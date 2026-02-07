@@ -86,21 +86,46 @@ export interface ServiceCategory {
   updatedAt: string;
 }
 
-// Service
+// Service (list item – may use snake_case from API)
 export interface Service {
   id: string;
-  providerId: string;
-  categoryId: string;
-  name: MultilingualText;
-  description: MultilingualText;
+  providerId?: string;
+  categoryId?: string;
+  category_id?: number;
+  name: MultilingualText | string;
+  description?: MultilingualText | string | null;
+  icon_url?: string | null;
   price?: number;
-  duration: number;
-  isActive: boolean;
-  isNegotiable: boolean;
-  createdAt: string;
-  updatedAt: string;
+  base_price?: number;
+  duration?: number;
+  isActive?: boolean;
+  is_negotiable?: boolean;
+  isNegotiable?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
   provider?: ServiceProvider;
   category?: ServiceCategory;
+  attributes?: ServiceAttribute[];
+}
+
+// Attribute option (for booking options)
+export interface AttributeOption {
+  id: number;
+  label: string;
+  price_adjustment?: number;
+}
+
+// Service attribute (e.g. Car Size, Wash Type)
+export interface ServiceAttribute {
+  id: number;
+  label: string;
+  service_id?: number;
+  options?: AttributeOption[];
+}
+
+// Service detail (full for detail page)
+export interface ServiceDetail extends Service {
+  attributes?: ServiceAttribute[];
 }
 
 // Booking

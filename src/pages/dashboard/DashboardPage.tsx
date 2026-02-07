@@ -128,7 +128,7 @@ export const DashboardPage = () => {
         {/* Bar Chart */}
         <div className="animate-chart-enter overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-6">
           <div className="mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-orange-500" />
+            <TrendingUp className="h-5 w-5 text-teal-500" />
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Metrics Overview
             </h2>

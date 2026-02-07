@@ -1,5 +1,5 @@
 import api from './api';
-import type { Service, ServiceCategory, PaginatedResponse } from '../types';
+import type { Service, ServiceCategory, ServiceDetail, PaginatedResponse } from '../types';
 
 export type CategoryCreateInput = {
   name: string;
@@ -48,9 +48,10 @@ export const serviceService = {
     return response.data;
   },
 
-  async getServiceById(id: string): Promise<Service> {
-    const response = await api.get<Service>(`/services/${id}`);
-    return response.data;
+  async getServiceById(id: string): Promise<ServiceDetail> {
+    const response = await api.get<{ service?: ServiceDetail } | ServiceDetail>(`/services/${id}`);
+    const data = response.data as { service?: ServiceDetail };
+    return (data.service ?? data) as ServiceDetail;
   },
 
   async updateService(id: string, data: Partial<Service>): Promise<Service> {

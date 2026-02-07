@@ -35,4 +35,9 @@ export const userService = {
     const response = await api.patch<User>(`/users/${id}`, { isActive: false });
     return response.data;
   },
+
+  /** Suspend user (same as deactivate) */
+  async suspendUser(id: string): Promise<User> {
+    return this.deactivateUser(id);
+  },
 };

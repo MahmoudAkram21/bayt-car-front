@@ -10,6 +10,7 @@ import { UsersPage } from "./pages/users/UsersPage";
 import { ProvidersPage } from "./pages/providers/ProvidersPage";
 import { CategoriesPage } from "./pages/services/CategoriesPage";
 import { ServicesPage } from "./pages/services/ServicesPage";
+import { ServiceDetailPage } from "./pages/services/ServiceDetailPage";
 import { BookingsPage } from "./pages/bookings/BookingsPage";
 import { CommissionsPage } from "./pages/commissions/CommissionsPage";
 import { Err400Page } from "./pages/errors/Err400Page";
@@ -43,6 +44,7 @@ function App() {
                 <Route path="/providers" element={<ProvidersPage />} />
                 <Route path="/categories" element={<CategoriesPage />} />
                 <Route path="/services" element={<ServicesPage />} />
+                <Route path="/services/:id" element={<ServiceDetailPage />} />
                 <Route path="/bookings" element={<BookingsPage />} />
                 <Route path="/commissions" element={<CommissionsPage />} />
                 <Route path="/settings" element={

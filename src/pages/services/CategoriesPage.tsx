@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Search, Package, Plus, Pencil, Trash2, Eye, X } from 'lucide-react';
+import { Search, Package, Plus, Pencil, Trash2, Eye, X, LayoutGrid, List } from 'lucide-react';
 import { serviceService, type CategoryCreateInput } from '../../services/service.service';
 
 type CategoryRow = {
@@ -29,6 +29,7 @@ export const CategoriesPage = () => {
   const [editCategory, setEditCategory] = useState<CategoryRow | null>(null);
   const [showCategoryId, setShowCategoryId] = useState<string | null>(null);
   const [deleteCategory, setDeleteCategory] = useState<CategoryRow | null>(null);
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [form, setForm] = useState<CategoryCreateInput>({ name: '', slug: '', description: '', sort_order: 0 });
 
   const { data: categories, isLoading, error } = useQuery({
@@ -127,7 +128,7 @@ export const CategoriesPage = () => {
         </div>
         <Button
           size="sm"
-          className="shrink-0 rounded-xl bg-gradient-to-r from-orange-600 to-orange-700 shadow-lg gap-2"
+          className="shrink-0 rounded-xl bg-teal-600 shadow-lg gap-2 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500"
           onClick={() => setAddOpen(true)}
         >
           <Plus className="h-4 w-4" />
@@ -135,16 +136,63 @@ export const CategoriesPage = () => {
         </Button>
       </div>
 
+      {/* Stat card — same style as Commissions */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-1 lg:grid-cols-3">
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm dark:border-gray-600 dark:bg-gray-800/50">
+          <div className="flex items-center justify-between p-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Categories</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{categories?.length ?? 0}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-700/80 shadow-sm">
+              <Package className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+            </div>
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-teal-200 bg-teal-50 shadow-sm dark:border-teal-800 dark:bg-teal-900/20">
+          <div className="flex items-center justify-between p-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Visible in list</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{categories?.length ?? 0}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 shadow-sm">
+              <Package className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+            </div>
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/20">
+          <div className="flex items-center justify-between p-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">With description</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{categories?.filter((c: CategoryRow) => { const d = c.description; if (!d) return false; if (typeof d === 'string') return d.trim().length > 0; const o = d as { en?: string; ar?: string }; return !!(o?.en || o?.ar); }).length ?? 0}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 shadow-sm">
+              <Package className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <Card className="mb-6 rounded-2xl border-gray-200 dark:border-gray-700 p-5 shadow-sm">
         <CardContent className="pt-0">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-            <Input
-              placeholder="Search categories..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="rounded-lg border-gray-300 pl-10 focus:ring-2 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-700"
-            />
+          <div className="flex flex-col gap-4 md:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <Input
+                placeholder="Search categories..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-lg border-gray-300 pl-10 focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700"
+              />
+            </div>
+            <div className="flex rounded-lg border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 overflow-hidden">
+              <button type="button" onClick={() => setViewMode('cards')} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${viewMode === 'cards' ? 'bg-teal-500 text-white dark:bg-teal-600' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600'}`}>
+                <LayoutGrid className="h-4 w-4" /> Cards
+              </button>
+              <button type="button" onClick={() => setViewMode('table')} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${viewMode === 'table' ? 'bg-teal-500 text-white dark:bg-teal-600' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600'}`}>
+                <List className="h-4 w-4" /> List
+              </button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -152,7 +200,7 @@ export const CategoriesPage = () => {
       <Card className="overflow-hidden rounded-2xl border-gray-200 shadow-lg dark:border-gray-700 dark:bg-gray-800">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
-            <Package className="h-5 w-5" />
+            <Package className="h-5 w-5 text-teal-500" />
             All Categories
           </CardTitle>
           <CardDescription>
@@ -162,7 +210,7 @@ export const CategoriesPage = () => {
         <CardContent>
           {isLoading && (
             <div className="flex justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-600 border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
             </div>
           )}
 
@@ -174,8 +222,8 @@ export const CategoriesPage = () => {
 
           {filteredCategories.length === 0 && !isLoading && (
             <div className="flex flex-col items-center justify-center py-16">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
-                <Package className="h-12 w-12 text-orange-600 dark:text-orange-400" />
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-900/30">
+                <Package className="h-12 w-12 text-teal-600 dark:text-teal-400" />
               </div>
               <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">No categories found</p>
               <p className="mt-2 max-w-md text-center text-gray-500 dark:text-gray-400">
@@ -184,12 +232,12 @@ export const CategoriesPage = () => {
             </div>
           )}
 
-          {filteredCategories.length > 0 && (
+          {viewMode === 'cards' && filteredCategories.length > 0 && (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {filteredCategories.map((category: CategoryRow) => (
                 <div
                   key={category.id}
-                  className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-orange-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-orange-800"
+                  className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-teal-600"
                 >
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{getName(category.name)}</h3>
                   <p className="mt-2 line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
@@ -198,34 +246,50 @@ export const CategoriesPage = () => {
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-4 dark:border-gray-700">
                     <span className="text-xs text-gray-500 dark:text-gray-400">ID: {String(category.id)}</span>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-lg text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20"
-                        onClick={() => setShowCategoryId(String(category.id))}
-                      >
+                      <Button variant="outline" size="sm" className="rounded-lg text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900/20 focus:ring-2 focus:ring-teal-500" onClick={() => setShowCategoryId(String(category.id))}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-lg text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20"
-                        onClick={() => openEdit(category)}
-                      >
+                      <Button variant="outline" size="sm" className="rounded-lg text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900/20 focus:ring-2 focus:ring-teal-500" onClick={() => openEdit(category)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                        onClick={() => setDeleteCategory(category)}
-                      >
+                      <Button variant="outline" size="sm" className="rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => setDeleteCategory(category)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {viewMode === 'table' && filteredCategories.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-100 dark:bg-gray-700/70">
+                  <tr>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Name</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Slug</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredCategories.map((category: CategoryRow) => (
+                    <tr key={category.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{getName(category.name)}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{category.slug}</td>
+                      <td className="max-w-xs truncate px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{getName(category.description) || '—'}</td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-teal-600 hover:text-teal-700 dark:text-teal-400" title="View" onClick={() => setShowCategoryId(String(category.id))}><Eye className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-teal-600 hover:text-teal-700 dark:text-teal-400" title="Edit" onClick={() => openEdit(category)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-600 hover:text-red-700" title="Delete" onClick={() => setDeleteCategory(category)}><Trash2 className="h-4 w-4" /></Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </CardContent>
@@ -293,7 +357,7 @@ export const CategoriesPage = () => {
                 />
               </div>
               <div className="flex gap-2 pt-2">
-                <Button type="submit" className="rounded-xl bg-orange-600 hover:bg-orange-700" disabled={createMutation.isPending}>
+                <Button type="submit" className="rounded-xl bg-teal-600 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500" disabled={createMutation.isPending}>
                   {createMutation.isPending ? 'Saving...' : 'Save'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => setAddOpen(false)} className="rounded-xl">
@@ -367,7 +431,7 @@ export const CategoriesPage = () => {
                 />
               </div>
               <div className="flex gap-2 pt-2">
-                <Button type="submit" className="rounded-xl bg-orange-600 hover:bg-orange-700" disabled={updateMutation.isPending}>
+                <Button type="submit" className="rounded-xl bg-teal-600 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500" disabled={updateMutation.isPending}>
                   {updateMutation.isPending ? 'Saving...' : 'Update'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => setEditCategory(null)} className="rounded-xl">
@@ -394,7 +458,7 @@ export const CategoriesPage = () => {
             </div>
             {showLoading && (
               <div className="flex justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-600 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
               </div>
             )}
             {showCategory && (
