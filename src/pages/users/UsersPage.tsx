@@ -116,54 +116,6 @@ export const UsersPage = () => {
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{statCustomers}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 shadow-sm">
-              <UserCircle className="h-6 w-6 text-teal-600 dark:text-teal-400" />
-            </div>
-          </div>
-        </div>
-        <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/20">
-          <div className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Providers</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{statProviders}</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 shadow-sm">
-              <Building2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-            </div>
-          </div>
-        </div>
-        <div className="overflow-hidden rounded-2xl border border-amber-200 bg-amber-50 shadow-sm dark:border-amber-800 dark:bg-amber-900/20">
-          <div className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Admins</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{statAdmins}</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 shadow-sm">
-              <Shield className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stat cards — same style as Commissions */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm dark:border-gray-600 dark:bg-gray-800/50">
-          <div className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Users</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{users.length}</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-700/80 shadow-sm">
-              <Users className="h-6 w-6 text-gray-600 dark:text-gray-400" />
-            </div>
-          </div>
-        </div>
-        <div className="overflow-hidden rounded-2xl border border-teal-200 bg-teal-50 shadow-sm dark:border-teal-800 dark:bg-teal-900/20">
-          <div className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Customers</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{statCustomers}</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 shadow-sm">
               <UserCheck className="h-6 w-6 text-teal-600 dark:text-teal-400" />
             </div>
           </div>
