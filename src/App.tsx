@@ -9,6 +9,9 @@ import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { UsersPage } from "./pages/users/UsersPage";
 import { ProvidersPage } from "./pages/providers/ProvidersPage";
 import { CategoriesPage } from "./pages/services/CategoriesPage";
+import { CategoryDetailPage } from "./pages/services/CategoryDetailPage";
+import { CategoryEditPage } from "./pages/services/CategoryEditPage";
+import { CategoryNewPage } from "./pages/services/CategoryNewPage";
 import { ServicesPage } from "./pages/services/ServicesPage";
 import { ServiceDetailPage } from "./pages/services/ServiceDetailPage";
 import { BookingsPage } from "./pages/bookings/BookingsPage";
@@ -43,6 +46,9 @@ function App() {
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/providers" element={<ProvidersPage />} />
                 <Route path="/categories" element={<CategoriesPage />} />
+                <Route path="/categories/new" element={<CategoryNewPage />} />
+                <Route path="/categories/:id" element={<CategoryDetailPage />} />
+                <Route path="/categories/:id/edit" element={<CategoryEditPage />} />
                 <Route path="/services" element={<ServicesPage />} />
                 <Route path="/services/:id" element={<ServiceDetailPage />} />
                 <Route path="/bookings" element={<BookingsPage />} />

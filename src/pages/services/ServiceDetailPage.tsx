@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Wrench, Tag, Coins, FileText, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Wrench, Tag, Coins, FileText, CheckCircle2, Hash, Calendar, Info } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { serviceService } from '../../services/service.service';
@@ -152,8 +152,62 @@ export const ServiceDetailPage = () => {
           )}
         </div>
 
-        {/* Sidebar: Attributes & options */}
+        {/* Sidebar: Service info + Attributes */}
         <div className="space-y-6">
+          <Card className="rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                <Info className="h-5 w-5 text-teal-500" />
+                Service Info
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3 text-sm">
+                <Hash className="h-4 w-4 text-teal-500 shrink-0" />
+                <div>
+                  <p className="font-medium text-gray-500 dark:text-gray-400">ID</p>
+                  <p className="text-gray-900 dark:text-white">{String(service.id)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
+                <div>
+                  <p className="font-medium text-gray-500 dark:text-gray-400">Status</p>
+                  <p className="text-gray-900 dark:text-white">
+                    {service.isActive !== false ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">Inactive</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              {service.createdAt && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Calendar className="h-4 w-4 text-teal-500 shrink-0" />
+                  <div>
+                    <p className="font-medium text-gray-500 dark:text-gray-400">Created</p>
+                    <p className="text-gray-900 dark:text-white">
+                      {new Date(service.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {service.updatedAt && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Calendar className="h-4 w-4 text-teal-500 shrink-0" />
+                  <div>
+                    <p className="font-medium text-gray-500 dark:text-gray-400">Updated</p>
+                    <p className="text-gray-900 dark:text-white">
+                      {new Date(service.updatedAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card className="rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
