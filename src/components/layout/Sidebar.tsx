@@ -23,39 +23,41 @@ const navigation = [
 
 export const Sidebar = () => {
   return (
-    <div className="flex h-screen w-64 flex-col bg-gray-900 text-white">
-      {/* Logo */}
-      <div className="flex h-16 items-center px-6 border-b border-gray-800">
-        <h1 className="text-xl font-bold">Bayt Car Admin</h1>
+    <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800">
+      {/* Logo — Design System: gradient orange */}
+      <div className="flex h-14 sm:h-16 items-center px-6 bg-gradient-to-r from-orange-500 to-orange-600">
+        <h1 className="text-lg font-bold tracking-tight text-white sm:text-xl">
+          Bayt Car Admin
+        </h1>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+      {/* Navigation — Design System: active = orange gradient, inactive = gray hover, rounded-xl */}
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {navigation.map((item) => (
           <NavLink
             key={item.name}
             to={item.href}
             end={item.href === '/'}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/20'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'
               }`
             }
           >
-            <item.icon className="h-5 w-5" />
+            <item.icon className="h-5 w-5 shrink-0" />
             {item.name}
           </NavLink>
         ))}
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-gray-800 p-4">
-        <p className="text-xs text-gray-500 text-center">
+      <div className="border-t border-gray-200 p-4 dark:border-gray-700">
+        <p className="text-center text-xs text-gray-500 dark:text-gray-400">
           © 2026 Qeematech
         </p>
       </div>
-    </div>
+    </aside>
   );
 };

@@ -1,6 +1,14 @@
 import api from './api';
 import type { Service, ServiceCategory, PaginatedResponse } from '../types';
 
+export type CategoryCreateInput = {
+  name: string;
+  slug: string;
+  description?: string;
+  icon_url?: string;
+  sort_order?: number;
+};
+
 export const serviceService = {
   // Categories
   async getAllCategories(): Promise<ServiceCategory[]> {
@@ -8,12 +16,17 @@ export const serviceService = {
     return response.data;
   },
 
-  async createCategory(data: Omit<ServiceCategory, 'id' | 'createdAt' | 'updatedAt'>): Promise<ServiceCategory> {
+  async getCategoryById(id: string): Promise<ServiceCategory> {
+    const response = await api.get<ServiceCategory>(`/service-categories/${id}`);
+    return response.data;
+  },
+
+  async createCategory(data: CategoryCreateInput): Promise<ServiceCategory> {
     const response = await api.post<ServiceCategory>('/service-categories', data);
     return response.data;
   },
 
-  async updateCategory(id: string, data: Partial<ServiceCategory>): Promise<ServiceCategory> {
+  async updateCategory(id: string, data: Partial<CategoryCreateInput>): Promise<ServiceCategory> {
     const response = await api.patch<ServiceCategory>(`/service-categories/${id}`, data);
     return response.data;
   },

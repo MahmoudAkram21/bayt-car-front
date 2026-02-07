@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
-import { Search, Wrench } from 'lucide-react';
+import { Button } from '../../components/ui/button';
+import { Search, Wrench, RefreshCw } from 'lucide-react';
 import { serviceService } from '../../services/service.service';
-import { format } from 'date-fns';
 
 export const ServicesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,36 +31,48 @@ export const ServicesPage = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="animate-fade-in">
+      {/* Page Header — Design System: title + description + buttons (تحديث + إضافة) */}
+      <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Services</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+            Services
+          </h1>
+          <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">
             View and manage all services across providers
           </p>
         </div>
+        <div className="flex shrink-0 gap-2">
+          <Button variant="outline" size="sm" className="rounded-xl gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          <Button size="sm" className="rounded-xl bg-gradient-to-r from-orange-600 to-orange-700 shadow-lg gap-2">
+            Add Service
+          </Button>
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+      {/* Search & Filter — Design System: rounded-2xl border, focus:ring-orange-500 */}
+      <Card className="mb-6 rounded-2xl border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+        <CardContent className="pt-0">
+          <div className="flex flex-col gap-4 md:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <Input
                 placeholder="Search services..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="rounded-lg border-gray-300 pl-10 focus:ring-2 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-700"
               />
             </div>
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-4 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-700"
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="all">All Categories</option>
-              {categories?.map((cat) => (
+              {categories?.map((cat: { id: string; name: any }) => (
                 <option key={cat.id} value={cat.id}>
                   {getName(cat.name)}
                 </option>
@@ -69,7 +81,7 @@ export const ServicesPage = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-700"
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -79,10 +91,10 @@ export const ServicesPage = () => {
         </CardContent>
       </Card>
 
-      {/* Services Table */}
-      <Card>
+      {/* Table Container — Design System: rounded-2xl border overflow-hidden */}
+      <Card className="overflow-hidden rounded-2xl border-gray-200 shadow-lg dark:border-gray-700 dark:bg-gray-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <Wrench className="h-5 w-5" />
             All Services
           </CardTitle>
@@ -92,55 +104,65 @@ export const ServicesPage = () => {
         </CardHeader>
         <CardContent>
           {isLoading && (
-            <div className="text-center text-gray-500 py-8">
-              <p>Loading services...</p>
+            <div className="flex justify-center py-12">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-600 border-t-transparent" />
             </div>
           )}
 
           {error && (
-            <div className="text-center text-red-500 py-8">
+            <div className="rounded-xl border border-red-200 bg-red-50 py-8 text-center text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
               <p>Error loading services. Please try again.</p>
             </div>
           )}
 
-          {data && data.data.length === 0 && (
-            <div className="text-center text-gray-500 py-8">
-              <p>No services found.</p>
+          {data && data.data.length === 0 && !isLoading && (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
+                <Wrench className="h-12 w-12 text-orange-600 dark:text-orange-400" />
+              </div>
+              <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">No services found</p>
+              <p className="mt-2 max-w-md text-center text-gray-500 dark:text-gray-400">
+                Try adjusting your search or filters
+              </p>
             </div>
           )}
 
           {data && data.data.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-800">
+                <thead className="bg-gray-100 dark:bg-gray-700/70">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Provider</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Service Name</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Provider</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Category</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Price</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Duration</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {data.data.map((service) => (
-                    <tr key={service.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="px-4 py-3 font-medium">{getName(service.name)}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
+                  {data.data.map((service: any) => (
+                    <tr key={service.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{getName(service.name)}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                         {getName(service.provider?.businessName) || 'N/A'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                         {getName(service.category?.name) || 'N/A'}
                       </td>
-                      <td className="px-4 py-3 text-sm font-medium">
-                        ${service.price.toFixed(2)}
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                        ${service.price?.toFixed(2) ?? '—'}
                         {service.isNegotiable && ' (Negotiable)'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{service.duration} min</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          service.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{service.duration ?? '—'} min</td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                            service.isActive
+                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
+                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                          }`}
+                        >
                           {service.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>

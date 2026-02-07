@@ -1,4 +1,5 @@
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { UserRole } from '../types';
 
@@ -8,7 +9,14 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, allowedRoles = [UserRole.ADMIN, UserRole.SUPER_ADMIN] }: ProtectedRouteProps) => {
+  const navigate = useNavigate();
   const { isAuthenticated, user, isHydrated } = useAuthStore();
+
+  useEffect(() => {
+    if (isHydrated && (!isAuthenticated || !user)) {
+      navigate('/login', { replace: true });
+    }
+  }, [isHydrated, isAuthenticated, user, navigate]);
 
   // Wait for hydration to complete before checking auth
   if (!isHydrated) {
@@ -22,7 +30,13 @@ export const ProtectedRoute = ({ children, allowedRoles = [UserRole.ADMIN, UserR
   }
 
   if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
