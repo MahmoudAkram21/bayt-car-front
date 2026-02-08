@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Wrench, Tag, Coins, FileText, CheckCircle2, Hash, Calendar, Info, MapPin } from 'lucide-react';
+import { ArrowLeft, Wrench, Tag, Coins, FileText, CheckCircle2, Hash, Calendar, Info, MapPin, Truck } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -123,14 +123,14 @@ export const ServiceDetailPage = () => {
               </div>
               <div className="flex flex-1 flex-col justify-center p-6">
                 <div className="flex items-center gap-2">
-                  {(service as any).pricing_type && (
+                  {service.pricing_type && (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-medium text-teal-800 dark:bg-teal-900/40 dark:text-teal-300">
                       <Tag className="h-3.5 w-3.5" />
-                      {(service as any).pricing_type}
-                      {(service as any).pricing_type === 'PER_UNIT' && (service as any).unit_label && (
-                        <span className="opacity-80"> — {(service as any).base_price} ر.س / {(service as any).unit_label}</span>
+                      {service.pricing_type}
+                      {service.pricing_type === 'PER_UNIT' && service.unit_label && (
+                        <span className="opacity-80"> — {service.base_price} ر.س / {service.unit_label}</span>
                       )}
-                      {(service as any).pricing_type === 'CUSTOMER_DEFINED' && (
+                      {service.pricing_type === 'CUSTOMER_DEFINED' && (
                         <span className="opacity-80"> — العميل يحدد السعر</span>
                       )}
                     </span>
@@ -236,20 +236,20 @@ export const ServiceDetailPage = () => {
                   </div>
                 </div>
               )}
-              {(service as any).category && (
+              {service.category && (
                 <div className="flex items-center gap-3 text-sm">
                   <div>
                     <p className="font-medium text-gray-500 dark:text-gray-400">الفئة</p>
-                    <p className="text-gray-900 dark:text-white">{(service as any).category?.name_ar ?? '—'}</p>
+                    <p className="text-gray-900 dark:text-white">{service.category?.name_ar ?? '—'}</p>
                   </div>
                 </div>
               )}
-              {(service as any).gps_radius_km != null && (
+              {service.gps_radius_km != null && (
                 <div className="flex items-center gap-3 text-sm">
                   <MapPin className="h-4 w-4 text-teal-500 shrink-0" />
                   <div>
                     <p className="font-medium text-gray-500 dark:text-gray-400">نطاق GPS</p>
-                    <p className="text-gray-900 dark:text-white">{(service as any).gps_radius_km} كم</p>
+                    <p className="text-gray-900 dark:text-white">{service.gps_radius_km} كم</p>
                   </div>
                 </div>
               )}
@@ -269,7 +269,7 @@ export const ServiceDetailPage = () => {
               <div>
                 <Label>الفئة</Label>
                 <select
-                  value={categoryId !== '' ? categoryId : String((service as any).category_id ?? 'none')}
+                  value={categoryId !== '' ? categoryId : String(service.category_id ?? 'none')}
                   onChange={(e) => setCategoryId(e.target.value)}
                   className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
@@ -285,7 +285,7 @@ export const ServiceDetailPage = () => {
                   type="number"
                   step="0.5"
                   min="0"
-                  placeholder={(service as any).gps_radius_km ?? '25'}
+                  placeholder={String(service.gps_radius_km ?? '25')}
                   value={gpsRadius}
                   onChange={(e) => setGpsRadius(e.target.value)}
                   className="mt-1 rounded-lg"
@@ -296,6 +296,33 @@ export const ServiceDetailPage = () => {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Furniture Delivery Requests Section - Only for CUSTOMER_DEFINED services */}
+          {service.pricing_type === 'CUSTOMER_DEFINED' && (
+            <Card className="rounded-2xl border-teal-200 dark:border-teal-800 dark:bg-gray-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                  <Truck className="h-5 w-5 text-teal-500" />
+                  طلبات التوصيل
+                </CardTitle>
+                <CardDescription>
+                  إدارة طلبات العملاء لهذه الخدمة
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  هذه الخدمة من نوع "العميل يحدد السعر". يمكنك عرض وإدارة جميع الطلبات المرتبطة بها.
+                </p>
+                <Link
+                  to="/furniture-delivery"
+                  className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition-colors"
+                >
+                  <Truck className="h-4 w-4" />
+                  عرض الطلبات
+                </Link>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800">
             <CardHeader>

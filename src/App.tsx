@@ -23,6 +23,7 @@ import { SlidersPage } from "./pages/sliders/SlidersPage";
 import { SplashPage } from "./pages/splash/SplashPage";
 import { InvoicesPage } from "./pages/invoices/InvoicesPage";
 import { DeliveryPage } from "./pages/delivery/DeliveryPage";
+import { FurnitureDeliveryPage } from "./pages/furniture-delivery/FurnitureDeliveryPage";
 import { ReportsPage } from "./pages/reports/ReportsPage";
 import { Err400Page } from "./pages/errors/Err400Page";
 import { Err403Page } from "./pages/errors/Err403Page";
@@ -58,6 +59,7 @@ function App() {
                 <Route path="/services" element={<ServicesPage />} />
                 <Route path="/services/:id" element={<ServiceDetailPage />} />
                 <Route path="/delivery" element={<DeliveryPage />} />
+                <Route path="/furniture-delivery" element={<FurnitureDeliveryPage />} />
                 <Route path="/bookings" element={<BookingsPage />} />
                 <Route path="/commissions" element={<CommissionsPage />} />
                 <Route path="/wallets" element={<WalletsPage />} />

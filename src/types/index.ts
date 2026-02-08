@@ -98,9 +98,14 @@ export interface Service {
   gps_radius_km?: number | null;
   pricing_type?: PricingType;
   base_price?: number;
+  price?: number;
   unit_label?: string | null;
   is_negotiable?: boolean;
   isNegotiable?: boolean;
+  is_active?: boolean;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
   attributes?: ServiceAttribute[];
 }
 
