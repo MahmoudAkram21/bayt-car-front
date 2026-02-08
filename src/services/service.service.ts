@@ -3,6 +3,7 @@ import type { Service, ServiceDetail, PaginatedResponse } from '../types';
 
 export const serviceService = {
   async getAllServices(params?: {
+    categoryId?: number | null;
     isNegotiable?: boolean;
     minPrice?: number;
     maxPrice?: number;
@@ -12,6 +13,10 @@ export const serviceService = {
     const response = await api.get<PaginatedResponse<Service>>('/services', { params });
     return response.data;
   },
+
+  /** Admin: update service category and GPS radius */
+  updateServiceCatalog: (id: string, data: { category_id?: number | null; gps_radius_km?: number | null }) =>
+    api.patch<{ service: Service }>(`/services/${id}/catalog`, data).then((r) => r.data),
 
   async getServiceById(id: string): Promise<ServiceDetail> {
     const response = await api.get<{ service?: ServiceDetail } | ServiceDetail>(`/services/${id}`);

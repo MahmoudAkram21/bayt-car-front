@@ -4,8 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { Search, Wrench, RefreshCw, LayoutGrid, List, ChevronRight } from 'lucide-react';
+import { Search, Wrench, RefreshCw, LayoutGrid, List, ChevronRight, MapPin } from 'lucide-react';
 import { serviceService } from '../../services/service.service';
+import { serviceCategoryService } from '../../services/serviceCategory.service';
 import type { Service } from '../../types';
 
 type ViewMode = 'cards' | 'table';
@@ -23,10 +24,17 @@ const getPricingLabel = (s: Service) => {
 export const ServicesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [categoryFilter, setCategoryFilter] = useState<number | ''>('');
+
+  const { data: categoriesData } = useQuery({
+    queryKey: ['service-categories'],
+    queryFn: () => serviceCategoryService.list(),
+  });
+  const categories = categoriesData?.data ?? [];
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['services'],
-    queryFn: () => serviceService.getAllServices(),
+    queryKey: ['services', categoryFilter],
+    queryFn: () => serviceService.getAllServices({ categoryId: categoryFilter === '' ? undefined : categoryFilter }),
   });
 
   const getName = (name: any) => {
@@ -79,7 +87,7 @@ export const ServicesPage = () => {
 
       <Card className="mb-6 rounded-2xl border-gray-200 dark:border-gray-700 p-5 shadow-sm">
         <CardContent className="pt-0">
-          <div className="flex flex-col gap-4 md:flex-row">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <Input
@@ -89,6 +97,16 @@ export const ServicesPage = () => {
                 className="rounded-lg border-gray-300 pl-10 focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700"
               />
             </div>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value === '' ? '' : Number(e.target.value))}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="">كل الفئات</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name_ar}</option>
+              ))}
+            </select>
             {/* View toggle: Cards | Table */}
             <div className="flex rounded-lg border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 overflow-hidden">
               <button
@@ -202,9 +220,11 @@ export const ServicesPage = () => {
                 <thead className="bg-gray-100 dark:bg-gray-700/70">
                   <tr>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">ID</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Service Name</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Pricing</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Action</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الخدمة</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الفئة</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">نطاق GPS (كم)</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">التسعير</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجراء</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -212,13 +232,21 @@ export const ServicesPage = () => {
                     <tr key={service.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{service.id}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{getName(service.name)}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{(service as any).category?.name_ar ?? '—'}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                        {(service as any).gps_radius_km != null ? (
+                          <><MapPin className="h-3.5 w-3.5" /> {(service as any).gps_radius_km} كم</>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{getPricingLabel(service)}</td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <Link
                           to={`/services/${service.id}`}
                           className="text-sm font-medium text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
                         >
-                          View
+                          عرض / تعديل
                         </Link>
                       </td>
                     </tr>

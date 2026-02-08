@@ -22,6 +22,7 @@ import { PromoPage } from "./pages/promo/PromoPage";
 import { SlidersPage } from "./pages/sliders/SlidersPage";
 import { SplashPage } from "./pages/splash/SplashPage";
 import { InvoicesPage } from "./pages/invoices/InvoicesPage";
+import { DeliveryPage } from "./pages/delivery/DeliveryPage";
 import { ReportsPage } from "./pages/reports/ReportsPage";
 import { Err400Page } from "./pages/errors/Err400Page";
 import { Err403Page } from "./pages/errors/Err403Page";
@@ -56,6 +57,7 @@ function App() {
                 <Route path="/providers/:id" element={<ProviderDetailPage />} />
                 <Route path="/services" element={<ServicesPage />} />
                 <Route path="/services/:id" element={<ServiceDetailPage />} />
+                <Route path="/delivery" element={<DeliveryPage />} />
                 <Route path="/bookings" element={<BookingsPage />} />
                 <Route path="/commissions" element={<CommissionsPage />} />
                 <Route path="/wallets" element={<WalletsPage />} />

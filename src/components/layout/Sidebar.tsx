@@ -16,6 +16,7 @@ import {
   Image,
   Monitor,
   FileCheck,
+  Package,
 } from 'lucide-react';
 
 const navigation = [
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Providers', href: '/providers', icon: Building2 },
   { name: 'Services', href: '/services', icon: Wrench },
+  { name: 'توصيل طلبات', href: '/delivery', icon: Package },
   { name: 'Bookings', href: '/bookings', icon: Calendar },
   { name: 'Commissions', href: '/commissions', icon: DollarSign },
   { name: 'Wallets', href: '/wallets', icon: Wallet },

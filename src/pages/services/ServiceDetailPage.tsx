@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Wrench, Tag, Coins, FileText, CheckCircle2, Hash, Calendar, Info } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Wrench, Tag, Coins, FileText, CheckCircle2, Hash, Calendar, Info, MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 import { serviceService } from '../../services/service.service';
+import { serviceCategoryService } from '../../services/serviceCategory.service';
 import type { ServiceDetail } from '../../types';
 
 const getName = (name: ServiceDetail['name']) => {
@@ -20,12 +24,37 @@ const getDesc = (desc: ServiceDetail['description']) => {
 export const ServiceDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [gpsRadius, setGpsRadius] = useState<string>('');
+  const [categoryId, setCategoryId] = useState<string>('');
 
   const { data: service, isLoading, error } = useQuery({
     queryKey: ['service', id],
     queryFn: () => serviceService.getServiceById(id!),
     enabled: !!id,
   });
+  const { data: categoriesData } = useQuery({
+    queryKey: ['service-categories'],
+    queryFn: () => serviceCategoryService.list(),
+  });
+  const categories = categoriesData?.data ?? [];
+
+  const catalogMutation = useMutation({
+    mutationFn: (payload: { category_id?: number | null; gps_radius_km?: number | null }) =>
+      serviceService.updateServiceCatalog(id!, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service', id] });
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
+  });
+
+  const handleSaveCatalog = () => {
+    const payload: { category_id?: number | null; gps_radius_km?: number | null } = {};
+    if (categoryId !== '') payload.category_id = categoryId === 'none' ? null : parseInt(categoryId, 10);
+    if (gpsRadius !== '') payload.gps_radius_km = gpsRadius.trim() ? parseFloat(gpsRadius) : null;
+    if (Object.keys(payload).length === 0) return;
+    catalogMutation.mutate(payload);
+  };
 
   const price = service?.base_price ?? service?.price;
   const isNegotiable = service?.is_negotiable ?? service?.isNegotiable;
@@ -207,6 +236,64 @@ export const ServiceDetailPage = () => {
                   </div>
                 </div>
               )}
+              {(service as any).category && (
+                <div className="flex items-center gap-3 text-sm">
+                  <div>
+                    <p className="font-medium text-gray-500 dark:text-gray-400">الفئة</p>
+                    <p className="text-gray-900 dark:text-white">{(service as any).category?.name_ar ?? '—'}</p>
+                  </div>
+                </div>
+              )}
+              {(service as any).gps_radius_km != null && (
+                <div className="flex items-center gap-3 text-sm">
+                  <MapPin className="h-4 w-4 text-teal-500 shrink-0" />
+                  <div>
+                    <p className="font-medium text-gray-500 dark:text-gray-400">نطاق GPS</p>
+                    <p className="text-gray-900 dark:text-white">{(service as any).gps_radius_km} كم</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Admin: تعديل الفئة ونطاق GPS */}
+          <Card className="rounded-2xl border-amber-200 dark:border-amber-800 dark:bg-gray-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                <MapPin className="h-5 w-5 text-amber-500" />
+                نطاق التوصيل (GPS) والفئة
+              </CardTitle>
+              <CardDescription>تعديل الفئة ونطاق التوصيل بالكيلومتر من لوحة الإدارة</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>الفئة</Label>
+                <select
+                  value={categoryId !== '' ? categoryId : String((service as any).category_id ?? 'none')}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="none">— بدون فئة</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name_ar}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label>نطاق GPS (كم)</Label>
+                <Input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  placeholder={(service as any).gps_radius_km ?? '25'}
+                  value={gpsRadius}
+                  onChange={(e) => setGpsRadius(e.target.value)}
+                  className="mt-1 rounded-lg"
+                />
+              </div>
+              <Button size="sm" className="rounded-lg bg-amber-600 hover:bg-amber-700" onClick={handleSaveCatalog} disabled={catalogMutation.isPending}>
+                حفظ التعديل
+              </Button>
             </CardContent>
           </Card>
 

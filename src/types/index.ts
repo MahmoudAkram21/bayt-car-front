@@ -75,7 +75,15 @@ export interface ServiceProvider {
   user?: User;
 }
 
-// Service (list item – may use snake_case from API). No categories — services only.
+// Service category (توصيل طلبات)
+export interface ServiceCategoryRef {
+  id: number;
+  name_ar: string;
+  name_en?: string | null;
+  slug: string;
+}
+
+// Service (list item – may use snake_case from API)
 export type PricingType = 'FIXED' | 'BY_OPTION' | 'PER_UNIT' | 'CUSTOMER_DEFINED';
 
 export interface Service {
@@ -85,6 +93,9 @@ export interface Service {
   description?: MultilingualText | string | null;
   icon_url?: string | null;
   sort_order?: number;
+  category_id?: number | null;
+  category?: ServiceCategoryRef | null;
+  gps_radius_km?: number | null;
   pricing_type?: PricingType;
   base_price?: number;
   unit_label?: string | null;
