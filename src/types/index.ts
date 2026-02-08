@@ -119,7 +119,7 @@ export interface AttributeOption {
 // Service attribute (e.g. Car Size, Wash Type)
 export interface ServiceAttribute {
   id: number;
-  label: string;
+  label: string | MultilingualText;
   service_id?: number;
   options?: AttributeOption[];
 }

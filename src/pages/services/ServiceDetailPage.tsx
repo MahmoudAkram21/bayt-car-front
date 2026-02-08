@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Wrench, Tag, Coins, FileText, CheckCircle2, Hash, Info, MapPin, Truck, Plus, Trash2, Edit, X, Calendar } from 'lucide-react';
+import { ArrowLeft, Wrench, Tag, Coins, FileText, CheckCircle2, Hash, Info, MapPin, Truck, Plus, Trash2, Edit, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -9,12 +9,14 @@ import { Label } from '../../components/ui/label';
 import { serviceService } from '../../services/service.service';
 import { serviceCategoryService } from '../../services/serviceCategory.service';
 
-const getName = (name: any) => {
+import type { MultilingualText, ServiceAttribute, AttributeOption } from '../../types';
+
+const getName = (name: string | MultilingualText | null | undefined) => {
   if (typeof name === 'string') return name;
   return name?.en || name?.ar || '—';
 };
 
-const getDesc = (desc: any) => {
+const getDesc = (desc: string | MultilingualText | null | undefined) => {
   if (desc == null) return '';
   if (typeof desc === 'string') return desc;
   return desc?.en || desc?.ar || '';
@@ -29,7 +31,7 @@ export const ServiceDetailPage = () => {
 
   // Attribute Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingAttribute, setEditingAttribute] = useState<any>(null);
+  const [editingAttribute, setEditingAttribute] = useState<ServiceAttribute | null>(null);
   const [attrFormData, setAttrFormData] = useState({
     labelEn: '',
     labelAr: '',
@@ -58,8 +60,13 @@ export const ServiceDetailPage = () => {
   });
 
   // Attribute Mutations
+  interface AttributePayload {
+    label: MultilingualText;
+    options: { label: string; price: number }[];
+  }
+
   const createAttrMutation = useMutation({
-    mutationFn: (payload: any) => serviceService.createAttribute(id!, payload),
+    mutationFn: (payload: AttributePayload) => serviceService.createAttribute(id!, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['service', id] });
       setIsModalOpen(false);
@@ -68,7 +75,7 @@ export const ServiceDetailPage = () => {
   });
 
   const updateAttrMutation = useMutation({
-    mutationFn: (payload: { attrId: string; data: any }) => 
+    mutationFn: (payload: { attrId: string; data: AttributePayload }) => 
       serviceService.updateAttribute(id!, payload.attrId, payload.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['service', id] });
@@ -103,14 +110,14 @@ export const ServiceDetailPage = () => {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (attr: any) => {
+  const openEditModal = (attr: ServiceAttribute) => {
     setEditingAttribute(attr);
     // Parse label if object or string
     const labelEn = typeof attr.label === 'string' ? attr.label : attr.label?.en || '';
     const labelAr = typeof attr.label === 'string' ? attr.label : attr.label?.ar || '';
     
     // Map options
-    const options = attr.options?.map((opt: any) => ({
+    const options = attr.options?.map((opt: AttributeOption) => ({
       label: opt.label,
       price: Number(opt.price_adjustment)
     })) || [{ label: '', price: 0 }];
@@ -131,7 +138,7 @@ export const ServiceDetailPage = () => {
     };
 
     if (editingAttribute) {
-      updateAttrMutation.mutate({ attrId: editingAttribute.id, data: payload });
+      updateAttrMutation.mutate({ attrId: String(editingAttribute.id), data: payload });
     } else {
       createAttrMutation.mutate(payload);
     }
@@ -283,7 +290,7 @@ export const ServiceDetailPage = () => {
             <CardContent>
               {service.attributes && service.attributes.length > 0 ? (
                 <div className="space-y-4">
-                  {service.attributes.map((attr: any) => (
+                  {service.attributes.map((attr) => (
                     <div key={attr.id} className="relative rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800/50 transition-all hover:border-teal-200 dark:hover:border-teal-800">
                       <div className="flex items-start justify-between">
                         <div>
@@ -292,7 +299,7 @@ export const ServiceDetailPage = () => {
                           </h4>
                           {attr.options && attr.options.length > 0 ? (
                             <div className="mt-3 flex flex-wrap gap-2">
-                              {attr.options.map((opt: any) => (
+                              {attr.options.map((opt: AttributeOption) => (
                                 <span key={opt.id} className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
                                   {opt.label}
                                   {Number(opt.price_adjustment) !== 0 && (
@@ -311,7 +318,7 @@ export const ServiceDetailPage = () => {
                           <Button variant="ghost" size="icon" onClick={() => openEditModal(attr)} className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => deleteAttrMutation.mutate(attr.id)} className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20">
+                          <Button variant="ghost" size="icon" onClick={() => deleteAttrMutation.mutate(String(attr.id))} className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
