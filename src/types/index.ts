@@ -75,36 +75,21 @@ export interface ServiceProvider {
   user?: User;
 }
 
-// Service Category
-export interface ServiceCategory {
-  id: string;
-  name: MultilingualText;
-  description?: MultilingualText;
-  slug: string;
-  icon?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// Service (list item – may use snake_case from API). No categories — services only.
+export type PricingType = 'FIXED' | 'BY_OPTION' | 'PER_UNIT' | 'CUSTOMER_DEFINED';
 
-// Service (list item – may use snake_case from API)
 export interface Service {
-  id: string;
-  providerId?: string;
-  categoryId?: string;
-  category_id?: number;
+  id: string | number;
   name: MultilingualText | string;
+  slug?: string;
   description?: MultilingualText | string | null;
   icon_url?: string | null;
-  price?: number;
+  sort_order?: number;
+  pricing_type?: PricingType;
   base_price?: number;
-  duration?: number;
-  isActive?: boolean;
+  unit_label?: string | null;
   is_negotiable?: boolean;
   isNegotiable?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  provider?: ServiceProvider;
-  category?: ServiceCategory;
   attributes?: ServiceAttribute[];
 }
 

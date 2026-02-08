@@ -94,14 +94,16 @@ export const ServiceDetailPage = () => {
               </div>
               <div className="flex flex-1 flex-col justify-center p-6">
                 <div className="flex items-center gap-2">
-                  {service.category && (
+                  {(service as any).pricing_type && (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-medium text-teal-800 dark:bg-teal-900/40 dark:text-teal-300">
                       <Tag className="h-3.5 w-3.5" />
-                      {typeof service.category.name === 'string'
-                        ? service.category.name
-                        : (service.category.name as { en?: string; ar?: string })?.en ||
-                          (service.category.name as { en?: string; ar?: string })?.ar ||
-                          '—'}
+                      {(service as any).pricing_type}
+                      {(service as any).pricing_type === 'PER_UNIT' && (service as any).unit_label && (
+                        <span className="opacity-80"> — {(service as any).base_price} ر.س / {(service as any).unit_label}</span>
+                      )}
+                      {(service as any).pricing_type === 'CUSTOMER_DEFINED' && (
+                        <span className="opacity-80"> — العميل يحدد السعر</span>
+                      )}
                     </span>
                   )}
                 </div>

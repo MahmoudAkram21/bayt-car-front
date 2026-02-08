@@ -1,17 +1,21 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
-import { Search, Building2, LayoutGrid, List, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Button } from '../../components/ui/button';
+import { Search, Building2, LayoutGrid, List, AlertTriangle, CheckCircle, Clock, Eye, Pencil, Trash2 } from 'lucide-react';
 import { providerService } from '../../services/provider.service';
 import { format } from 'date-fns';
 
 const tabs = ['all', 'pending', 'verified', 'suspended'];
 
 export const ProvidersPage = () => {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['providers', { verified: activeTab === 'verified', search: searchTerm }],
@@ -38,6 +42,19 @@ export const ProvidersPage = () => {
   const statPending = allProviders.filter((p: any) => !p.isVerified).length;
   const statVerified = allProviders.filter((p: any) => p.isVerified && !p.isSuspended).length;
   const statSuspended = allProviders.filter((p: any) => p.isSuspended).length;
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => providerService.deleteProvider(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['providers'] });
+      setDeleteTarget(null);
+    },
+  });
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    deleteMutation.mutate(deleteTarget.id);
+  };
 
   return (
     <div className="animate-fade-in">
@@ -175,24 +192,41 @@ export const ProvidersPage = () => {
           {viewMode === 'cards' && filteredData.length > 0 && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredData.map((provider: any) => (
-                <div key={provider.id} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-teal-600">
-                  <div className="flex h-24 items-center justify-center bg-gradient-to-br from-teal-500/10 to-teal-600/5 dark:from-teal-900/30 dark:to-teal-800/20">
-                    <Building2 className="h-12 w-12 text-teal-500/70 dark:text-teal-400/60" />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{getName(provider.businessName)}</h3>
-                    <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{getName(provider.owner?.name) || '—'}</p>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{getName(provider.city) ?? '—'} · ⭐ {provider.averageRating?.toFixed(1) || '—'}</p>
-                    <div className="mt-3">
-                      {provider.isSuspended ? (
-                        <span className="inline-flex rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/20 dark:text-red-400">Suspended</span>
-                      ) : provider.isVerified ? (
-                        <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">Verified</span>
-                      ) : (
-                        <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">Pending</span>
-                      )}
+                <div key={provider.id} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:border-orange-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-orange-600">
+                  <Link to={`/providers/${provider.id}`} className="block">
+                    <div className="flex h-24 items-center justify-center bg-gradient-to-br from-orange-500/10 to-amber-600/5 dark:from-orange-900/30 dark:to-amber-800/20">
+                      <Building2 className="h-12 w-12 text-orange-500/70 dark:text-orange-400/60" />
                     </div>
-                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{provider.createdAt ? format(new Date(provider.createdAt), 'MMM dd, yyyy') : '—'}</p>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400">{getName(provider.businessName)}</h3>
+                      <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{getName(provider.owner?.name) || provider.user?.name || '—'}</p>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{getName(provider.city) ?? '—'} · ⭐ {provider.averageRating?.toFixed(1) || '—'}</p>
+                      <div className="mt-3">
+                        {provider.isSuspended ? (
+                          <span className="inline-flex rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/20 dark:text-red-400">Suspended</span>
+                        ) : provider.isVerified ? (
+                          <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">Verified</span>
+                        ) : (
+                          <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">Pending</span>
+                        )}
+                      </div>
+                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{provider.createdAt ? format(new Date(provider.createdAt), 'MMM dd, yyyy') : '—'}</p>
+                    </div>
+                  </Link>
+                  <div className="flex gap-2 border-t border-gray-100 px-4 py-3 dark:border-gray-700">
+                    <Button variant="ghost" size="sm" className="flex-1 rounded-lg gap-1.5 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20" asChild>
+                      <Link to={`/providers/${provider.id}`}>
+                        <Eye className="h-4 w-4" /> View
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" className="flex-1 rounded-lg gap-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700" asChild>
+                      <Link to={`/providers/${provider.id}/edit`}>
+                        <Pencil className="h-4 w-4" /> Edit
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" className="rounded-lg gap-1.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => setDeleteTarget({ id: String(provider.id), name: getName(provider.businessName) })}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -210,13 +244,18 @@ export const ProvidersPage = () => {
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Rating</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Joined</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {filteredData.map((provider: any) => (
                     <tr key={provider.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{getName(provider.businessName)}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{getName(provider.owner?.name) || 'N/A'}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                        <Link to={`/providers/${provider.id}`} className="hover:text-orange-600 dark:hover:text-orange-400">
+                          {getName(provider.businessName)}
+                        </Link>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{getName(provider.owner?.name) || provider.user?.name || 'N/A'}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{getName(provider.city) ?? 'N/A'}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">⭐ {provider.averageRating?.toFixed(1) || 'N/A'}</td>
                       <td className="whitespace-nowrap px-6 py-4">
@@ -231,6 +270,19 @@ export const ProvidersPage = () => {
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                         {provider.createdAt ? format(new Date(provider.createdAt), 'MMM dd, yyyy') : '—'}
                       </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="sm" className="h-8 rounded-lg text-orange-600 hover:bg-orange-50 dark:text-orange-400" asChild>
+                            <Link to={`/providers/${provider.id}`}><Eye className="h-4 w-4" /></Link>
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 rounded-lg text-gray-600 dark:text-gray-400" asChild>
+                            <Link to={`/providers/${provider.id}/edit`}><Pencil className="h-4 w-4" /></Link>
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400" onClick={() => setDeleteTarget({ id: String(provider.id), name: getName(provider.businessName) })}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -239,6 +291,24 @@ export const ProvidersPage = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDeleteTarget(null)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Delete Provider?</h2>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Are you sure you want to delete &quot;{deleteTarget.name}&quot;? This will remove the provider profile. The user account will remain.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <Button variant="outline" onClick={() => setDeleteTarget(null)} className="rounded-xl flex-1">Cancel</Button>
+              <Button variant="destructive" onClick={handleDelete} className="rounded-xl flex-1" disabled={deleteMutation.isPending}>
+                {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

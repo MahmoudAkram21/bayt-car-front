@@ -3,10 +3,11 @@ import {
   LayoutDashboard,
   Users,
   Building2,
-  Package,
   Wrench,
   Calendar,
   DollarSign,
+  Wallet,
+  FileText,
   Settings,
 } from 'lucide-react';
 
@@ -14,10 +15,11 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Providers', href: '/providers', icon: Building2 },
-  { name: 'Categories', href: '/categories', icon: Package },
   { name: 'Services', href: '/services', icon: Wrench },
   { name: 'Bookings', href: '/bookings', icon: Calendar },
   { name: 'Commissions', href: '/commissions', icon: DollarSign },
+  { name: 'Wallets', href: '/wallets', icon: Wallet },
+  { name: 'Reports', href: '/reports', icon: FileText },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

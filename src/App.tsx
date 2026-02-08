@@ -8,14 +8,14 @@ import { LoginPage } from "./pages/auth/LoginPage";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { UsersPage } from "./pages/users/UsersPage";
 import { ProvidersPage } from "./pages/providers/ProvidersPage";
-import { CategoriesPage } from "./pages/services/CategoriesPage";
-import { CategoryDetailPage } from "./pages/services/CategoryDetailPage";
-import { CategoryEditPage } from "./pages/services/CategoryEditPage";
-import { CategoryNewPage } from "./pages/services/CategoryNewPage";
+import { ProviderDetailPage } from "./pages/providers/ProviderDetailPage";
+import { ProviderEditPage } from "./pages/providers/ProviderEditPage";
 import { ServicesPage } from "./pages/services/ServicesPage";
 import { ServiceDetailPage } from "./pages/services/ServiceDetailPage";
 import { BookingsPage } from "./pages/bookings/BookingsPage";
 import { CommissionsPage } from "./pages/commissions/CommissionsPage";
+import { WalletsPage } from "./pages/wallets/WalletsPage";
+import { ReportsPage } from "./pages/reports/ReportsPage";
 import { Err400Page } from "./pages/errors/Err400Page";
 import { Err403Page } from "./pages/errors/Err403Page";
 import { Err404Page } from "./pages/errors/Err404Page";
@@ -45,14 +45,14 @@ function App() {
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/providers" element={<ProvidersPage />} />
-                <Route path="/categories" element={<CategoriesPage />} />
-                <Route path="/categories/new" element={<CategoryNewPage />} />
-                <Route path="/categories/:id" element={<CategoryDetailPage />} />
-                <Route path="/categories/:id/edit" element={<CategoryEditPage />} />
+                <Route path="/providers/:id/edit" element={<ProviderEditPage />} />
+                <Route path="/providers/:id" element={<ProviderDetailPage />} />
                 <Route path="/services" element={<ServicesPage />} />
                 <Route path="/services/:id" element={<ServiceDetailPage />} />
                 <Route path="/bookings" element={<BookingsPage />} />
                 <Route path="/commissions" element={<CommissionsPage />} />
+                <Route path="/wallets" element={<WalletsPage />} />
+                <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/settings" element={
                   <div className="animate-fade-in flex flex-col items-center justify-center py-16">
                     <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
