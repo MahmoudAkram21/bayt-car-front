@@ -9,6 +9,13 @@ import {
   Wallet,
   FileText,
   Settings,
+  Gift,
+  Percent,
+  Receipt,
+  Tag,
+  Image,
+  Monitor,
+  FileCheck,
 } from 'lucide-react';
 
 const navigation = [
@@ -19,6 +26,13 @@ const navigation = [
   { name: 'Bookings', href: '/bookings', icon: Calendar },
   { name: 'Commissions', href: '/commissions', icon: DollarSign },
   { name: 'Wallets', href: '/wallets', icon: Wallet },
+  { name: 'Loyalty & Cashback', href: '/loyalty', icon: Gift },
+  { name: 'Commission Rules', href: '/commission-rules', icon: Percent },
+  { name: 'Tax Settings', href: '/tax', icon: Receipt },
+  { name: 'Promo Offers', href: '/promo', icon: Tag },
+  { name: 'Sliders', href: '/sliders', icon: Image },
+  { name: 'Splash Screens', href: '/splash', icon: Monitor },
+  { name: 'Invoices', href: '/invoices', icon: FileCheck },
   { name: 'Reports', href: '/reports', icon: FileText },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];

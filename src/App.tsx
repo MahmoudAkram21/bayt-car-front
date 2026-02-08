@@ -15,6 +15,13 @@ import { ServiceDetailPage } from "./pages/services/ServiceDetailPage";
 import { BookingsPage } from "./pages/bookings/BookingsPage";
 import { CommissionsPage } from "./pages/commissions/CommissionsPage";
 import { WalletsPage } from "./pages/wallets/WalletsPage";
+import { LoyaltyPage } from "./pages/loyalty/LoyaltyPage";
+import { CommissionRulesPage } from "./pages/commission-rules/CommissionRulesPage";
+import { TaxPage } from "./pages/tax/TaxPage";
+import { PromoPage } from "./pages/promo/PromoPage";
+import { SlidersPage } from "./pages/sliders/SlidersPage";
+import { SplashPage } from "./pages/splash/SplashPage";
+import { InvoicesPage } from "./pages/invoices/InvoicesPage";
 import { ReportsPage } from "./pages/reports/ReportsPage";
 import { Err400Page } from "./pages/errors/Err400Page";
 import { Err403Page } from "./pages/errors/Err403Page";
@@ -52,6 +59,13 @@ function App() {
                 <Route path="/bookings" element={<BookingsPage />} />
                 <Route path="/commissions" element={<CommissionsPage />} />
                 <Route path="/wallets" element={<WalletsPage />} />
+                <Route path="/loyalty" element={<LoyaltyPage />} />
+                <Route path="/commission-rules" element={<CommissionRulesPage />} />
+                <Route path="/tax" element={<TaxPage />} />
+                <Route path="/promo" element={<PromoPage />} />
+                <Route path="/sliders" element={<SlidersPage />} />
+                <Route path="/splash" element={<SplashPage />} />
+                <Route path="/invoices" element={<InvoicesPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/settings" element={
                   <div className="animate-fade-in flex flex-col items-center justify-center py-16">
