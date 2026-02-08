@@ -7,6 +7,7 @@ import { AdminLayout } from "./components/layout/AdminLayout";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { UsersPage } from "./pages/users/UsersPage";
+import { UserDetailPage } from "./pages/users/UserDetailPage";
 import { ProvidersPage } from "./pages/providers/ProvidersPage";
 import { ProviderDetailPage } from "./pages/providers/ProviderDetailPage";
 import { ProviderEditPage } from "./pages/providers/ProviderEditPage";
@@ -53,6 +54,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/users" element={<UsersPage />} />
+                <Route path="/users/:id" element={<UserDetailPage />} />
                 <Route path="/providers" element={<ProvidersPage />} />
                 <Route path="/providers/:id/edit" element={<ProviderEditPage />} />
                 <Route path="/providers/:id" element={<ProviderDetailPage />} />

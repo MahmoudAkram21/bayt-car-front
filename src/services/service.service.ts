@@ -42,4 +42,19 @@ export const serviceService = {
     const response = await api.patch<Service>(`/services/${id}`, { isActive: false });
     return response.data;
   },
+
+  // Attributes
+  async createAttribute(serviceId: string, data: any): Promise<any> {
+    const response = await api.post(`/services/${serviceId}/attributes`, data);
+    return response.data;
+  },
+
+  async updateAttribute(serviceId: string, attributeId: string, data: any): Promise<any> {
+    const response = await api.patch(`/services/${serviceId}/attributes/${attributeId}`, data);
+    return response.data;
+  },
+
+  async deleteAttribute(serviceId: string, attributeId: string): Promise<void> {
+    await api.delete(`/services/${serviceId}/attributes/${attributeId}`);
+  },
 };

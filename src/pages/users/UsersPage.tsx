@@ -8,10 +8,13 @@ import { UserRole } from '../../types';
 import { userService } from '../../services/user.service';
 import { format } from 'date-fns';
 
+import { useNavigate } from 'react-router-dom';
+
 type ViewMode = 'cards' | 'table';
 
 export const UsersPage = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
@@ -237,7 +240,8 @@ export const UsersPage = () => {
               {users.map((user: any) => (
                 <div
                   key={user.id}
-                  className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-teal-600"
+                  onClick={() => navigate(`/users/${user.id}`)}
+                  className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-teal-600 cursor-pointer"
                 >
                   <div className="flex h-28 items-center justify-center bg-gradient-to-br from-teal-500/10 to-teal-600/5 dark:from-teal-900/30 dark:to-teal-800/20">
                     <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-xl font-bold text-teal-600 dark:bg-teal-800/50 dark:text-teal-300">
@@ -289,7 +293,7 @@ export const UsersPage = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {users.map((user: any) => (
-                    <tr key={user.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <tr key={user.id} onClick={() => navigate(`/users/${user.id}`)} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer">
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{getName(user.name)}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{user.email}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{user.phone || 'N/A'}</td>

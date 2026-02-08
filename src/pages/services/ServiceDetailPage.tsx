@@ -1,24 +1,23 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Wrench, Tag, Coins, FileText, CheckCircle2, Hash, Calendar, Info, MapPin, Truck } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { ArrowLeft, Wrench, Tag, Coins, FileText, CheckCircle2, Hash, Info, MapPin, Truck, Plus, Trash2, Edit, X, Calendar } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { serviceService } from '../../services/service.service';
 import { serviceCategoryService } from '../../services/serviceCategory.service';
-import type { ServiceDetail } from '../../types';
 
-const getName = (name: ServiceDetail['name']) => {
+const getName = (name: any) => {
   if (typeof name === 'string') return name;
-  return (name as { en?: string; ar?: string })?.en || (name as { en?: string; ar?: string })?.ar || '—';
+  return name?.en || name?.ar || '—';
 };
 
-const getDesc = (desc: ServiceDetail['description']) => {
+const getDesc = (desc: any) => {
   if (desc == null) return '';
   if (typeof desc === 'string') return desc;
-  return (desc as { en?: string; ar?: string })?.en || (desc as { en?: string; ar?: string })?.ar || '';
+  return desc?.en || desc?.ar || '';
 };
 
 export const ServiceDetailPage = () => {
@@ -27,6 +26,15 @@ export const ServiceDetailPage = () => {
   const queryClient = useQueryClient();
   const [gpsRadius, setGpsRadius] = useState<string>('');
   const [categoryId, setCategoryId] = useState<string>('');
+
+  // Attribute Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingAttribute, setEditingAttribute] = useState<any>(null);
+  const [attrFormData, setAttrFormData] = useState({
+    labelEn: '',
+    labelAr: '',
+    options: [{ label: '', price: 0 }]
+  });
 
   const { data: service, isLoading, error } = useQuery({
     queryKey: ['service', id],
@@ -39,6 +47,7 @@ export const ServiceDetailPage = () => {
   });
   const categories = categoriesData?.data ?? [];
 
+  // Catalog Mutation
   const catalogMutation = useMutation({
     mutationFn: (payload: { category_id?: number | null; gps_radius_km?: number | null }) =>
       serviceService.updateServiceCatalog(id!, payload),
@@ -48,12 +57,102 @@ export const ServiceDetailPage = () => {
     },
   });
 
+  // Attribute Mutations
+  const createAttrMutation = useMutation({
+    mutationFn: (payload: any) => serviceService.createAttribute(id!, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service', id] });
+      setIsModalOpen(false);
+      resetForm();
+    }
+  });
+
+  const updateAttrMutation = useMutation({
+    mutationFn: (payload: { attrId: string; data: any }) => 
+      serviceService.updateAttribute(id!, payload.attrId, payload.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service', id] });
+      setIsModalOpen(false);
+      resetForm();
+    }
+  });
+
+  const deleteAttrMutation = useMutation({
+    mutationFn: (attrId: string) => serviceService.deleteAttribute(id!, attrId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service', id] });
+    }
+  });
+
   const handleSaveCatalog = () => {
     const payload: { category_id?: number | null; gps_radius_km?: number | null } = {};
     if (categoryId !== '') payload.category_id = categoryId === 'none' ? null : parseInt(categoryId, 10);
     if (gpsRadius !== '') payload.gps_radius_km = gpsRadius.trim() ? parseFloat(gpsRadius) : null;
     if (Object.keys(payload).length === 0) return;
     catalogMutation.mutate(payload);
+  };
+
+  // Attribute Handlers
+  const resetForm = () => {
+    setEditingAttribute(null);
+    setAttrFormData({ labelEn: '', labelAr: '', options: [{ label: '', price: 0 }] });
+  };
+
+  const openCreateModal = () => {
+    resetForm();
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (attr: any) => {
+    setEditingAttribute(attr);
+    // Parse label if object or string
+    const labelEn = typeof attr.label === 'string' ? attr.label : attr.label?.en || '';
+    const labelAr = typeof attr.label === 'string' ? attr.label : attr.label?.ar || '';
+    
+    // Map options
+    const options = attr.options?.map((opt: any) => ({
+      label: opt.label,
+      price: Number(opt.price_adjustment)
+    })) || [{ label: '', price: 0 }];
+
+    setAttrFormData({
+      labelEn: labelEn || labelAr, // Fallback
+      labelAr: labelAr || labelEn,
+      options: options.length ? options : [{ label: '', price: 0 }]
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleAttrSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = {
+      label: { en: attrFormData.labelEn, ar: attrFormData.labelAr || attrFormData.labelEn },
+      options: attrFormData.options.filter(o => o.label.trim() !== '')
+    };
+
+    if (editingAttribute) {
+      updateAttrMutation.mutate({ attrId: editingAttribute.id, data: payload });
+    } else {
+      createAttrMutation.mutate(payload);
+    }
+  };
+
+  const handleOptionChange = (index: number, field: 'label' | 'price', value: string | number) => {
+    const newOptions = [...attrFormData.options];
+    newOptions[index] = { ...newOptions[index], [field]: value };
+    setAttrFormData({ ...attrFormData, options: newOptions });
+  };
+
+  const addOption = () => {
+    setAttrFormData({
+      ...attrFormData,
+      options: [...attrFormData.options, { label: '', price: 0 }]
+    });
+  };
+
+  const removeOption = (index: number) => {
+    const newOptions = attrFormData.options.filter((_, i) => i !== index);
+    setAttrFormData({ ...attrFormData, options: newOptions });
   };
 
   const price = service?.base_price ?? service?.price;
@@ -79,7 +178,7 @@ export const ServiceDetailPage = () => {
   }
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in relative">
       {/* Back + Header */}
       <div className="mb-6 flex items-center gap-4">
         <Button
@@ -165,6 +264,73 @@ export const ServiceDetailPage = () => {
             </div>
           </Card>
 
+          {/* Attributes Management */}
+          <Card className="rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                  <CheckCircle2 className="h-5 w-5 text-teal-500" />
+                   Attributes & Pricing
+                </CardTitle>
+                <CardDescription>
+                  Configure attributes (e.g., Dish Size) and their price adjustments
+                </CardDescription>
+              </div>
+              <Button onClick={openCreateModal} size="sm" className="gap-2 bg-teal-600 hover:bg-teal-700 text-white shadow-sm">
+                <Plus className="h-4 w-4" /> Add Attribute
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {service.attributes && service.attributes.length > 0 ? (
+                <div className="space-y-4">
+                  {service.attributes.map((attr: any) => (
+                    <div key={attr.id} className="relative rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800/50 transition-all hover:border-teal-200 dark:hover:border-teal-800">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-semibold text-gray-900 dark:text-white text-lg">
+                            {typeof attr.label === 'string' ? attr.label : (attr.label?.en || attr.label?.ar)}
+                          </h4>
+                          {attr.options && attr.options.length > 0 ? (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {attr.options.map((opt: any) => (
+                                <span key={opt.id} className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+                                  {opt.label}
+                                  {Number(opt.price_adjustment) !== 0 && (
+                                    <span className="text-amber-600 dark:text-amber-400 font-bold ml-1">
+                                      {Number(opt.price_adjustment) > 0 ? '+' : ''}{Number(opt.price_adjustment)}
+                                    </span>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="mt-1 text-sm text-gray-500 italic">No options defined</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => openEditModal(attr)} className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => deleteAttrMutation.mutate(attr.id)} className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-12 dark:border-gray-700 dark:bg-gray-800/30">
+                  <div className="rounded-full bg-gray-100 p-3 dark:bg-gray-800">
+                    <CheckCircle2 className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <p className="mt-2 font-medium text-gray-900 dark:text-white">No attributes defined</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Add options like "Dish Size" or "Cable Length"</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Description */}
           {getDesc(service.description) && (
             <Card className="rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800">
@@ -214,42 +380,11 @@ export const ServiceDetailPage = () => {
                   </p>
                 </div>
               </div>
-              {service.createdAt && (
-                <div className="flex items-center gap-3 text-sm">
-                  <Calendar className="h-4 w-4 text-teal-500 shrink-0" />
-                  <div>
-                    <p className="font-medium text-gray-500 dark:text-gray-400">Created</p>
-                    <p className="text-gray-900 dark:text-white">
-                      {new Date(service.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {service.updatedAt && (
-                <div className="flex items-center gap-3 text-sm">
-                  <Calendar className="h-4 w-4 text-teal-500 shrink-0" />
-                  <div>
-                    <p className="font-medium text-gray-500 dark:text-gray-400">Updated</p>
-                    <p className="text-gray-900 dark:text-white">
-                      {new Date(service.updatedAt).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              )}
               {service.category && (
                 <div className="flex items-center gap-3 text-sm">
                   <div>
                     <p className="font-medium text-gray-500 dark:text-gray-400">الفئة</p>
                     <p className="text-gray-900 dark:text-white">{service.category?.name_ar ?? '—'}</p>
-                  </div>
-                </div>
-              )}
-              {service.gps_radius_km != null && (
-                <div className="flex items-center gap-3 text-sm">
-                  <MapPin className="h-4 w-4 text-teal-500 shrink-0" />
-                  <div>
-                    <p className="font-medium text-gray-500 dark:text-gray-400">نطاق GPS</p>
-                    <p className="text-gray-900 dark:text-white">{service.gps_radius_km} كم</p>
                   </div>
                 </div>
               )}
@@ -323,49 +458,92 @@ export const ServiceDetailPage = () => {
               </CardContent>
             </Card>
           )}
-
-          <Card className="rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
-                <CheckCircle2 className="h-5 w-5 text-teal-500" />
-                Options & Attributes
-              </CardTitle>
-              <CardDescription>
-                Choices available when booking this service
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {service.attributes && service.attributes.length > 0 ? (
-                <ul className="space-y-4">
-                  {service.attributes.map((attr) => (
-                    <li key={attr.id} className="rounded-xl border border-gray-200 bg-gray-50/50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
-                      <p className="font-medium text-gray-900 dark:text-white">{attr.label}</p>
-                      {attr.options && attr.options.length > 0 && (
-                        <ul className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                          {attr.options.map((opt) => (
-                            <li key={opt.id} className="flex items-center justify-between">
-                              <span>{opt.label}</span>
-                              {opt.price_adjustment != null && Number(opt.price_adjustment) !== 0 && (
-                                <span className="text-amber-600 dark:text-amber-400">
-                                  +{Number(opt.price_adjustment).toFixed(2)} ر.س
-                                </span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No attributes defined for this service.
-                </p>
-              )}
-            </CardContent>
-          </Card>
         </div>
       </div>
+
+      {/* Attribute Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <Card className="w-full max-w-lg shadow-2xl rounded-2xl max-h-[90vh] overflow-y-auto">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-gray-100 dark:border-gray-800">
+              <CardTitle>{editingAttribute ? 'Edit Attribute' : 'Add New Attribute'}</CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)}>
+                <X className="h-5 w-5" />
+              </Button>
+            </CardHeader>
+            <form onSubmit={handleAttrSubmit}>
+              <CardContent className="space-y-6 pt-6">
+                <div className="space-y-2">
+                  <Label>Attribute Name</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-500">English</Label>
+                      <Input 
+                        value={attrFormData.labelEn}
+                        onChange={(e) => setAttrFormData({...attrFormData, labelEn: e.target.value})}
+                        placeholder="e.g. Dish Size"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-500">Arabic</Label>
+                      <Input 
+                        value={attrFormData.labelAr}
+                        onChange={(e) => setAttrFormData({...attrFormData, labelAr: e.target.value})}
+                        placeholder="مثال: حجم الدش"
+                        className="text-right"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Options</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={addOption} className="h-7 text-xs">
+                      <Plus className="h-3 w-3 mr-1" /> Add Option
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    {attrFormData.options.map((option, index) => (
+                      <div key={index} className="flex gap-3 items-end">
+                         <div className="flex-1 space-y-1">
+                           <Label className="text-xs text-gray-500">Label</Label>
+                           <Input 
+                             value={option.label}
+                             onChange={(e) => handleOptionChange(index, 'label', e.target.value)}
+                             placeholder="e.g. 60cm"
+                             required
+                           />
+                         </div>
+                         <div className="w-28 space-y-1">
+                           <Label className="text-xs text-gray-500">Added Price</Label>
+                           <Input 
+                             type="number"
+                             value={option.price}
+                             onChange={(e) => handleOptionChange(index, 'price', parseFloat(e.target.value))}
+                             placeholder="0"
+                           />
+                         </div>
+                         <Button type="button" variant="ghost" size="icon" onClick={() => removeOption(index)} className="h-10 w-10 text-red-500 hover:bg-red-50">
+                           <Trash2 className="h-4 w-4" />
+                         </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-end border-t border-gray-100 dark:border-gray-800 pt-4">
+                <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="mr-2">Cancel</Button>
+                <Button type="submit" disabled={createAttrMutation.isPending || updateAttrMutation.isPending}>
+                  {editingAttribute ? 'Save Changes' : 'Create Attribute'}
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
+
