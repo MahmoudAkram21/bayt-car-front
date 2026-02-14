@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { MapPin, Package, Wrench, RefreshCw } from 'lucide-react';
+import { MapPin, Package, Wrench } from 'lucide-react';
 import { serviceCategoryService, type ServiceCategory } from '../../services/serviceCategory.service';
 import { serviceService } from '../../services/service.service';
 
@@ -77,7 +77,7 @@ export const DeliveryPage = () => {
       </Card>
 
       {/* List: الخدمات */}
-      <Card className="overflow-hidden rounded-2xl border-gray-200 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+      <Card className="overflow-hidden rounded-2xl border-gray-200 bg-white/80 shadow-lg backdrop-blur-xl dark:border-gray-700 dark:bg-gray-800/80">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <Package className="h-5 w-5 text-amber-500" />
@@ -99,37 +99,37 @@ export const DeliveryPage = () => {
             </div>
           )}
           {!svcLoading && services.length > 0 && (
-            <ul className="space-y-3">
+            <ul className="grid gap-4 sm:grid-cols-2">
               {services.map((s: any) => (
                 <li
                   key={s.id}
-                  className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50/50 p-4 dark:border-gray-700 dark:bg-gray-900/40"
+                  className="group flex flex-col justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50/50 p-4 transition-all hover:bg-white hover:shadow-md dark:border-gray-700 dark:bg-gray-900/40 dark:hover:bg-gray-800"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
-                      <Wrench className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                      <Wrench className="h-6 w-6" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{getName(s.name)}</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">{getName(s.name)}</p>
                       {s.description && (
-                        <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{s.description}</p>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{s.description}</p>
                       )}
-                      <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                        {s.gps_radius_km != null && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3.5 w-3.5" />
-                            نطاق {s.gps_radius_km} كم
+                      
+                      <div className="mt-3 flex flex-wrap gap-2">
+                         {s.gps_radius_km != null && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-medium text-gray-600 shadow-sm dark:bg-gray-800 dark:text-gray-300">
+                            <MapPin className="h-3 w-3" /> {s.gps_radius_km} كم
                           </span>
                         )}
                         {s.is_negotiable && (
-                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                          <span className="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
                             تفاوضي
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-lg" asChild>
+                  <Button variant="outline" size="sm" className="w-full rounded-lg hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-900/20" asChild>
                     <a href={`/services/${s.id}`}>عرض التفاصيل</a>
                   </Button>
                 </li>

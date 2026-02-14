@@ -1,5 +1,7 @@
 /** @format */
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import "./lib/i18n";
 import { Routes, Route } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -26,6 +28,7 @@ import { InvoicesPage } from "./pages/invoices/InvoicesPage";
 import { DeliveryPage } from "./pages/delivery/DeliveryPage";
 import { FurnitureDeliveryPage } from "./pages/furniture-delivery/FurnitureDeliveryPage";
 import { ReportsPage } from "./pages/reports/ReportsPage";
+import { SettingsPage } from "./pages/settings/Settings";
 import { Err400Page } from "./pages/errors/Err400Page";
 import { Err403Page } from "./pages/errors/Err403Page";
 import { Err404Page } from "./pages/errors/Err404Page";
@@ -35,9 +38,16 @@ import "./App.css";
 function App() {
   const hydrate = useAuthStore((state) => state.hydrate);
 
+  const { i18n } = useTranslation();
+
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  useEffect(() => {
+    document.dir = i18n.dir();
+    document.documentElement.lang = i18n.language;
+  }, [i18n, i18n.language]);
 
   return (
     <Routes>
@@ -73,15 +83,7 @@ function App() {
                 <Route path="/splash" element={<SplashPage />} />
                 <Route path="/invoices" element={<InvoicesPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
-                <Route path="/settings" element={
-                  <div className="animate-fade-in flex flex-col items-center justify-center py-16">
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
-                      <svg className="h-12 w-12 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    </div>
-                    <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">Settings</p>
-                    <p className="mt-2 max-w-md text-center text-gray-500 dark:text-gray-400">Settings page coming soon.</p>
-                  </div>
-                } />
+                <Route path="/settings" element={<SettingsPage />} />
               </Routes>
             </AdminLayout>
           </ProtectedRoute>

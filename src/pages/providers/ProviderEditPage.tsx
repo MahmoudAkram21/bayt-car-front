@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
+
 import { Label } from '../../components/ui/label';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useState, useEffect } from 'react';

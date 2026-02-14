@@ -27,29 +27,37 @@ export const WalletsPage = () => {
       </div>
 
       {/* Stats */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <div className="overflow-hidden rounded-2xl border border-violet-200 bg-violet-50 shadow-sm dark:border-violet-800 dark:bg-violet-900/20">
-          <div className="flex items-center justify-between p-5">
+      <div className="mb-6 grid gap-6 sm:grid-cols-3">
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Wallets</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{wallets.length}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Wallets</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{wallets.length}</p>
             </div>
-            <Wallet className="h-10 w-10 text-violet-600 dark:text-violet-400" />
-          </div>
-        </div>
-        <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/20">
-          <div className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Balance</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{totalBalance.toFixed(2)} ر.س</p>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400">
+              <Wallet className="h-6 w-6" />
             </div>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-amber-200 bg-amber-50 shadow-sm dark:border-amber-800 dark:bg-amber-900/20">
-          <div className="flex items-center justify-between p-5">
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Frozen</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{totalFrozen.toFixed(2)} ر.س</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Balance</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{totalBalance.toFixed(2)} <span className="text-sm font-normal text-gray-500">SAR</span></p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
+              <Building2 className="h-6 w-6" />
+            </div>
+          </div>
+        </div>
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Frozen</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{totalFrozen.toFixed(2)} <span className="text-sm font-normal text-gray-500">SAR</span></p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400">
+              <User className="h-6 w-6" />
             </div>
           </div>
         </div>

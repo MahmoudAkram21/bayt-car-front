@@ -42,44 +42,46 @@ export const CommissionsPage = () => {
         </p>
       </div>
 
-      {/* Stats Cards — Design System: rounded-2xl, semantic colors */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="overflow-hidden rounded-2xl border border-red-200 bg-red-50 shadow-sm dark:border-red-800 dark:bg-red-900/20">
-          <div className="flex items-center justify-between p-5">
+      {/* Stats Cards */}
+      <div className="mb-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Unpaid</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Unpaid</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
                 ${stats?.totalUnpaid?.toFixed(2) || '0.00'}
               </p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 shadow-sm">
-              <DollarSign className="h-6 w-6 text-red-600 dark:text-red-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400">
+              <DollarSign className="h-6 w-6" />
             </div>
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/20">
-          <div className="flex items-center justify-between p-5">
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Paid</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Paid</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
                 ${stats?.totalPaid?.toFixed(2) || '0.00'}
               </p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 shadow-sm">
-              <DollarSign className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
+              <DollarSign className="h-6 w-6" />
             </div>
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-amber-200 bg-amber-50 shadow-sm dark:border-amber-800 dark:bg-amber-900/20">
-          <div className="flex items-center justify-between p-5">
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Suspended Providers</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats?.suspendedProviders || 0}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Suspended Providers</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
+                {stats?.suspendedProviders || 0}
+              </p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 shadow-sm">
-              <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400">
+              <AlertTriangle className="h-6 w-6" />
             </div>
           </div>
         </div>

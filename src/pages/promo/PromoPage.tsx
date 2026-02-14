@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { promoService, type PromoOffer, type OfferType, type OfferScope } from '../../services/promo.service';
-import { Tag, Percent, Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
+import { Tag, Percent, Plus, Pencil, Trash2, RefreshCw, CheckCircle2, Ticket, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 
 const TYPE_OPTIONS: { value: OfferType; label: string }[] = [
@@ -109,22 +109,36 @@ export const PromoPage = () => {
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-            العروض الترويجية
-          </h1>
-          <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">
-            أكواد الخصم: نسبة أو مبلغ ثابت، صلاحية، حد الاستخدام. نطاق: الكل أو خدمة محددة.
-          </p>
+    <div className="animate-fade-in space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-lg text-white">
+             <Tag className="h-6 w-6" />
+           </div>
+           <div>
+             <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+               العروض الترويجية
+             </h1>
+             <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
+               إدارة أكواد الخصم والعروض الخاصة
+             </p>
+           </div>
         </div>
         <div className="flex shrink-0 gap-2">
-          <Button variant="outline" size="sm" className="rounded-xl gap-2" onClick={() => queryClient.invalidateQueries({ queryKey: ['promo-offers'] })}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="rounded-xl gap-2 hover:bg-white/50 hover:text-rose-600 dark:hover:bg-gray-800/50 dark:hover:text-rose-400" 
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['promo-offers'] })}
+          >
             <RefreshCw className="h-4 w-4" />
             تحديث
           </Button>
-          <Button size="sm" className="rounded-xl bg-rose-600 gap-2 hover:bg-rose-700" onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm()); }}>
+          <Button 
+            size="sm" 
+            className="rounded-xl bg-rose-600 gap-2 hover:bg-rose-700 shadow-lg shadow-rose-600/20" 
+            onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm()); }}
+          >
             <Plus className="h-4 w-4" />
             إضافة عرض
           </Button>
@@ -132,67 +146,70 @@ export const PromoPage = () => {
       </div>
 
       {showForm && (
-        <Card className="mb-6 rounded-2xl border-rose-200 dark:border-rose-800">
-          <CardHeader className="pb-3">
+        <Card className="border-rose-100 bg-rose-50/50 backdrop-blur-sm dark:border-rose-900/50 dark:bg-rose-900/10">
+          <CardHeader>
             <CardTitle className="text-lg text-gray-900 dark:text-white">{editingId ? 'تعديل العرض الترويجي' : 'إضافة عرض ترويجي جديد'}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div>
+            <form onSubmit={handleSubmit} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-2">
                 <Label>الكود</Label>
-                <Input value={form.code} onChange={(e) => setForm((p) => ({ ...p, code: e.target.value.toUpperCase() }))} placeholder="SUMMER20" className="mt-1 rounded-lg font-mono" required />
+                <div className="relative">
+                  <Tag className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Input value={form.code} onChange={(e) => setForm((p) => ({ ...p, code: e.target.value.toUpperCase() }))} placeholder="SUMMER20" className="bg-white pr-9 font-mono uppercase dark:bg-gray-800" required />
+                </div>
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label>النوع</Label>
-                <select value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value as OfferType }))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" required>
+                <select value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value as OfferType }))} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white" required>
                   {TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label>القيمة (نسبة أو مبلغ)</Label>
-                <Input type="number" step="0.01" min="0" value={form.value} onChange={(e) => setForm((p) => ({ ...p, value: e.target.value }))} className="mt-1 rounded-lg" required />
+                <Input type="number" step="0.01" min="0" value={form.value} onChange={(e) => setForm((p) => ({ ...p, value: e.target.value }))} className="bg-white dark:bg-gray-800" required />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label>الحد الأدنى للطلب (اختياري)</Label>
-                <Input type="number" min="0" value={form.min_order_amount} onChange={(e) => setForm((p) => ({ ...p, min_order_amount: e.target.value }))} className="mt-1 rounded-lg" />
+                <Input type="number" min="0" value={form.min_order_amount} onChange={(e) => setForm((p) => ({ ...p, min_order_amount: e.target.value }))} className="bg-white dark:bg-gray-800" />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label>الحد الأقصى للخصم (اختياري)</Label>
-                <Input type="number" min="0" value={form.max_discount} onChange={(e) => setForm((p) => ({ ...p, max_discount: e.target.value }))} className="mt-1 rounded-lg" />
+                <Input type="number" min="0" value={form.max_discount} onChange={(e) => setForm((p) => ({ ...p, max_discount: e.target.value }))} className="bg-white dark:bg-gray-800" />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label>صالح من (اختياري)</Label>
-                <Input type="datetime-local" value={form.valid_from} onChange={(e) => setForm((p) => ({ ...p, valid_from: e.target.value }))} className="mt-1 rounded-lg" />
+                <Input type="datetime-local" value={form.valid_from} onChange={(e) => setForm((p) => ({ ...p, valid_from: e.target.value }))} className="bg-white dark:bg-gray-800" />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label>صالح حتى (اختياري)</Label>
-                <Input type="datetime-local" value={form.valid_to} onChange={(e) => setForm((p) => ({ ...p, valid_to: e.target.value }))} className="mt-1 rounded-lg" />
+                <Input type="datetime-local" value={form.valid_to} onChange={(e) => setForm((p) => ({ ...p, valid_to: e.target.value }))} className="bg-white dark:bg-gray-800" />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label>حد الاستخدام (اختياري)</Label>
-                <Input type="number" min="0" value={form.usage_limit} onChange={(e) => setForm((p) => ({ ...p, usage_limit: e.target.value }))} className="mt-1 rounded-lg" />
+                <Input type="number" min="0" value={form.usage_limit} onChange={(e) => setForm((p) => ({ ...p, usage_limit: e.target.value }))} className="bg-white dark:bg-gray-800" />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label>النطاق</Label>
-                <select value={form.scope} onChange={(e) => setForm((p) => ({ ...p, scope: e.target.value as OfferScope }))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                <select value={form.scope} onChange={(e) => setForm((p) => ({ ...p, scope: e.target.value as OfferScope }))} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
                   {SCOPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
-              <div>
-                <Label>معرف الخدمة (إن كان النطاق خدمة محددة)</Label>
-                <Input type="number" min="0" value={form.entity_id} onChange={(e) => setForm((p) => ({ ...p, entity_id: e.target.value }))} className="mt-1 rounded-lg" />
+              <div className="space-y-2">
+                <Label>معرف الخدمة (للنطاق المحدد)</Label>
+                <Input type="number" min="0" value={form.entity_id} onChange={(e) => setForm((p) => ({ ...p, entity_id: e.target.value }))} className="bg-white dark:bg-gray-800" placeholder="ID الخدمة" />
               </div>
-              <div className="flex items-end gap-2">
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} className="rounded border-gray-300" />
-                  مفعّل
+              <div className="flex items-center pb-2">
+                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500" />
+                  مفعّل ونشط
                 </label>
               </div>
-              <div className="flex items-end gap-2 sm:col-span-2">
-                <Button type="submit" size="sm" className="rounded-lg" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingId ? 'حفظ التعديل' : 'إضافة'}
+              <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-1">
+                <Button type="submit" size="sm" className="w-full rounded-xl bg-rose-600 hover:bg-rose-700" disabled={createMutation.isPending || updateMutation.isPending}>
+                  {editingId ? 'حفظ' : 'إضافة'}
                 </Button>
-                <Button type="button" variant="outline" size="sm" className="rounded-lg" onClick={() => { setShowForm(false); setEditingId(null); setForm(emptyForm()); }}>
+                <Button type="button" variant="outline" size="sm" className="w-full rounded-xl" onClick={() => { setShowForm(false); setEditingId(null); setForm(emptyForm()); }}>
                   إلغاء
                 </Button>
               </div>
@@ -201,34 +218,53 @@ export const PromoPage = () => {
         </Card>
       )}
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2">
-        <div className="overflow-hidden rounded-2xl border border-rose-200 bg-rose-50 shadow-sm dark:border-rose-800 dark:bg-rose-900/20">
-          <div className="flex items-center justify-between p-5">
+      {/* Stats Cards */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجمالي العروض</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{offers.length}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي العروض</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{offers.length}</p>
             </div>
-            <Tag className="h-10 w-10 text-rose-600 dark:text-rose-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400">
+              <Ticket className="h-6 w-6" />
+            </div>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/20">
-          <div className="flex items-center justify-between p-5">
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">النشطة</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{activeCount}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">العروض النشطة</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{activeCount}</p>
             </div>
-            <Percent className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
+              <CheckCircle2 className="h-6 w-6" />
+            </div>
+          </div>
+        </div>
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
+             <div>
+               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">نوع الخصم</p>
+               <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                  <span className="font-semibold">{offers.filter((o: any) => o.type === 'PERCENTAGE').length}</span> نسبة / 
+                  <span className="font-semibold"> {offers.filter((o: any) => o.type === 'FIXED').length}</span> ثابت
+               </div>
+             </div>
+             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">
+               <Percent className="h-6 w-6" />
+             </div>
           </div>
         </div>
       </div>
 
-      <Card className="overflow-hidden rounded-2xl border-gray-200 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+      <Card className="overflow-hidden rounded-2xl border-gray-200 bg-white/60 shadow-lg backdrop-blur-xl dark:border-gray-700 dark:bg-gray-800/60">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <Tag className="h-5 w-5 text-rose-500" />
-            جميع العروض
+            قائمة العروض
           </CardTitle>
-          <CardDescription>الكود، النوع، القيمة، الصلاحية، الاستخدام</CardDescription>
+          <CardDescription>إدارة وتتبع استخدام كود الخصم</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading && (
@@ -237,47 +273,73 @@ export const PromoPage = () => {
             </div>
           )}
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 py-8 text-center text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+            <div className="py-8 text-center text-red-600 dark:text-red-400">
               فشل تحميل العروض.
             </div>
           )}
           {!isLoading && !error && offers.length === 0 && (
-            <div className="py-12 text-center text-gray-500 dark:text-gray-400">لا توجد عروض بعد. استخدم &quot;إضافة عرض&quot; أعلاه.</div>
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-900/20">
+                <Ticket className="h-8 w-8 text-rose-300 dark:text-rose-600" />
+              </div>
+              <p className="mt-4 text-gray-500 dark:text-gray-400">لا توجد عروض ترويجية.</p>
+            </div>
           )}
           {!isLoading && offers.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-100 dark:bg-gray-700/70">
+                <thead className="bg-gray-100/50 dark:bg-gray-700/40">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">الكود</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">النوع</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">القيمة</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">صالح حتى</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">الاستخدام</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">الحالة</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">إجراءات</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الكود</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">القيمة</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الصلاحية</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الاستخدام</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الحالة</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجراءات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {offers.map((o: PromoOffer) => (
-                    <tr key={o.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                      <td className="whitespace-nowrap px-6 py-4 font-mono text-sm font-medium text-gray-900 dark:text-white">{o.code}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{o.type === 'PERCENTAGE' ? 'نسبة' : 'ثابت'}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">{o.type === 'PERCENTAGE' ? `${Number(o.value)}%` : Number(o.value)}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{o.valid_to ? format(new Date(o.valid_to), 'PP') : '—'}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">{o.usage_count}{o.usage_limit != null ? ` / ${o.usage_limit}` : ''}</td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${o.is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
-                          {o.is_active ? 'نشط' : 'غير نشط'}
+                    <tr key={o.id} className="transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                           <span className="flex h-8 items-center justify-center rounded-md bg-rose-100 px-2 font-mono text-sm font-bold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                             {o.code}
+                           </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                           {o.type === 'PERCENTAGE' ? `${Number(o.value)}%` : `${Number(o.value)} ر.س`}
+                        </div>
+                        <div className="text-xs text-gray-500">{o.type === 'PERCENTAGE' ? 'نسبة' : 'ثابت'}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
+                           <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                           {o.valid_to ? format(new Date(o.valid_to), 'PP') : 'مفتوح'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                           <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                              {o.usage_count} {o.usage_limit ? `/ ${o.usage_limit}` : ''}
+                           </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${o.is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${o.is_active ? 'bg-emerald-500' : 'bg-gray-500'}`} />
+                          {o.is_active ? 'نشط' : 'معطل'}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 flex gap-1">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0" onClick={() => startEdit(o)} title="تعديل">
-                          <Pencil className="h-4 w-4 text-rose-600" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => handleDelete(o.id)} title="حذف">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/20 dark:hover:text-rose-400" onClick={() => startEdit(o)} title="تعديل">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleDelete(o.id)} title="حذف">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}

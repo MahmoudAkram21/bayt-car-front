@@ -1,0 +1,26 @@
+{
+  "common": {
+    "dashboard": "لوحة التحكم",
+    "users": "المستخدمين",
+    "providers": "مقدمي الخدمة",
+    "services": "الخدمات",
+    "deliveries": "التوصيل",
+    "bookings": "الحجوزات",
+    "commissions": "العمولات",
+    "wallets": "المحافظ",
+    "invoices": "الفواتير",
+    "reports": "التقارير",
+    "loyalty": "الولاء والاسترداد النقدي",
+    "promo": "العروض الترويجية",
+    "commissionRules": "قواعد العمولة",
+    "tax": "إعدادات الضريبة",
+    "sliders": "اللافتات",
+    "splash": "شاشات الترحيب",
+    "settings": "الإعدادات",
+    "logout": "تسجيل الخروج",
+    "overview": "نظرة عامة",
+    "management": "الإدارة",
+    "finance": "المالية",
+    "marketingConfig": "التسويق والإعدادات"
+  }
+}

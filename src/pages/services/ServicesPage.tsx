@@ -70,16 +70,42 @@ export const ServicesPage = () => {
         </div>
       </div>
 
-      {/* Stat card */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm dark:border-gray-600 dark:bg-gray-800/50">
-          <div className="flex items-center justify-between p-5">
+      {/* Stats Grid */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Services</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{total}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Services</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{total}</p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-700/80 shadow-sm">
-              <Wrench className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-100 text-teal-600 dark:bg-teal-900/40 dark:text-teal-400">
+              <Wrench className="h-6 w-6" />
+            </div>
+          </div>
+        </div>
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Fixed Price</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
+                {servicesRaw.filter((s: Service) => s.pricing_type === 'FIXED' || s.pricing_type === 'PER_UNIT').length}
+              </p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">
+              <span className="text-lg font-bold">$</span>
+            </div>
+          </div>
+        </div>
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Negotiable/Other</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
+                {servicesRaw.filter((s: Service) => s.pricing_type !== 'FIXED' && s.pricing_type !== 'PER_UNIT').length}
+              </p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400">
+              <MapPin className="h-6 w-6" />
             </div>
           </div>
         </div>

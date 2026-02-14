@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { dashboardService } from '../../services/dashboard.service';
-import { Users, Building2, Calendar, DollarSign, TrendingUp, PieChart, Wallet, FileText } from 'lucide-react';
+import { 
+  Users, Building2, Calendar, DollarSign, TrendingUp, 
+  Wallet, FileText, Plus, Activity, Bell
+} from 'lucide-react';
 import {
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -14,7 +15,10 @@ import {
   Pie,
   Cell,
   Legend,
+  AreaChart,
+  Area
 } from 'recharts';
+import { Button } from '../../components/ui/button';
 
 const CHART_COLORS = ['#f97316', '#10b981', '#3b82f6', '#eab308'];
 const PIE_COLORS = ['#3b82f6', '#10b981', '#f97316'];
@@ -25,63 +29,61 @@ export const DashboardPage = () => {
     queryFn: () => dashboardService.getStats(),
   });
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
   const statCards = [
     {
       label: 'Total Users',
       value: stats?.totalUsers ?? '—',
       sub: 'All platform users',
       icon: Users,
-      border: 'border-slate-200 dark:border-slate-700',
-      bg: 'bg-slate-50 dark:bg-slate-900/30',
-      iconBg: 'bg-slate-100 dark:bg-slate-800',
+      color: 'text-blue-600 dark:text-blue-400',
+      bg: 'bg-blue-100 dark:bg-blue-900/30',
+      trend: '+12% from last month',
+      trendUp: true
     },
     {
       label: 'Active Providers',
       value: stats?.activeProviders ?? '—',
       sub: 'Verified providers',
       icon: Building2,
-      border: 'border-emerald-200 dark:border-emerald-800',
-      bg: 'bg-emerald-50 dark:bg-emerald-900/20',
-      iconBg: 'bg-emerald-100 dark:bg-emerald-800/50',
+      color: 'text-emerald-600 dark:text-emerald-400',
+      bg: 'bg-emerald-100 dark:bg-emerald-900/30',
+      trend: '+5% new providers',
+      trendUp: true
     },
     {
       label: 'Total Bookings',
       value: stats?.totalBookings ?? '—',
       sub: 'All time bookings',
       icon: Calendar,
-      border: 'border-blue-200 dark:border-blue-800',
-      bg: 'bg-blue-50 dark:bg-blue-900/20',
-      iconBg: 'bg-blue-100 dark:bg-blue-800/50',
+      color: 'text-violet-600 dark:text-violet-400',
+      bg: 'bg-violet-100 dark:bg-violet-900/30',
+      trend: '85 pending today',
+      trendUp: true
     },
     {
       label: 'Revenue',
-      value: isLoading ? '—' : stats != null ? `${Number(stats.platformRevenue).toFixed(2)} ر.س` : '—',
-      sub: 'Platform revenue',
+      value: isLoading ? '—' : stats != null ? `${Number(stats.platformRevenue).toFixed(2)}` : '—',
+      sub: 'SAR',
       icon: DollarSign,
-      border: 'border-amber-200 dark:border-amber-800',
-      bg: 'bg-amber-50 dark:bg-amber-900/20',
-      iconBg: 'bg-amber-100 dark:bg-amber-800/50',
+      color: 'text-orange-600 dark:text-orange-400',
+      bg: 'bg-orange-100 dark:bg-orange-900/30',
+      trend: '+18% vs last week',
+      trendUp: true
     },
-    {
-      label: 'Wallets',
-      value: stats?.totalWallets ?? '—',
-      sub: `Balance: ${stats != null ? Number(stats.totalWalletBalance ?? 0).toFixed(0) : '0'} ر.س`,
-      icon: Wallet,
-      border: 'border-violet-200 dark:border-violet-800',
-      bg: 'bg-violet-50 dark:bg-violet-900/20',
-      iconBg: 'bg-violet-100 dark:bg-violet-800/50',
-      href: '/wallets',
-    },
-    {
-      label: 'Reports',
-      value: stats?.totalReports ?? '—',
-      sub: 'Saved reports',
-      icon: FileText,
-      border: 'border-rose-200 dark:border-rose-800',
-      bg: 'bg-rose-50 dark:bg-rose-900/20',
-      iconBg: 'bg-rose-100 dark:bg-rose-800/50',
-      href: '/reports',
-    },
+  ];
+
+  const quickActions = [
+    { name: 'Add Provider', href: '/providers', icon: Plus, color: 'bg-emerald-500' },
+    { name: 'New Invoice', href: '/invoices', icon: FileText, color: 'bg-blue-500' },
+    { name: 'Wallet Adjustment', href: '/wallets', icon: Wallet, color: 'bg-violet-500' },
+    { name: 'System Settings', href: '/settings', icon: Activity, color: 'bg-gray-500' },
   ];
 
   const barData = stats
@@ -102,155 +104,155 @@ export const DashboardPage = () => {
     : [];
 
   return (
-    <div className="animate-fade-in">
-      {/* Page Header */}
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-          Dashboard Overview
-        </h1>
-        <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">
-          Monitor users, providers, bookings, and platform revenue at a glance.
-        </p>
-      </div>
-
-      {/* Animated Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {statCards.map((card, i) => {
-          const content = (
-            <div className="p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {card.label}
-              </p>
-              <div className="mt-2 flex items-center gap-3">
-                <div
-                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm ${card.iconBg}`}
-                >
-                  <card.icon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                </div>
-                <p className="text-2xl font-bold tabular-nums text-gray-900 dark:text-white sm:text-3xl">
-                  {card.value}
-                </p>
-              </div>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{card.sub}</p>
-            </div>
-          );
-          const className = `
-            dashboard-stat-card animate-card-enter overflow-hidden rounded-2xl border shadow-sm
-            ${card.border} ${card.bg}
-            ${i === 0 ? '' : i === 1 ? 'animate-card-enter-delay-1' : i === 2 ? 'animate-card-enter-delay-2' : i === 3 ? 'animate-card-enter-delay-3' : i === 4 ? 'animate-card-enter-delay-4' : 'animate-card-enter-delay-4'}
-          `;
-          return (card as { href?: string }).href ? (
-            <Link key={card.label} to={(card as { href: string }).href} className={`block transition hover:opacity-90 ${className}`}>
-              {content}
-            </Link>
-          ) : (
-            <div key={card.label} className={className}>
-              {content}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Charts Row */}
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        {/* Bar Chart */}
-        <div className="animate-chart-enter overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-6">
-          <div className="mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-teal-500" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Metrics Overview
-            </h2>
-          </div>
-          {isLoading || barData.length === 0 ? (
-            <div className="flex h-64 items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-900/50">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {isLoading ? 'Loading…' : 'No data yet'}
-              </p>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={barData} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: 'currentColor', fontSize: 12 }}
-                  className="text-gray-600 dark:text-gray-400"
-                />
-                <YAxis
-                  tick={{ fill: 'currentColor', fontSize: 12 }}
-                  className="text-gray-600 dark:text-gray-400"
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: '12px',
-                    border: '1px solid var(--border)',
-                    backgroundColor: 'var(--card)',
-                  }}
-                  formatter={(value: number) => [value, '']}
-                />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        {/* Pie Chart */}
-        <div className="animate-chart-enter overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-6">
-          <div className="mb-4 flex items-center gap-2">
-            <PieChart className="h-5 w-5 text-emerald-500" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Distribution
-            </h2>
-          </div>
-          {isLoading || pieData.length === 0 ? (
-            <div className="flex h-64 items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-900/50">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {isLoading ? 'Loading…' : 'No data yet'}
-              </p>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <RechartsPie>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={2}
-                  dataKey="value"
-                  nameKey="name"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: '12px',
-                    border: '1px solid var(--border)',
-                    backgroundColor: 'var(--card)',
-                  }}
-                  formatter={(value: number, name: string) => [value, name]}
-                />
-                <Legend />
-              </RechartsPie>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </div>
-
-      {/* Welcome Card */}
-      <div className="animate-chart-enter mt-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-        <div className="p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Welcome to Bayt Car Admin
-          </h2>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Use the sidebar to manage users, providers, services, bookings, commissions, wallets, and reports.
-            Wallets are for clients and providers; admin can view all and generate reports.
+    <div className="animate-fade-in space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+            {getGreeting()}, Admin
+          </h1>
+          <p className="mt-2 text-gray-500 dark:text-gray-400">
+            Here's what's happening with your platform today.
           </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="icon" className="rounded-full">
+            <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+          </Button>
+          <Button className="rounded-full bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
+            Download Report
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((card, i) => (
+          <div
+            key={card.label}
+            className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
+            style={{ animationDelay: `${i * 100}ms` }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{card.label}</p>
+                <h3 className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
+                  {card.value}
+                </h3>
+              </div>
+              <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${card.bg}`}>
+                <card.icon className={`h-6 w-6 ${card.color}`} />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-2">
+              <span className={`flex items-center text-xs font-medium ${card.trendUp ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600'}`}>
+                <TrendingUp className="mr-1 h-3 w-3" />
+                {card.trend}
+              </span>
+              <span className="text-xs text-gray-400">{card.sub}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Main Chart */}
+        <div className="col-span-2 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Platform Overview</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Monthly performance metrics</p>
+            </div>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={barData}>
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#6B7280', fontSize: 12 }} 
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#6B7280', fontSize: 12 }} 
+                />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  cursor={{ stroke: '#f97316', strokeWidth: 1, strokeDasharray: '4 4' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#f97316" 
+                  strokeWidth={3}
+                  fillOpacity={1} 
+                  fill="url(#colorValue)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Quick Actions & Distribution */}
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">Quick Actions</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {quickActions.map((action) => (
+                <Link
+                  key={action.name}
+                  to={action.href}
+                  className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4 transition-all hover:border-gray-200 hover:bg-white hover:shadow-md dark:border-gray-800 dark:bg-gray-800 dark:hover:bg-gray-700"
+                >
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-sm ${action.color}`}>
+                    <action.icon className="h-5 w-5" />
+                  </div>
+                  <span className="text-center text-xs font-medium text-gray-700 dark:text-gray-300">
+                    {action.name}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Distribution Mini Chart */}
+          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">Distribution</h3>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsPie>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={70}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} strokeWidth={0} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                </RechartsPie>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { invoiceService, type Invoice } from '../../services/invoice.service';
 import api from '../../services/api';
-import { FileText, Download, QrCode, RefreshCw, Plus } from 'lucide-react';
+import { FileText, Download, QrCode, RefreshCw, Plus, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const InvoicesPage = () => {
@@ -42,12 +42,12 @@ export const InvoicesPage = () => {
   const handleDownloadPdf = async (id: number) => {
     try {
       const res = await api.get(`/invoices/${id}/pdf`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const url = (window as any).URL.createObjectURL(new Blob([res.data]));
       const a = document.createElement('a');
       a.href = url;
       a.download = `invoice-${id}.pdf`;
       a.click();
-      window.URL.revokeObjectURL(url);
+      (window as any).URL.revokeObjectURL(url);
     } catch (e) {
       console.error(e);
       alert('فشل تحميل PDF');
@@ -57,10 +57,10 @@ export const InvoicesPage = () => {
   const handleShowQr = async (id: number) => {
     try {
       const res = await api.get(`/invoices/${id}/qr`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const url = (window as any).URL.createObjectURL(new Blob([res.data]));
       const w = window.open(url, '_blank', 'noopener');
-      if (w) w.URL.revokeObjectURL = () => {};
-      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+      if (w) (w as any).URL.revokeObjectURL = () => {};
+      setTimeout(() => (window as any).URL.revokeObjectURL(url), 10000);
     } catch (e) {
       console.error(e);
       alert('فشل تحميل صورة QR');
@@ -115,29 +115,37 @@ export const InvoicesPage = () => {
         </Card>
       )}
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm dark:border-slate-700 dark:bg-slate-900/20">
-          <div className="flex items-center justify-between p-5">
+      <div className="mb-6 grid gap-6 sm:grid-cols-3">
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجمالي الفواتير</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{invoices.length}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي الفواتير</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{invoices.length}</p>
             </div>
-            <FileText className="h-10 w-10 text-slate-600 dark:text-slate-400" />
-          </div>
-        </div>
-        <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/20">
-          <div className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">مدفوعة</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{paidCount}</p>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-900/40 dark:text-slate-400">
+              <FileText className="h-6 w-6" />
             </div>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-violet-200 bg-violet-50 shadow-sm dark:border-violet-800 dark:bg-violet-900/20">
-          <div className="flex items-center justify-between p-5">
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجمالي المبلغ</p>
-              <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{totalAmount.toFixed(2)} ر.س</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">مدفوعة</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{paidCount}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
+              <FileText className="h-6 w-6" />
+            </div>
+          </div>
+        </div>
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي المبلغ</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{totalAmount.toFixed(2)} <span className="text-sm font-normal text-gray-500">ر.س</span></p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400">
+              <DollarSign className="h-6 w-6" />
             </div>
           </div>
         </div>

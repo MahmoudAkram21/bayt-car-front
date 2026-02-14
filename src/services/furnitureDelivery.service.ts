@@ -12,7 +12,7 @@ export interface FurnitureDeliveryRequest {
   description: string | null;
   address_city: string | null;
   address_area: string | null;
-  status: 'OPEN' | 'ACCEPTED' | 'COMPLETED' | 'CANCELLED' | 'REJECTED';
+  status: 'OPEN' | 'ACCEPTED' | 'COMPLETED' | 'CANCELLED' | 'REJECTED' | 'PENDING_CUSTOMER_APPROVAL';
   created_at: string;
   service?: {
     id: number;
@@ -29,6 +29,8 @@ export interface FurnitureDeliveryRequest {
     name: string;
     phone: string;
   } | null;
+  provider_offer_price?: number | null;
+  provider_discount_amount?: number | null;
 }
 
 export interface FurnitureDeliveryListResponse {
@@ -51,4 +53,14 @@ export const furnitureDeliveryService = {
     const { data } = await api.get(`/furniture-delivery/requests/${id}`);
     return data.request;
   },
+
+  async submitOffer(requestId: number, offerPrice: number): Promise<any> {
+    const { data } = await api.post(`/furniture-delivery/requests/${requestId}/offer`, { offerPrice });
+    return data;
+  },
+
+  async acceptRequest(requestId: number, discountAmount?: number): Promise<any> {
+    const { data } = await api.post(`/furniture-delivery/requests/${requestId}/accept`, { discountAmount });
+    return data;
+  }
 };

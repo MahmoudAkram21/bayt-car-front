@@ -5,13 +5,13 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { splashService, type SplashScreen, type SplashPlatform } from '../../services/splash.service';
-import { Image, Monitor, Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
+import { Image, Monitor, Plus, Pencil, Trash2, RefreshCw, Smartphone, CheckCircle2, LayoutTemplate } from 'lucide-react';
 import { format } from 'date-fns';
 
-const PLATFORM_OPTIONS: { value: SplashPlatform; label: string }[] = [
-  { value: 'ALL', label: 'الكل' },
-  { value: 'ANDROID', label: 'أندرويد' },
-  { value: 'IOS', label: 'آيفون' },
+const PLATFORM_OPTIONS: { value: SplashPlatform; label: string; icon: any }[] = [
+  { value: 'ALL', label: 'الكل', icon: LayoutTemplate },
+  { value: 'ANDROID', label: 'أندرويد', icon: Smartphone },
+  { value: 'IOS', label: 'آيفون', icon: Smartphone },
 ];
 
 const emptyForm = () => ({
@@ -98,22 +98,36 @@ export const SplashPage = () => {
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-            شاشات السبلاش
-          </h1>
-          <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">
-            شاشات البداية لتطبيق الموبايل. صورة، عنوان، وصف، إجراء. المنصة وفترة الصلاحية.
-          </p>
+    <div className="animate-fade-in space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg text-white">
+             <Image className="h-6 w-6" />
+           </div>
+           <div>
+             <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+               شاشات السبلاش
+             </h1>
+             <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
+               إدارة صور وعروض شاشة البداية للتطبيق
+             </p>
+           </div>
         </div>
         <div className="flex shrink-0 gap-2">
-          <Button variant="outline" size="sm" className="rounded-xl gap-2" onClick={() => queryClient.invalidateQueries({ queryKey: ['splash'] })}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="rounded-xl gap-2 hover:bg-white/50 hover:text-cyan-600 dark:hover:bg-gray-800/50 dark:hover:text-cyan-400" 
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['splash'] })}
+          >
             <RefreshCw className="h-4 w-4" />
             تحديث
           </Button>
-          <Button size="sm" className="rounded-xl bg-cyan-600 gap-2 hover:bg-cyan-700" onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm()); }}>
+          <Button 
+            size="sm" 
+            className="rounded-xl bg-cyan-600 gap-2 hover:bg-cyan-700 shadow-lg shadow-cyan-600/20" 
+            onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm()); }}
+          >
             <Plus className="h-4 w-4" />
             إضافة سبلاش
           </Button>
@@ -121,54 +135,61 @@ export const SplashPage = () => {
       </div>
 
       {showForm && (
-        <Card className="mb-6 rounded-2xl border-cyan-200 dark:border-cyan-800">
-          <CardHeader className="pb-3">
+        <Card className="border-cyan-100 bg-cyan-50/50 backdrop-blur-sm dark:border-cyan-900/50 dark:bg-cyan-900/10">
+          <CardHeader>
             <CardTitle className="text-lg text-gray-900 dark:text-white">{editingId ? 'تعديل شاشة السبلاش' : 'إضافة شاشة سبلاش جديدة'}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <form onSubmit={handleSubmit} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div className="sm:col-span-2">
                 <Label>رابط الصورة (مطلوب)</Label>
-                <Input value={form.image_url} onChange={(e) => setForm((p) => ({ ...p, image_url: e.target.value }))} placeholder="https://..." className="mt-1 rounded-lg" required />
+                <div className="flex gap-4">
+                   <Input value={form.image_url} onChange={(e) => setForm((p) => ({ ...p, image_url: e.target.value }))} placeholder="https://..." className="mt-1 flex-1 bg-white dark:bg-gray-800" required />
+                   {form.image_url && (
+                      <div className="h-10 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white">
+                        <img src={form.image_url} alt="Preview" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                      </div>
+                   )}
+                </div>
               </div>
               <div>
                 <Label>العنوان</Label>
-                <Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} className="mt-1 rounded-lg" />
+                <Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} className="mt-1 bg-white dark:bg-gray-800" />
               </div>
               <div>
                 <Label>المنصة</Label>
-                <select value={form.platform} onChange={(e) => setForm((p) => ({ ...p, platform: e.target.value as SplashPlatform }))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                <select value={form.platform} onChange={(e) => setForm((p) => ({ ...p, platform: e.target.value as SplashPlatform }))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
                   {PLATFORM_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div className="sm:col-span-2">
                 <Label>الوصف</Label>
-                <Input value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className="mt-1 rounded-lg" />
+                <Input value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className="mt-1 bg-white dark:bg-gray-800" />
               </div>
               <div className="sm:col-span-2">
                 <Label>رابط الإجراء</Label>
-                <Input value={form.action_url} onChange={(e) => setForm((p) => ({ ...p, action_url: e.target.value }))} placeholder="https://..." className="mt-1 rounded-lg" />
+                <Input value={form.action_url} onChange={(e) => setForm((p) => ({ ...p, action_url: e.target.value }))} placeholder="https://..." className="mt-1 bg-white dark:bg-gray-800" />
               </div>
               <div>
                 <Label>صالح من</Label>
-                <Input type="datetime-local" value={form.valid_from} onChange={(e) => setForm((p) => ({ ...p, valid_from: e.target.value }))} className="mt-1 rounded-lg" />
+                <Input type="datetime-local" value={form.valid_from} onChange={(e) => setForm((p) => ({ ...p, valid_from: e.target.value }))} className="mt-1 bg-white dark:bg-gray-800" />
               </div>
               <div>
                 <Label>صالح حتى</Label>
-                <Input type="datetime-local" value={form.valid_to} onChange={(e) => setForm((p) => ({ ...p, valid_to: e.target.value }))} className="mt-1 rounded-lg" />
+                <Input type="datetime-local" value={form.valid_to} onChange={(e) => setForm((p) => ({ ...p, valid_to: e.target.value }))} className="mt-1 bg-white dark:bg-gray-800" />
               </div>
-              <div className="flex items-end gap-2">
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} className="rounded border-gray-300" />
-                  مفعّل
+              <div className="flex items-center pt-6">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500" />
+                  مفعّل ونشط
                 </label>
               </div>
-              <div className="flex items-end gap-2 sm:col-span-2">
-                <Button type="submit" size="sm" className="rounded-lg" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingId ? 'حفظ التعديل' : 'إضافة'}
-                </Button>
-                <Button type="button" variant="outline" size="sm" className="rounded-lg" onClick={() => { setShowForm(false); setEditingId(null); setForm(emptyForm()); }}>
+              <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-1 justify-end">
+                <Button type="button" variant="outline" size="sm" className="w-full rounded-xl" onClick={() => { setShowForm(false); setEditingId(null); setForm(emptyForm()); }}>
                   إلغاء
+                </Button>
+                <Button type="submit" size="sm" className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-700" disabled={createMutation.isPending || updateMutation.isPending}>
+                  {editingId ? 'حفظ' : 'إضافة'}
                 </Button>
               </div>
             </form>
@@ -176,33 +197,39 @@ export const SplashPage = () => {
         </Card>
       )}
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2">
-        <div className="overflow-hidden rounded-2xl border border-cyan-200 bg-cyan-50 shadow-sm dark:border-cyan-800 dark:bg-cyan-900/20">
-          <div className="flex items-center justify-between p-5">
+      {/* Stats Cards */}
+      <div className="grid gap-6 sm:grid-cols-2">
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجمالي السبلاش</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{list.length}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي شاشات السبلاش</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{list.length}</p>
             </div>
-            <Monitor className="h-10 w-10 text-cyan-600 dark:text-cyan-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-100 text-cyan-600 dark:bg-cyan-900/40 dark:text-cyan-400">
+              <Monitor className="h-6 w-6" />
+            </div>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/20">
-          <div className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">النشطة</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{activeCount}</p>
-            </div>
-          </div>
+        <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
+           <div className="flex items-center justify-between">
+             <div>
+               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">الشاشات النشطة</p>
+               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{activeCount}</p>
+             </div>
+             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
+               <CheckCircle2 className="h-6 w-6" />
+             </div>
+           </div>
         </div>
       </div>
 
-      <Card className="overflow-hidden rounded-2xl border-gray-200 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+      <Card className="overflow-hidden rounded-2xl border-gray-200 bg-white/60 shadow-lg backdrop-blur-xl dark:border-gray-700 dark:bg-gray-800/60">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <Image className="h-5 w-5 text-cyan-500" />
             جميع شاشات السبلاش
           </CardTitle>
-          <CardDescription>الصورة، العنوان، المنصة، فترة الصلاحية</CardDescription>
+          <CardDescription>عرض تفاصيل شاشات الترحيب والبداية</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading && (
@@ -211,47 +238,68 @@ export const SplashPage = () => {
             </div>
           )}
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 py-8 text-center text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+            <div className="py-8 text-center text-red-600 dark:text-red-400">
               فشل تحميل شاشات السبلاش.
             </div>
           )}
           {!isLoading && !error && list.length === 0 && (
-            <div className="py-12 text-center text-gray-500 dark:text-gray-400">لا توجد شاشات سبلاش بعد. استخدم &quot;إضافة سبلاش&quot; أعلاه.</div>
+            <div className="flex flex-col items-center justify-center py-12">
+               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cyan-50 dark:bg-cyan-900/20">
+                 <Image className="h-8 w-8 text-cyan-300 dark:text-cyan-600" />
+               </div>
+               <p className="mt-4 text-gray-500 dark:text-gray-400">لا توجد شاشات سبلاش بعد.</p>
+            </div>
           )}
           {!isLoading && list.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-100 dark:bg-gray-700/70">
+                <thead className="bg-gray-100/50 dark:bg-gray-700/40">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">معاينة</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">العنوان</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">المنصة</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">صالح حتى</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">الحالة</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">إجراءات</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">معاينة</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">العنوان</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">المنصة</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الصلاحية</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الحالة</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجراءات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {list.map((s: SplashScreen) => (
-                    <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <tr key={s.id} className="transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
                       <td className="px-6 py-4">
-                        <img src={s.image_url} alt={s.title ?? ''} className="h-12 w-20 rounded object-cover" onError={(e) => { (e.target as HTMLImageElement).src = ''; (e.target as HTMLImageElement).className = 'h-12 w-20 rounded bg-gray-200 dark:bg-gray-600'; }} />
+                        <div className="h-12 w-20 overflow-hidden rounded-lg border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800">
+                           <img src={s.image_url} alt={s.title ?? ''} className="h-full w-full object-cover transition-transform hover:scale-110" onError={(e) => { (e.target as HTMLImageElement).src = ''; (e.target as HTMLImageElement).style.opacity = '0.5'; }} />
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{s.title ?? '—'}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{s.platform}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{s.valid_to ? format(new Date(s.valid_to), 'PP') : '—'}</td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${s.is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
-                          {s.is_active ? 'نشط' : 'غير نشط'}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
+                           {s.platform === 'ANDROID' && <Smartphone className="h-4 w-4" />}
+                           {s.platform === 'IOS' && <Smartphone className="h-4 w-4" />}
+                           {s.platform === 'ALL' && <Monitor className="h-4 w-4" />}
+                           {s.platform}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 flex flex-col gap-0.5">
+                        {s.valid_from && <span className="text-xs text-gray-400">من {format(new Date(s.valid_from), 'P')}</span>}
+                        {s.valid_to && <span>إلى {format(new Date(s.valid_to), 'P')}</span>}
+                        {!s.valid_from && !s.valid_to && <span className="text-gray-400">—</span>}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${s.is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
+                           <span className={`h-1.5 w-1.5 rounded-full ${s.is_active ? 'bg-emerald-500' : 'bg-gray-500'}`} />
+                           {s.is_active ? 'نشط' : 'معطل'}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 flex gap-1">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0" onClick={() => startEdit(s)} title="تعديل">
-                          <Pencil className="h-4 w-4 text-cyan-600" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => handleDelete(s.id)} title="حذف">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-cyan-50 hover:text-cyan-600 dark:hover:bg-cyan-900/20 dark:hover:text-cyan-400" onClick={() => startEdit(s)} title="تعديل">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleDelete(s.id)} title="حذف">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}

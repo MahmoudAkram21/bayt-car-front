@@ -20,4 +20,7 @@ export declare const serviceService: {
     deleteService(id: string): Promise<void>;
     activateService(id: string): Promise<Service>;
     deactivateService(id: string): Promise<Service>;
+    createAttribute(serviceId: string, data: any): Promise<any>;
+    updateAttribute(serviceId: string, attributeId: string, data: any): Promise<any>;
+    deleteAttribute(serviceId: string, attributeId: string): Promise<void>;
 };

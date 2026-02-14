@@ -1,0 +1,26 @@
+{
+  "common": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "providers": "Providers",
+    "services": "Services",
+    "deliveries": "Deliveries",
+    "bookings": "Bookings",
+    "commissions": "Commissions",
+    "wallets": "Wallets",
+    "invoices": "Invoices",
+    "reports": "Reports",
+    "loyalty": "Loyalty & Cashback",
+    "promo": "Promo Offers",
+    "commissionRules": "Commission Rules",
+    "tax": "Tax Settings",
+    "sliders": "Sliders",
+    "splash": "Splash Screens",
+    "settings": "Settings",
+    "logout": "Sign Out",
+    "overview": "Overview",
+    "management": "Management",
+    "finance": "Finance",
+    "marketingConfig": "Marketing & Config"
+  }
+}

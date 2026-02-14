@@ -4,10 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/button';
 import { reportService, type Report } from '../../services/report.service';
 import { FileText, Plus, RefreshCw } from 'lucide-react';
+import { ReportDetailModal } from './ReportDetailModal';
 
 export const ReportsPage = () => {
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['reports', page],
@@ -51,7 +53,7 @@ export const ReportsPage = () => {
         </Button>
       </div>
 
-      <Card className="overflow-hidden rounded-2xl border-gray-200 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+      <Card className="overflow-hidden rounded-2xl border-gray-200 bg-white/80 shadow-lg backdrop-blur-xl dark:border-gray-700 dark:bg-gray-800/80">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <FileText className="h-5 w-5 text-violet-500" />
@@ -84,17 +86,18 @@ export const ReportsPage = () => {
           {!isLoading && reports.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-100 dark:bg-gray-700/70">
+                <thead className="bg-gray-100/50 dark:bg-gray-700/40">
                   <tr>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">ID</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Title</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Created</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {reports.map((r: Report) => (
-                    <tr key={r.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <tr key={r.id} className="transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{r.id}</td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-medium text-violet-800 dark:bg-violet-900/30 dark:text-violet-300">
@@ -105,6 +108,15 @@ export const ReportsPage = () => {
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                         {r.created_at ? new Date(r.created_at).toLocaleString() : '—'}
                       </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedReport(r)}
+                        >
+                          View
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -113,6 +125,12 @@ export const ReportsPage = () => {
           )}
         </CardContent>
       </Card>
+
+      <ReportDetailModal
+        report={selectedReport}
+        isOpen={!!selectedReport}
+        onClose={() => setSelectedReport(null)}
+      />
     </div>
   );
 };

@@ -138,25 +138,46 @@
   }
 
   /* Typography: Poppins (EN) / Alexandria (AR) — applied via font-family in HTML */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold tracking-tight;
   }
 }
 
 /* Animations */
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
@@ -187,18 +208,34 @@
   animation: card-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.animate-card-enter-delay-1 { animation-delay: 0.08s; opacity: 0; }
-.animate-card-enter-delay-2 { animation-delay: 0.16s; opacity: 0; }
-.animate-card-enter-delay-3 { animation-delay: 0.24s; opacity: 0; }
-.animate-card-enter-delay-4 { animation-delay: 0.32s; opacity: 0; }
+.animate-card-enter-delay-1 {
+  animation-delay: 0.08s;
+  opacity: 0;
+}
+.animate-card-enter-delay-2 {
+  animation-delay: 0.16s;
+  opacity: 0;
+}
+.animate-card-enter-delay-3 {
+  animation-delay: 0.24s;
+  opacity: 0;
+}
+.animate-card-enter-delay-4 {
+  animation-delay: 0.32s;
+  opacity: 0;
+}
 
 /* Dashboard: card hover lift */
 .dashboard-stat-card {
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 .dashboard-stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.15), 0 4px 8px -4px rgb(0 0 0 / 0.08);
+  box-shadow:
+    0 12px 24px -8px rgb(0 0 0 / 0.15),
+    0 4px 8px -4px rgb(0 0 0 / 0.08);
 }
 .dark .dashboard-stat-card:hover {
   box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.4);
@@ -218,4 +255,29 @@
 .animate-chart-enter {
   animation: chart-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
   opacity: 0;
+}
+
+/* Background Blob Animation */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+.animate-blob {
+  animation: blob 7s infinite;
+}
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+.animation-delay-4000 {
+  animation-delay: 4s;
 }

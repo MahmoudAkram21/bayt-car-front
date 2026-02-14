@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
-import { Home, ArrowLeft, AlertCircle, Ban, FileQuestion, ServerCrash } from 'lucide-react';
+import { Home, ArrowLeft } from 'lucide-react';
 
 export type ErrorCode = 400 | 403 | 404 | 500;
 

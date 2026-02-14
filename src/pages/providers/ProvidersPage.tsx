@@ -67,52 +67,32 @@ export const ProvidersPage = () => {
         </p>
       </div>
 
-      {/* Stat cards — same style as Commissions */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm dark:border-gray-600 dark:bg-gray-800/50">
-          <div className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Providers</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{statTotal}</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-700/80 shadow-sm">
-              <Building2 className="h-6 w-6 text-gray-600 dark:text-gray-400" />
-            </div>
-          </div>
-        </div>
-        <div className="overflow-hidden rounded-2xl border border-amber-200 bg-amber-50 shadow-sm dark:border-amber-800 dark:bg-amber-900/20">
-          <div className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Pending</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{statPending}</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 shadow-sm">
-              <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-            </div>
-          </div>
-        </div>
-        <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/20">
-          <div className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Verified</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{statVerified}</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 shadow-sm">
-              <CheckCircle className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+      {/* Modern Stats Grid */}
+      <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: 'Total Providers', value: statTotal, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-100' },
+          { label: 'Pending', value: statPending, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100' },
+          { label: 'Verified', value: statVerified, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+          { label: 'Suspended', value: statSuspended, icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-100' },
+        ].map((stat, i) => (
+          <div
+            key={stat.label}
+            className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60"
+            style={{ animationDelay: `${i * 100}ms` }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.label}</p>
+                <h3 className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
+                  {stat.value}
+                </h3>
+              </div>
+              <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${stat.bg} dark:bg-opacity-20`}>
+                <stat.icon className={`h-6 w-6 ${stat.color} dark:text-opacity-90`} />
+              </div>
             </div>
           </div>
-        </div>
-        <div className="overflow-hidden rounded-2xl border border-red-200 bg-red-50 shadow-sm dark:border-red-800 dark:bg-red-900/20">
-          <div className="flex items-center justify-between p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Suspended</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{statSuspended}</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 shadow-sm">
-              <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       <Card className="mb-6 rounded-2xl border-gray-200 dark:border-gray-700 p-5 shadow-sm">
