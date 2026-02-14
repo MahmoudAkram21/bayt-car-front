@@ -12,7 +12,10 @@ interface ErrorPageViewProps {
   showLoginLink?: boolean;
 }
 
+import { useTranslation } from 'react-i18next';
+
 export function ErrorPageView({ code, title, description, icon, showLoginLink }: ErrorPageViewProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-16 dark:bg-gray-900">
       <div className="animate-fade-in w-full max-w-md text-center">
@@ -41,7 +44,7 @@ export function ErrorPageView({ code, title, description, icon, showLoginLink }:
           >
             <Link to="/" className="inline-flex items-center gap-2">
               <ArrowLeft className="h-4 w-4" />
-              رجوع
+              {t('common.back')}
             </Link>
           </Button>
           <Button
@@ -51,7 +54,7 @@ export function ErrorPageView({ code, title, description, icon, showLoginLink }:
           >
             <Link to="/" className="inline-flex items-center gap-2">
               <Home className="h-4 w-4" />
-              الرئيسية
+              {t('common.home')}
             </Link>
           </Button>
           {showLoginLink && (
@@ -61,7 +64,7 @@ export function ErrorPageView({ code, title, description, icon, showLoginLink }:
               size="lg"
               className="rounded-xl"
             >
-              <Link to="/login">تسجيل الدخول</Link>
+              <Link to="/login">{t('common.login')}</Link>
             </Button>
           )}
         </div>

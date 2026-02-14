@@ -19,11 +19,13 @@ import {
   Area
 } from 'recharts';
 import { Button } from '../../components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 const CHART_COLORS = ['#f97316', '#10b981', '#3b82f6', '#eab308'];
 const PIE_COLORS = ['#3b82f6', '#10b981', '#f97316'];
 
 export const DashboardPage = () => {
+  const { t, i18n } = useTranslation();
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: () => dashboardService.getStats(),
@@ -38,68 +40,68 @@ export const DashboardPage = () => {
 
   const statCards = [
     {
-      label: 'Total Users',
+      label: t('common.totalUsers'),
       value: stats?.totalUsers ?? '—',
-      sub: 'All platform users',
+      sub: t('common.platformOverview'),
       icon: Users,
       color: 'text-blue-600 dark:text-blue-400',
       bg: 'bg-blue-100 dark:bg-blue-900/30',
-      trend: '+12% from last month',
+      trend: '+12%',
       trendUp: true
     },
     {
-      label: 'Active Providers',
+      label: t('common.activeProviders'),
       value: stats?.activeProviders ?? '—',
-      sub: 'Verified providers',
+      sub: t('common.management'),
       icon: Building2,
       color: 'text-emerald-600 dark:text-emerald-400',
       bg: 'bg-emerald-100 dark:bg-emerald-900/30',
-      trend: '+5% new providers',
+      trend: '+5%',
       trendUp: true
     },
     {
-      label: 'Total Bookings',
+      label: t('common.totalBookings'),
       value: stats?.totalBookings ?? '—',
-      sub: 'All time bookings',
+      sub: t('common.overview'),
       icon: Calendar,
       color: 'text-violet-600 dark:text-violet-400',
       bg: 'bg-violet-100 dark:bg-violet-900/30',
-      trend: '85 pending today',
+      trend: '85',
       trendUp: true
     },
     {
-      label: 'Revenue',
+      label: t('common.revenue'),
       value: isLoading ? '—' : stats != null ? `${Number(stats.platformRevenue).toFixed(2)}` : '—',
       sub: 'SAR',
       icon: DollarSign,
       color: 'text-orange-600 dark:text-orange-400',
       bg: 'bg-orange-100 dark:bg-orange-900/30',
-      trend: '+18% vs last week',
+      trend: '+18%',
       trendUp: true
     },
   ];
 
   const quickActions = [
-    { name: 'Add Provider', href: '/providers', icon: Plus, color: 'bg-emerald-500' },
-    { name: 'New Invoice', href: '/invoices', icon: FileText, color: 'bg-blue-500' },
-    { name: 'Wallet Adjustment', href: '/wallets', icon: Wallet, color: 'bg-violet-500' },
-    { name: 'System Settings', href: '/settings', icon: Activity, color: 'bg-gray-500' },
+    { name: t('common.addProvider'), href: '/providers', icon: Plus, color: 'bg-emerald-500' },
+    { name: t('common.newInvoice'), href: '/invoices', icon: FileText, color: 'bg-blue-500' },
+    { name: t('common.walletAdjustment'), href: '/wallets', icon: Wallet, color: 'bg-violet-500' },
+    { name: t('common.systemSettings'), href: '/settings', icon: Activity, color: 'bg-gray-500' },
   ];
 
   const barData = stats
     ? [
-        { name: 'Users', value: stats.totalUsers, fill: CHART_COLORS[0] },
-        { name: 'Providers', value: stats.activeProviders, fill: CHART_COLORS[1] },
-        { name: 'Bookings', value: stats.totalBookings, fill: CHART_COLORS[2] },
-        { name: 'Revenue', value: Math.round(stats.platformRevenue), fill: CHART_COLORS[3] },
+        { name: t('common.users'), value: stats.totalUsers, fill: CHART_COLORS[0] },
+        { name: t('common.providers'), value: stats.activeProviders, fill: CHART_COLORS[1] },
+        { name: t('common.bookings'), value: stats.totalBookings, fill: CHART_COLORS[2] },
+        { name: t('common.revenue'), value: Math.round(stats.platformRevenue), fill: CHART_COLORS[3] },
       ]
     : [];
 
   const pieData = stats
     ? [
-        { name: 'Users', value: stats.totalUsers, fill: PIE_COLORS[0] },
-        { name: 'Providers', value: stats.activeProviders, fill: PIE_COLORS[1] },
-        { name: 'Bookings', value: stats.totalBookings, fill: PIE_COLORS[2] },
+        { name: t('common.users'), value: stats.totalUsers, fill: PIE_COLORS[0] },
+        { name: t('common.providers'), value: stats.activeProviders, fill: PIE_COLORS[1] },
+        { name: t('common.bookings'), value: stats.totalBookings, fill: PIE_COLORS[2] },
       ].filter((d) => d.value > 0)
     : [];
 
@@ -112,7 +114,7 @@ export const DashboardPage = () => {
             {getGreeting()}, Admin
           </h1>
           <p className="mt-2 text-gray-500 dark:text-gray-400">
-            Here's what's happening with your platform today.
+            {t('common.platformOverview')}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -120,7 +122,7 @@ export const DashboardPage = () => {
             <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </Button>
           <Button className="rounded-full bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
-            Download Report
+            {t('common.reports')}
           </Button>
         </div>
       </div>
@@ -129,7 +131,7 @@ export const DashboardPage = () => {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card, i) => (
           <div
-            key={card.label}
+            key={i}
             className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
             style={{ animationDelay: `${i * 100}ms` }}
           >
@@ -160,11 +162,11 @@ export const DashboardPage = () => {
         <div className="col-span-2 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Platform Overview</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Monthly performance metrics</p>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('common.platformOverview')}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('common.overview')}</p>
             </div>
           </div>
-          <div className="h-[300px] w-full">
+          <div className="h-[300px] w-full" dir="ltr">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={barData}>
                 <defs>
@@ -207,7 +209,7 @@ export const DashboardPage = () => {
         <div className="space-y-6">
           {/* Quick Actions */}
           <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">Quick Actions</h3>
+            <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">{t('common.quickActions')}</h3>
             <div className="grid grid-cols-2 gap-4">
               {quickActions.map((action) => (
                 <Link
@@ -228,8 +230,8 @@ export const DashboardPage = () => {
 
           {/* Distribution Mini Chart */}
           <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">Distribution</h3>
-            <div className="h-[200px]">
+            <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">{t('common.distribution')}</h3>
+            <div className="h-[200px]" dir="ltr">
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsPie>
                   <Pie

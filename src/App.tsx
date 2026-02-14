@@ -6,6 +6,7 @@ import { Routes, Route } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminLayout } from "./components/layout/AdminLayout";
+import { ThemeProvider } from "./components/theme-provider";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { UsersPage } from "./pages/users/UsersPage";
@@ -50,48 +51,50 @@ function App() {
   }, [i18n, i18n.language]);
 
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/400" element={<Err400Page />} />
-      <Route path="/403" element={<Err403Page />} />
-      <Route path="/404" element={<Err404Page />} />
-      <Route path="/500" element={<Err500Page />} />
-      <Route
-        path="/*"
-        element={
-          <ProtectedRoute>
-            <AdminLayout>
-              <Routes>
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/users/:id" element={<UserDetailPage />} />
-                <Route path="/providers" element={<ProvidersPage />} />
-                <Route path="/providers/:id/edit" element={<ProviderEditPage />} />
-                <Route path="/providers/:id" element={<ProviderDetailPage />} />
-                <Route path="/services" element={<ServicesPage />} />
-                <Route path="/services/:id" element={<ServiceDetailPage />} />
-                <Route path="/delivery" element={<DeliveryPage />} />
-                <Route path="/furniture-delivery" element={<FurnitureDeliveryPage />} />
-                <Route path="/bookings" element={<BookingsPage />} />
-                <Route path="/commissions" element={<CommissionsPage />} />
-                <Route path="/wallets" element={<WalletsPage />} />
-                <Route path="/loyalty" element={<LoyaltyPage />} />
-                <Route path="/commission-rules" element={<CommissionRulesPage />} />
-                <Route path="/tax" element={<TaxPage />} />
-                <Route path="/promo" element={<PromoPage />} />
-                <Route path="/sliders" element={<SlidersPage />} />
-                <Route path="/splash" element={<SplashPage />} />
-                <Route path="/invoices" element={<InvoicesPage />} />
-                <Route path="/reports" element={<ReportsPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-              </Routes>
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route path="*" element={<Err404Page />} />
-    </Routes>
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/400" element={<Err400Page />} />
+        <Route path="/403" element={<Err403Page />} />
+        <Route path="/404" element={<Err404Page />} />
+        <Route path="/500" element={<Err500Page />} />
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <Routes>
+                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/users/:id" element={<UserDetailPage />} />
+                  <Route path="/providers" element={<ProvidersPage />} />
+                  <Route path="/providers/:id/edit" element={<ProviderEditPage />} />
+                  <Route path="/providers/:id" element={<ProviderDetailPage />} />
+                  <Route path="/services" element={<ServicesPage />} />
+                  <Route path="/services/:id" element={<ServiceDetailPage />} />
+                  <Route path="/delivery" element={<DeliveryPage />} />
+                  <Route path="/furniture-delivery" element={<FurnitureDeliveryPage />} />
+                  <Route path="/bookings" element={<BookingsPage />} />
+                  <Route path="/commissions" element={<CommissionsPage />} />
+                  <Route path="/wallets" element={<WalletsPage />} />
+                  <Route path="/loyalty" element={<LoyaltyPage />} />
+                  <Route path="/commission-rules" element={<CommissionRulesPage />} />
+                  <Route path="/tax" element={<TaxPage />} />
+                  <Route path="/promo" element={<PromoPage />} />
+                  <Route path="/sliders" element={<SlidersPage />} />
+                  <Route path="/splash" element={<SplashPage />} />
+                  <Route path="/invoices" element={<InvoicesPage />} />
+                  <Route path="/reports" element={<ReportsPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                </Routes>
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route path="*" element={<Err404Page />} />
+      </Routes>
+    </ThemeProvider>
   );
 }
 

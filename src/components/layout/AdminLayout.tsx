@@ -1,11 +1,15 @@
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { useState } from 'react';
+import { cn } from '../../lib/utils';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden">
         {/* Background Mesh Gradient */}
@@ -16,10 +20,13 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         </div>
 
       {/* Sidebar — Design System: w-72, white/dark:gray-800, RTL support via dir */}
-      <Sidebar />
+      <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
       {/* Main Content — Design System: lg:ml-72 (LTR), padding, overflow */}
-      <div className="flex flex-1 flex-col overflow-hidden lg:ms-72 relative z-10 transition-all duration-300">
+      <div className={cn(
+        "flex flex-1 flex-col overflow-hidden relative z-10 transition-all duration-300",
+        isCollapsed ? "lg:ms-20" : "lg:ms-72"
+      )}>
         {/* Header — Design System: sticky, z-20, h-14 sm:h-16 */}
         <Header />
 

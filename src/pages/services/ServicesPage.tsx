@@ -7,23 +7,27 @@ import { Button } from '../../components/ui/button';
 import { Search, Wrench, RefreshCw, LayoutGrid, List, ChevronRight, MapPin } from 'lucide-react';
 import { serviceService } from '../../services/service.service';
 import { serviceCategoryService } from '../../services/serviceCategory.service';
-import type { Service } from '../../types';
+import type { Service, PaginatedResponse, MultilingualText } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 type ViewMode = 'cards' | 'table';
 
-const getPricingLabel = (s: Service) => {
-  const type = s.pricing_type ?? 'FIXED';
-  if (type === 'CUSTOMER_DEFINED') return 'العميل يحدد السعر';
-  if (type === 'PER_UNIT' && s.unit_label) return `${Number(s.base_price ?? 0).toFixed(0)} ر.س / ${s.unit_label}`;
-  if (type === 'BY_OPTION') return 'حسب الخيار';
-  if (s.is_negotiable ?? s.isNegotiable) return 'تفاوض';
-  const price = s.base_price ?? (s as any).price;
-  return price != null ? `${Number(price).toFixed(0)} ر.س` : '—';
-};
+
 
 export const ServicesPage = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
+
+  const getPricingLabel = (s: Service) => {
+    const type = s.pricing_type ?? 'FIXED';
+    if (type === 'CUSTOMER_DEFINED') return t('common.customerDefined');
+    if (type === 'PER_UNIT' && s.unit_label) return t('common.perUnit', { price: Number(s.base_price ?? 0).toFixed(0), unit: s.unit_label });
+    if (type === 'BY_OPTION') return t('common.byOption');
+    if (s.is_negotiable ?? s.isNegotiable) return t('common.negotiation');
+    const price = s.base_price;
+    return price != null ? `${Number(price).toFixed(0)} ${t('common.currency', { defaultValue: 'SAR' })}` : '—';
+  };
   const [categoryFilter, setCategoryFilter] = useState<number | ''>('');
 
   const { data: categoriesData } = useQuery({
@@ -32,12 +36,12 @@ export const ServicesPage = () => {
   });
   const categories = categoriesData?.data ?? [];
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<PaginatedResponse<Service>>({
     queryKey: ['services', categoryFilter],
     queryFn: () => serviceService.getAllServices({ categoryId: categoryFilter === '' ? undefined : categoryFilter }),
   });
 
-  const getName = (name: any) => {
+  const getName = (name: MultilingualText | string) => {
     if (typeof name === 'string') return name;
     return name?.en || name?.ar || 'N/A';
   };
@@ -46,26 +50,26 @@ export const ServicesPage = () => {
   const services = searchTerm
     ? servicesRaw.filter((s: Service) => getName(s.name).toLowerCase().includes(searchTerm.toLowerCase()))
     : servicesRaw;
-  const total = (data as any)?.pagination?.total ?? servicesRaw.length;
+  const total = data?.total ?? servicesRaw.length;
 
   return (
     <div className="animate-fade-in">
       <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-            Services
+            {t('common.services')}
           </h1>
           <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">
-            View and manage all services. Switch between cards and table view.
+            {t('common.servicesDesc')}
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
           <Button variant="outline" size="sm" className="rounded-xl gap-2 focus:ring-2 focus:ring-teal-500">
             <RefreshCw className="h-4 w-4" />
-            Refresh
+            {t('common.refresh')}
           </Button>
           <Button size="sm" className="rounded-xl bg-teal-600 shadow-lg gap-2 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500">
-            Add Service
+            {t('common.addService')}
           </Button>
         </div>
       </div>
@@ -75,7 +79,7 @@ export const ServicesPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Services</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('common.totalServices')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{total}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-100 text-teal-600 dark:bg-teal-900/40 dark:text-teal-400">
@@ -86,7 +90,7 @@ export const ServicesPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Fixed Price</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('common.fixedPrice')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
                 {servicesRaw.filter((s: Service) => s.pricing_type === 'FIXED' || s.pricing_type === 'PER_UNIT').length}
               </p>
@@ -99,7 +103,7 @@ export const ServicesPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Negotiable/Other</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('common.negotiableOther')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
                 {servicesRaw.filter((s: Service) => s.pricing_type !== 'FIXED' && s.pricing_type !== 'PER_UNIT').length}
               </p>
@@ -117,7 +121,7 @@ export const ServicesPage = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <Input
-                placeholder="Search services..."
+                placeholder={t('common.searchServices')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="rounded-lg border-gray-300 pl-10 focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700"
@@ -128,7 +132,7 @@ export const ServicesPage = () => {
               onChange={(e) => setCategoryFilter(e.target.value === '' ? '' : Number(e.target.value))}
               className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">كل الفئات</option>
+              <option value="">{t('common.allCategories')}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name_ar}</option>
               ))}
@@ -145,7 +149,7 @@ export const ServicesPage = () => {
                 }`}
               >
                 <LayoutGrid className="h-4 w-4" />
-                Cards
+                {t('common.cards')}
               </button>
               <button
                 type="button"
@@ -157,7 +161,7 @@ export const ServicesPage = () => {
                 }`}
               >
                 <List className="h-4 w-4" />
-                Table
+                {t('common.list')}
               </button>
             </div>
           </div>
@@ -168,10 +172,10 @@ export const ServicesPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <Wrench className="h-5 w-5 text-teal-500" />
-            All Services
+            {t('common.allServices')}
           </CardTitle>
           <CardDescription>
-            {data ? (searchTerm ? `${services.length} of ${total} services` : `${total} services found`) : 'View all services'}
+            {data ? (searchTerm ? t('common.servicesDesc') : t('common.servicesDesc')) : t('common.servicesDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -192,9 +196,9 @@ export const ServicesPage = () => {
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-900/30">
                 <Wrench className="h-12 w-12 text-teal-600 dark:text-teal-400" />
               </div>
-              <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">No services found</p>
+              <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">{t('common.noRequests')}</p>
               <p className="mt-2 max-w-md text-center text-gray-500 dark:text-gray-400">
-                Try adjusting your search or filters
+                {t('common.tryAdjusting')}
               </p>
             </div>
           )}
@@ -231,7 +235,7 @@ export const ServicesPage = () => {
                       {getName(service.name)}
                     </h3>
                     <div className="mt-2 flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                      <span>View details</span>
+                      <span>{t('common.viewDetails')}</span>
                       <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                     </div>
                   </div>
@@ -245,12 +249,12 @@ export const ServicesPage = () => {
               <table className="w-full">
                 <thead className="bg-gray-100 dark:bg-gray-700/70">
                   <tr>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">ID</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الخدمة</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الفئة</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">نطاق GPS (كم)</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">التسعير</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجراء</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.id')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.service')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.category')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.gpsRange')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.pricing')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -258,10 +262,10 @@ export const ServicesPage = () => {
                     <tr key={service.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{service.id}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{getName(service.name)}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{(service as any).category?.name_ar ?? '—'}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{service.category?.name_ar ?? '—'}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                        {(service as any).gps_radius_km != null ? (
-                          <><MapPin className="h-3.5 w-3.5" /> {(service as any).gps_radius_km} كم</>
+                        {service.gps_radius_km != null ? (
+                          <><MapPin className="h-3.5 w-3.5" /> {service.gps_radius_km} {t('common.km')}</>
                         ) : (
                           '—'
                         )}
@@ -272,7 +276,7 @@ export const ServicesPage = () => {
                           to={`/services/${service.id}`}
                           className="text-sm font-medium text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
                         >
-                          عرض / تعديل
+                          {t('common.viewEdit')}
                         </Link>
                       </td>
                     </tr>

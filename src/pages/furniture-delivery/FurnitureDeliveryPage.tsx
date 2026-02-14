@@ -7,6 +7,7 @@ import { furnitureDeliveryService, type FurnitureDeliveryRequest } from '../../s
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { useTranslation } from 'react-i18next';
 
 // Fix Leaflet icon issue
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,18 +36,10 @@ const statusIcons: Record<string, React.ReactNode> = {
   REJECTED: <XCircle className="h-4 w-4" />,
 };
 
-const statusLabels: Record<string, string> = {
-  OPEN: 'مفتوح',
-  PENDING_CUSTOMER_APPROVAL: 'بانتظار موافقة العميل',
-  ACCEPTED: 'مقبول',
-  COMPLETED: 'مكتمل',
-  CANCELLED: 'ملغي',
-  REJECTED: 'مرفوض',
-};
-
 type ViewMode = 'list' | 'map';
 
 export const FurnitureDeliveryPage = () => {
+  const { t, i18n } = useTranslation();
   const [activeStatus, setActiveStatus] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -60,11 +53,23 @@ export const FurnitureDeliveryPage = () => {
     }),
   });
 
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      OPEN: t('common.open'),
+      PENDING_CUSTOMER_APPROVAL: t('common.pendingCustomerApproval'),
+      ACCEPTED: t('common.accepted'),
+      COMPLETED: t('common.completed'),
+      CANCELLED: t('common.cancelled'),
+      REJECTED: t('common.rejected'),
+    };
+    return labels[status] || status;
+  };
+
   const requests = data?.data ?? [];
   const pagination = data?.pagination;
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('ar-SA', {
+    return new Date(dateStr).toLocaleDateString(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -75,7 +80,7 @@ export const FurnitureDeliveryPage = () => {
 
   const formatPrice = (price: number | null) => {
     if (price === null) return '—';
-    return `${price.toLocaleString()} ر.س`;
+    return `${price.toLocaleString()} ${t('common.currency', { defaultValue: 'SAR' })}`;
   };
 
   return (
@@ -88,10 +93,10 @@ export const FurnitureDeliveryPage = () => {
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-              توصيل العفش
+              {t('common.furnitureDelivery')}
             </h1>
             <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-              إدارة طلبات التوصيل والتفاوض.
+              {t('common.furnitureDeliveryDesc')}
             </p>
           </div>
         </div>
@@ -104,7 +109,7 @@ export const FurnitureDeliveryPage = () => {
             className="rounded-xl gap-2 hover:bg-white/50 hover:text-amber-600 dark:hover:bg-gray-800/50 dark:hover:text-amber-400"
           >
             <RefreshCw className="h-4 w-4" />
-            تحديث
+            {t('common.refresh')}
           </Button>
 
           <div className="flex rounded-xl border border-gray-200 bg-white/50 dark:border-gray-600 dark:bg-gray-800/50 overflow-hidden">
@@ -117,7 +122,7 @@ export const FurnitureDeliveryPage = () => {
               }`}
             >
               <LayoutGrid className="h-4 w-4" />
-              قائمة
+              {t('common.list')}
             </button>
             <div className="w-px bg-gray-200 dark:bg-gray-600" />
             <button
@@ -129,7 +134,7 @@ export const FurnitureDeliveryPage = () => {
               }`}
             >
               <MapIcon className="h-4 w-4" />
-              خريطة
+              {t('common.map')}
             </button>
           </div>
         </div>
@@ -145,7 +150,7 @@ export const FurnitureDeliveryPage = () => {
               className={`rounded-xl transition-all ${activeStatus === null ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20' : 'hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20 dark:hover:text-amber-400'}`}
               onClick={() => { setActiveStatus(null); setPage(1); }}
             >
-              الكل
+              {t('common.all')}
             </Button>
             {['OPEN', 'PENDING_CUSTOMER_APPROVAL', 'ACCEPTED', 'COMPLETED', 'CANCELLED'].map((status) => (
               <Button
@@ -155,7 +160,7 @@ export const FurnitureDeliveryPage = () => {
                 className={`rounded-xl transition-all ${activeStatus === status ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20' : 'hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20 dark:hover:text-amber-400'}`}
                 onClick={() => { setActiveStatus(status); setPage(1); }}
               >
-                {statusLabels[status]}
+                {getStatusLabel(status)}
               </Button>
             ))}
           </div>
@@ -167,10 +172,10 @@ export const FurnitureDeliveryPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <Truck className="h-5 w-5 text-amber-500" />
-            الطلبات {pagination && `(${pagination.total})`}
+            {t('common.requests')} {pagination && `(${pagination.total})`}
           </CardTitle>
           <CardDescription>
-            {viewMode === 'map' ? 'عرض مواقع الطلبات النشطة' : 'قائمة الطلبات وحالات التفاوض'}
+            {viewMode === 'map' ? t('common.activeRequestsMap') : t('common.requestsDesc')}
           </CardDescription>
         </CardHeader>
 
@@ -183,7 +188,7 @@ export const FurnitureDeliveryPage = () => {
 
           {error && (
             <div className="py-12 text-center text-red-600 dark:text-red-400">
-              حدث خطأ في تحميل الطلبات
+              {t('common.loadingError')}
             </div>
           )}
 
@@ -192,8 +197,8 @@ export const FurnitureDeliveryPage = () => {
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-900/20">
                 <Truck className="h-12 w-12 text-amber-300 dark:text-amber-600" />
               </div>
-              <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">لا توجد طلبات</p>
-              <p className="mt-2 text-gray-500 dark:text-gray-400">حاول تغيير حالة التصفية أو تحقق لاحقاً.</p>
+              <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">{t('common.noRequests')}</p>
+              <p className="mt-2 text-gray-500 dark:text-gray-400">{t('common.noRequestsDesc')}</p>
             </div>
           )}
 
@@ -212,14 +217,14 @@ export const FurnitureDeliveryPage = () => {
                         position={[parseFloat(req.latitude), parseFloat(req.longitude)]}
                       >
                         <Popup>
-                          <div className="text-right p-1" dir="rtl">
-                            <h3 className="font-bold text-sm mb-1 text-gray-900">طلب #{req.id}</h3>
+                          <div className={`text-right p-1 ${i18n.language === 'ar' ? 'text-right' : 'text-left'}`} dir={i18n.language === 'ar' ? "rtl" : "ltr"}>
+                            <h3 className="font-bold text-sm mb-1 text-gray-900">{t('common.request')} #{req.id}</h3>
                             <p className="text-xs text-gray-600 mb-1">{req.description}</p>
                             <p className="text-xs font-semibold text-amber-600">
                               {formatPrice(req.customer_offer_price ?? req.final_agreed_price)}
                             </p>
                             <div className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[req.status]}`}>
-                              {statusLabels[req.status]}
+                              {getStatusLabel(req.status)}
                             </div>
                           </div>
                         </Popup>
@@ -240,7 +245,7 @@ export const FurnitureDeliveryPage = () => {
                           <div className="flex items-center gap-2 mb-3">
                             <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[req.status]}`}>
                               {statusIcons[req.status]}
-                              {statusLabels[req.status]}
+                              {getStatusLabel(req.status)}
                             </span>
                             <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">
                               #{req.id}
@@ -286,12 +291,12 @@ export const FurnitureDeliveryPage = () => {
                           
                           {req.status === 'PENDING_CUSTOMER_APPROVAL' && (
                             <span className="text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded-full">
-                              عرض مقدم خدمة
+                              {t('common.providerOffer')}
                             </span>
                           )}
                           {req.status === 'OPEN' && (
                             <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full">
-                              عرض العميل
+                              {t('common.customerOffer')}
                             </span>
                           )}
                           
@@ -303,7 +308,7 @@ export const FurnitureDeliveryPage = () => {
                           {/* Provider Info */}
                           {req.provider && (
                             <div className="mt-2 text-right">
-                              <div className="text-[10px] text-gray-400">مقدم الخدمة</div>
+                              <div className="text-[10px] text-gray-400">{t('common.serviceProvider')}</div>
                               <div className="flex items-center gap-1.5 text-sm font-medium text-gray-900 dark:text-white">
                                 <Truck className="h-3 w-3 text-gray-400" />
                                 {req.provider.name}
@@ -325,7 +330,7 @@ export const FurnitureDeliveryPage = () => {
                         onClick={() => setPage(p => p - 1)}
                         className="rounded-xl w-24"
                       >
-                        السابق
+                        {t('common.previous')}
                       </Button>
                       <span className="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[3rem] text-center">
                         {page} / {pagination.totalPages}
@@ -337,7 +342,7 @@ export const FurnitureDeliveryPage = () => {
                         onClick={() => setPage(p => p + 1)}
                         className="rounded-xl w-24"
                       >
-                        التالي
+                        {t('common.next')}
                       </Button>
                     </div>
                   )}
@@ -352,7 +357,7 @@ export const FurnitureDeliveryPage = () => {
          <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4 shadow-sm dark:border-blue-900/30 dark:bg-blue-900/10">
             <p className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
               <Info className="h-4 w-4" />
-              <strong>تلميح:</strong> الخريطة تعرض جميع الطلبات المفلترة (بحد أقصى 100). اضغط على العلامة لعرض التفاصيل.
+              <strong>{t('common.mapHint')}</strong>
             </p>
          </div>
       )}
