@@ -5,6 +5,7 @@ import {
   Users, Building2, Calendar, DollarSign, TrendingUp, 
   Wallet, FileText, Plus, Activity, Bell
 } from 'lucide-react';
+import { systemSettingsService } from '../../services/systemSettings.service';
 import {
   XAxis,
   YAxis,
@@ -26,17 +27,30 @@ const PIE_COLORS = ['#3b82f6', '#10b981', '#f97316'];
 
 export const DashboardPage = () => {
   const { t, i18n } = useTranslation();
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: () => dashboardService.getStats(),
   });
 
+  const { data: settings } = useQuery({
+    queryKey: ['system-settings'],
+    queryFn: systemSettingsService.getSettings,
+  });
+
   const getGreeting = () => {
+    const welcomeMsg = i18n.language === 'ar' 
+      ? settings?.welcome_message_ar 
+      : settings?.welcome_message_en;
+    
+    if (welcomeMsg) return welcomeMsg;
+
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning';
     if (hour < 18) return 'Good Afternoon';
     return 'Good Evening';
   };
+
+  const isLoading = statsLoading;
 
   const statCards = [
     {
