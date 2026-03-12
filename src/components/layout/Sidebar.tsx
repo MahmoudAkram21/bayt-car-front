@@ -18,12 +18,12 @@ import {
   LogOut,
   Tag,
   Receipt,
-  Image,
   Globe,
   Moon,
   Sun,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LayoutGrid
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -81,7 +81,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         { name: t('common.promo'), href: '/promo', icon: Tag },
         { name: t('common.commissionRules'), href: '/commission-rules', icon: Percent },
         { name: t('common.tax'), href: '/tax', icon: Receipt },
-        { name: t('common.sliders'), href: '/sliders', icon: Image },
+        { name: t('common.banners'), href: '/banners', icon: LayoutGrid },
         { name: t('common.splash'), href: '/splash', icon: Monitor },
         { name: t('common.settings'), href: '/settings', icon: Settings },
       ]

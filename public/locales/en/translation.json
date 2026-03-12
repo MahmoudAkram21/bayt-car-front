@@ -136,6 +136,20 @@
     "confirmDelete": "Delete \"{{name}}\"?",
     "back": "Back",
     "home": "Home",
-    "login": "Login"
+    "login": "Login",
+    "banners": "Banners",
+    "addBanner": "Add Banner",
+    "editBanner": "Edit Banner",
+    "bannerType": "Banner Type",
+    "ad": "Advertisement (Link)",
+    "servicePromo": "Service Promotion",
+    "bannerImage": "Banner Image",
+    "link": "Link",
+    "selectService": "Select Service",
+    "sortOrder": "Sort Order",
+    "isActive": "Is Active",
+    "bannerDeleted": "Banner deleted successfully",
+    "bannerCreated": "Banner created successfully",
+    "bannerUpdated": "Banner updated successfully"
   }
 }
