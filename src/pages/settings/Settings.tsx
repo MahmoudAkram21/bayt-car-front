@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
-import { Settings, Save, RefreshCw, Globe, Server, Phone, Mail, MapPin, DollarSign, MessageSquare } from 'lucide-react';
+import { Settings, Save, RefreshCw, Globe, Server, Phone, Mail, MapPin, DollarSign, MessageSquare, Clock } from 'lucide-react';
 import { systemSettingsService } from '../../services/systemSettings.service';
 import { Toaster, toast } from 'sonner';
 
@@ -47,6 +47,7 @@ export const SettingsPage = () => {
     { key: 'welcome_message_en', label: 'رسالة الترحيب (إنجليزي)', type: 'text', description: 'Welcome message shown to users in the mobile app', icon: MessageSquare },
     { key: 'search_radius_km', label: 'نطاق البحث الافتراضي (كم)', type: 'number', description: 'نطاق البحث عن مقدمي الخدمة حول العميل', icon: MapPin },
     { key: 'commission_percent', label: 'نسبة العمولة الافتراضية (%)', type: 'number', description: 'النسبة المقتطعة من أرباح مقدم الخدمة', icon: DollarSign },
+    { key: 'PAYMENT_TIMEOUT_MINUTES', label: 'مهلة إتمام الدفع (دقيقة)', type: 'number', description: 'الوقت المسموح لإتمام الدفع بعد قبول الطلب؛ بعدها يُلغى الطلب تلقائياً', icon: Clock },
     { key: 'support_phone', label: 'رقم هاتف الدعم', type: 'text', description: 'رقم التواصل الظاهر في التطبيق', icon: Phone },
     { key: 'support_email', label: 'بريد الدعم الإلكتروني', type: 'email', description: 'البريد الإلكتروني للتواصل الظاهر في التطبيق', icon: Mail },
   ];
