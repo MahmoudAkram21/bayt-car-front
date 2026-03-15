@@ -150,6 +150,27 @@
     "isActive": "نشط",
     "bannerDeleted": "تم حذف الإعلان بنجاح",
     "bannerCreated": "تم إضافة الإعلان بنجاح",
-    "bannerUpdated": "تم تحديث الإعلان بنجاح"
+    "bannerUpdated": "تم تحديث الإعلان بنجاح",
+    "sendNotification": "إرسال إشعار",
+    "sendNotificationTo": "إرسال إشعار إلى {{name}}",
+    "notificationSent": "تم إرسال الإشعار",
+    "title": "العنوان",
+    "body": "النص",
+    "titleEnglish": "العنوان (إنجليزي)",
+    "titleArabic": "العنوان (عربي)",
+    "bodyEnglish": "النص (إنجليزي)",
+    "bodyArabic": "النص (عربي)",
+    "notificationTitleEn": "أدخل العنوان بالإنجليزية",
+    "notificationTitleAr": "أدخل العنوان بالعربية",
+    "notificationBodyEn": "رسالة اختيارية بالإنجليزية",
+    "notificationBodyAr": "رسالة اختيارية بالعربية",
+    "notificationTitle": "عنوان الإشعار",
+    "notificationBody": "رسالة اختيارية",
+    "sending": "جاري الإرسال...",
+    "send": "إرسال",
+    "atLeastOneTitle": "أدخل عنواناً واحداً على الأقل (إنجليزي أو عربي)",
+    "create": "إنشاء",
+    "editUser": "تعديل المستخدم",
+    "usersFound": "تم العثور على {{count}} مستخدم"
   }
 }

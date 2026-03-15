@@ -150,6 +150,27 @@
     "isActive": "Is Active",
     "bannerDeleted": "Banner deleted successfully",
     "bannerCreated": "Banner created successfully",
-    "bannerUpdated": "Banner updated successfully"
+    "bannerUpdated": "Banner updated successfully",
+    "sendNotification": "Send notification",
+    "sendNotificationTo": "Send push notification to {{name}}",
+    "notificationSent": "Notification sent",
+    "title": "Title",
+    "body": "Body",
+    "titleEnglish": "Title (English)",
+    "titleArabic": "Title (Arabic)",
+    "bodyEnglish": "Body (English)",
+    "bodyArabic": "Body (Arabic)",
+    "notificationTitleEn": "Enter title in English",
+    "notificationTitleAr": "Enter title in Arabic",
+    "notificationBodyEn": "Optional message in English",
+    "notificationBodyAr": "رسالة اختيارية بالعربية",
+    "notificationTitle": "Notification title",
+    "notificationBody": "Optional message",
+    "sending": "Sending...",
+    "send": "Send",
+    "atLeastOneTitle": "Enter at least one title (English or Arabic)",
+    "create": "Create",
+    "editUser": "Edit User",
+    "usersFound": "{{count}} users found"
   }
 }

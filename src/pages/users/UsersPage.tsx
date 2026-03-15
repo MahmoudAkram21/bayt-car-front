@@ -4,9 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { Search, Users, UserPlus, RefreshCw, LayoutGrid, List, Pencil, Trash2, Ban, UserCheck, Building2, Shield, CheckCircle } from 'lucide-react';
+import { Search, Users, UserPlus, RefreshCw, LayoutGrid, List, Pencil, Trash2, Ban, UserCheck, Building2, Shield, CheckCircle, Bell } from 'lucide-react';
 import { type User, UserRole, type PaginatedResponse } from '../../types';
 import { userService } from '../../services/user.service';
+import { notificationService } from '../../services/notification.service';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 
@@ -25,6 +27,9 @@ export const UsersPage = () => {
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({ nameEn: '', nameAr: '', email: '', phone: '', role: UserRole.OWNER });
+  const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
+  const [notifyTargetUser, setNotifyTargetUser] = useState<User | null>(null);
+  const [notifyForm, setNotifyForm] = useState({ titleEn: '', titleAr: '', bodyEn: '', bodyAr: '' });
 
   const { data, isLoading, error } = useQuery<PaginatedResponse<User>>({
     queryKey: ['users', { role: filterRole !== 'all' ? filterRole : undefined, search: searchTerm }],
@@ -60,6 +65,21 @@ export const UsersPage = () => {
   const suspendMutation = useMutation({
     mutationFn: (id: string) => userService.suspendUser(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+  });
+
+  const sendNotificationMutation = useMutation({
+    mutationFn: (params: { userId: string; titleEn?: string; titleAr?: string; bodyEn?: string; bodyAr?: string }) => notificationService.sendToUser(params),
+    onSuccess: () => {
+      console.log('[UsersPage] Send notification success');
+      toast.success(t('common.notificationSent') || 'Notification sent');
+      setIsNotifyModalOpen(false);
+      setNotifyTargetUser(null);
+      setNotifyForm({ titleEn: '', titleAr: '', bodyEn: '', bodyAr: '' });
+    },
+    onError: (error: any) => {
+      console.error('[UsersPage] Send notification error:', error?.response?.data ?? error?.message ?? error);
+      toast.error(error.response?.data?.error || error.message || 'Failed to send notification');
+    },
   });
 
   const getRoleBadge = (role: string) => {
@@ -107,6 +127,34 @@ export const UsersPage = () => {
     setFormData({ nameEn: '', nameAr: '', email: '', phone: '', role: UserRole.OWNER });
     setIsAddUserOpen(true);
   };
+
+  const handleOpenNotifyModal = (user: User, e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('[UsersPage] Open notify modal for user:', user.id, user.email);
+    setNotifyTargetUser(user);
+    setNotifyForm({ titleEn: '', titleAr: '', bodyEn: '', bodyAr: '' });
+    setIsNotifyModalOpen(true);
+  };
+
+  const handleSendNotification = (e: React.FormEvent) => {
+    e.preventDefault();
+    const hasTitle = notifyForm.titleEn.trim() || notifyForm.titleAr.trim();
+    if (!notifyTargetUser || !hasTitle) {
+      console.log('[UsersPage] Send notification skipped: no target or no title', { notifyTargetUser: !!notifyTargetUser, titleEn: notifyForm.titleEn, titleAr: notifyForm.titleAr });
+      return;
+    }
+    const payload = {
+      userId: notifyTargetUser.id,
+      titleEn: notifyForm.titleEn.trim() || undefined,
+      titleAr: notifyForm.titleAr.trim() || undefined,
+      bodyEn: notifyForm.bodyEn.trim() || undefined,
+      bodyAr: notifyForm.bodyAr.trim() || undefined,
+    };
+    console.log('[UsersPage] Sending notification:', payload);
+    sendNotificationMutation.mutate(payload);
+  };
+
+  const notifyFormHasTitle = (notifyForm.titleEn?.trim() || notifyForm.titleAr?.trim()) ?? false;
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
@@ -310,6 +358,9 @@ export const UsersPage = () => {
                       {user.createdAt ? format(new Date(user.createdAt), 'MMM dd, yyyy') : '—'}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-1">
+                      <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs focus:ring-2 focus:ring-teal-500" onClick={(e) => handleOpenNotifyModal(user, e)} title={t('common.sendNotification') || 'Send notification'}>
+                        <Bell className="h-3.5 w-3.5" />
+                      </Button>
                       <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs focus:ring-2 focus:ring-teal-500" onClick={(e) => {
                         e.stopPropagation();
                         handleEditUser(user);
@@ -379,7 +430,9 @@ export const UsersPage = () => {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="mt-3 flex flex-wrap gap-1">
-
+                      <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs focus:ring-2 focus:ring-teal-500" onClick={(e) => handleOpenNotifyModal(user, e)} title={t('common.sendNotification') || 'Send notification'}>
+                        <Bell className="h-3.5 w-3.5" />
+                      </Button>
                       <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs focus:ring-2 focus:ring-teal-500" onClick={(e) => {
                         e.stopPropagation();
                         handleEditUser(user);
@@ -500,6 +553,44 @@ export const UsersPage = () => {
               <Button type="button" variant="outline" onClick={() => setIsEditUserOpen(false)}>{t('common.cancel')}</Button>
               <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={updateMutation.isPending}>
                 {updateMutation.isPending ? 'Updating...' : t('common.save')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Notification Dialog */}
+      <Dialog open={isNotifyModalOpen} onOpenChange={(open) => { if (!open) { setNotifyTargetUser(null); setNotifyForm({ titleEn: '', titleAr: '', bodyEn: '', bodyAr: '' }); } setIsNotifyModalOpen(open); }}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>{t('common.sendNotification')}</DialogTitle>
+            <DialogDescription>
+              {notifyTargetUser ? t('common.sendNotificationTo', { name: getName(notifyTargetUser.name) }) : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSendNotification}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="notifyTitleEn" className="text-sm font-medium">{t('common.titleEnglish')} *</label>
+                <Input id="notifyTitleEn" value={notifyForm.titleEn} onChange={(e) => setNotifyForm({ ...notifyForm, titleEn: e.target.value })} placeholder={t('common.notificationTitleEn')} dir="ltr" />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="notifyTitleAr" className="text-sm font-medium">{t('common.titleArabic')} *</label>
+                <Input id="notifyTitleAr" value={notifyForm.titleAr} onChange={(e) => setNotifyForm({ ...notifyForm, titleAr: e.target.value })} placeholder={t('common.notificationTitleAr')} dir="rtl" />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="notifyBodyEn" className="text-sm font-medium">{t('common.bodyEnglish')}</label>
+                <textarea id="notifyBodyEn" value={notifyForm.bodyEn} onChange={(e) => setNotifyForm({ ...notifyForm, bodyEn: e.target.value })} placeholder={t('common.notificationBodyEn')} rows={2} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white w-full resize-y" dir="ltr" />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="notifyBodyAr" className="text-sm font-medium">{t('common.bodyArabic')}</label>
+                <textarea id="notifyBodyAr" value={notifyForm.bodyAr} onChange={(e) => setNotifyForm({ ...notifyForm, bodyAr: e.target.value })} placeholder={t('common.notificationBodyAr')} rows={2} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white w-full resize-y" dir="rtl" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsNotifyModalOpen(false)}>{t('common.cancel')}</Button>
+              <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={sendNotificationMutation.isPending || !notifyFormHasTitle}>
+                {sendNotificationMutation.isPending ? t('common.sending') : t('common.send')}
               </Button>
             </DialogFooter>
           </form>
