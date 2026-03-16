@@ -1,23 +1,39 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { ArrowLeft, Mail, Phone, Calendar, Shield, Award, Wallet, Activity } from 'lucide-react';
 import { userService } from '../../services/user.service';
+import { adminUsersService, type AdminUser } from '../../services/adminUsers.service';
 import { format } from 'date-fns';
 import { UserRole } from '../../types';
 
+type UserType = 'app' | 'admin';
+
 export const UserDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const type = (searchParams.get('type') as UserType) || 'app';
 
-  const { data: user, isLoading, error } = useQuery({
+  const appQuery = useQuery({
     queryKey: ['user', id],
     queryFn: () => userService.getUserById(id!),
-    enabled: !!id,
+    enabled: !!id && type === 'app',
   });
 
-  if (isLoading) {
+  const adminQuery = useQuery({
+    queryKey: ['admin-user', id],
+    queryFn: () => adminUsersService.getById(id!),
+    enabled: !!id && type === 'admin',
+  });
+
+  const isApp = type === 'app';
+  const { data: user, isLoading, error } = isApp ? appQuery : adminQuery;
+  const isLoadingAny = appQuery.isLoading || adminQuery.isLoading;
+  const errorAny = appQuery.error || adminQuery.error;
+
+  if (isLoadingAny) {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
@@ -25,7 +41,7 @@ export const UserDetailPage = () => {
     );
   }
 
-  if (error || !user) {
+  if (errorAny || !user) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <div className="rounded-full bg-red-100 p-3 dark:bg-red-900/20">
@@ -56,6 +72,48 @@ export const UserDetailPage = () => {
     return name?.en || name?.ar || 'N/A';
   };
 
+  if (type === 'admin') {
+    const admin = user as AdminUser;
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/users')} className="rounded-full">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+                Admin Profile
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Dashboard admin user
+              </p>
+            </div>
+          </div>
+        </div>
+        <Card className="rounded-2xl shadow-sm border-gray-200 dark:border-gray-700 max-w-xl">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center text-center">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-amber-100 text-3xl font-bold text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 mb-4">
+                {(admin.name || 'A').charAt(0).toUpperCase()}
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{admin.name}</h2>
+              <span className="mt-2 inline-flex rounded-full px-3 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                {admin.role}
+              </span>
+            </div>
+            <div className="mt-8 space-y-4">
+              <div className="flex items-center gap-3 text-sm">
+                <Mail className="h-4 w-4 text-gray-400" />
+                <span className="text-gray-600 dark:text-gray-300">{admin.email}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -84,27 +142,27 @@ export const UserDetailPage = () => {
           <CardContent className="pt-6">
             <div className="flex flex-col items-center text-center">
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-teal-100 text-3xl font-bold text-teal-600 dark:bg-teal-900/30 dark:text-teal-400 mb-4">
-                 {(getName(user.name) || 'U').charAt(0).toUpperCase()}
+                 {(getName((user as any).name) || 'U').charAt(0).toUpperCase()}
               </div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{getName(user.name)}</h2>
-              <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-medium ${getRoleBadge(user.role)}`}>
-                {user.role}
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{getName((user as any).name)}</h2>
+              <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-medium ${getRoleBadge((user as any).role)}`}>
+                {(user as any).role}
               </span>
             </div>
 
             <div className="mt-8 space-y-4">
               <div className="flex items-center gap-3 text-sm">
                 <Mail className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600 dark:text-gray-300">{user.email}</span>
+                <span className="text-gray-600 dark:text-gray-300">{(user as any).email}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Phone className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600 dark:text-gray-300">{user.phone || 'No phone number'}</span>
+                <span className="text-gray-600 dark:text-gray-300">{(user as any).phone || 'No phone number'}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Calendar className="h-4 w-4 text-gray-400" />
                 <span className="text-gray-600 dark:text-gray-300">
-                  Joined {user.createdAt ? format(new Date(user.createdAt), 'MMMM dd, yyyy') : 'N/A'}
+                  Joined {(user as any).createdAt ? format(new Date((user as any).createdAt), 'MMMM dd, yyyy') : 'N/A'}
                 </span>
               </div>
             </div>
