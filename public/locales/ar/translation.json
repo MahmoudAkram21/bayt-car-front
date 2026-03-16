@@ -136,6 +136,20 @@
     "confirmDelete": "حذف \"{{name}}\"؟",
     "back": "رجوع",
     "home": "الرئيسية",
-    "login": "تسجيل الدخول"
+    "login": "تسجيل الدخول",
+    "banners": "الإعلانات (Banners)",
+    "addBanner": "إضافة إعلان",
+    "editBanner": "تعديل إعلان",
+    "bannerType": "نوع الإعلان",
+    "ad": "إعلان خارجي (رابط)",
+    "servicePromo": "عرض خدمة",
+    "bannerImage": "صورة الإعلان",
+    "link": "الرابط",
+    "selectService": "اختر الخدمة",
+    "sortOrder": "ترتيب العرض",
+    "isActive": "نشط",
+    "bannerDeleted": "تم حذف الإعلان بنجاح",
+    "bannerCreated": "تم إضافة الإعلان بنجاح",
+    "bannerUpdated": "تم تحديث الإعلان بنجاح"
   }
 }

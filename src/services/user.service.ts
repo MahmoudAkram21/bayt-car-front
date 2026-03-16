@@ -17,6 +17,11 @@ export const userService = {
     return response.data;
   },
 
+  async createUser(data: { name: { en: string; ar?: string }; email: string; phone?: string; role: string }): Promise<User> {
+    const response = await api.post<User>('/users', data);
+    return response.data;
+  },
+
   async updateUser(id: string, data: Partial<User>): Promise<User> {
     const response = await api.patch<User>(`/users/${id}`, data);
     return response.data;

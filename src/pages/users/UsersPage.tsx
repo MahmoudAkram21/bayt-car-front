@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { Search, Users, UserPlus, RefreshCw, LayoutGrid, List, Pencil, Trash2, Ban, UserCheck, Building2, Shield, CheckCircle } from 'lucide-react';
 import { type User, UserRole, type PaginatedResponse } from '../../types';
 import { userService } from '../../services/user.service';
@@ -20,6 +21,10 @@ export const UsersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [formData, setFormData] = useState({ nameEn: '', nameAr: '', email: '', phone: '', role: UserRole.OWNER });
 
   const { data, isLoading, error } = useQuery<PaginatedResponse<User>>({
     queryKey: ['users', { role: filterRole !== 'all' ? filterRole : undefined, search: searchTerm }],
@@ -27,6 +32,24 @@ export const UsersPage = () => {
       role: filterRole !== 'all' ? filterRole : undefined,
       search: searchTerm || undefined,
     }),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: { name: { en: string; ar?: string }; email: string; phone?: string; role: string }) => userService.createUser(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setIsAddUserOpen(false);
+      setFormData({ nameEn: '', nameAr: '', email: '', phone: '', role: UserRole.OWNER });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<User> }) => userService.updateUser(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setIsEditUserOpen(false);
+      setEditingUser(null);
+    },
   });
 
   const deleteMutation = useMutation({
@@ -75,7 +98,51 @@ export const UsersPage = () => {
   };
 
   const handleSuspend = (id: string, name: string) => {
-    if (window.confirm(t('common.confirmSuspend', { name }))) suspendMutation.mutate(id);
+    if (window.confirm(t('common.confirmSuspend', { name }))) {
+      suspendMutation.mutate(id);
+    }
+  };
+
+  const handleAddUser = () => {
+    setFormData({ nameEn: '', nameAr: '', email: '', phone: '', role: UserRole.OWNER });
+    setIsAddUserOpen(true);
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    const userName = typeof user.name === 'string' ? user.name : user.name.en;
+    const userNameAr = typeof user.name === 'string' ? user.name : user.name.ar;
+    setFormData({
+      nameEn: userName || '',
+      nameAr: userNameAr || '',
+      email: user.email,
+      phone: user.phone || '',
+      role: user.role,
+    });
+    setIsEditUserOpen(true);
+  };
+
+  const handleSubmitAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate({
+      name: { en: formData.nameEn, ar: formData.nameAr || formData.nameEn },
+      email: formData.email,
+      phone: formData.phone || undefined,
+      role: formData.role,
+    });
+  };
+
+  const handleSubmitEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    updateMutation.mutate({
+      id: editingUser.id,
+      data: {
+        name: { en: formData.nameEn, ar: formData.nameAr || formData.nameEn },
+        phone: formData.phone || undefined,
+        role: formData.role,
+      },
+    });
   };
 
   return (
@@ -94,7 +161,7 @@ export const UsersPage = () => {
             <RefreshCw className="h-4 w-4" />
             {t('common.update')}
           </Button>
-          <Button size="sm" className="rounded-xl bg-teal-600 shadow-lg gap-2 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500">
+          <Button size="sm" className="rounded-xl bg-teal-600 shadow-lg gap-2 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500" onClick={handleAddUser}>
             <UserPlus className="h-4 w-4" />
             {t('common.addUser')}
           </Button>
@@ -245,10 +312,7 @@ export const UsersPage = () => {
                     <div className="mt-3 flex flex-wrap gap-1">
                       <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs focus:ring-2 focus:ring-teal-500" onClick={(e) => {
                         e.stopPropagation();
-                        const newName = prompt(t('common.enterNewName'), getName(user.name));
-                        if(newName) {
-                           userService.updateUser(user.id, { name: { en: newName, ar: newName } }).then(() => queryClient.invalidateQueries({ queryKey:['users'] }));
-                        }
+                        handleEditUser(user);
                       }}>
                         <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
                       </Button>
@@ -318,10 +382,7 @@ export const UsersPage = () => {
 
                       <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs focus:ring-2 focus:ring-teal-500" onClick={(e) => {
                         e.stopPropagation();
-                        const newName = prompt("Enter new name:", getName(user.name));
-                        if(newName) {
-                           userService.updateUser(user.id, { name: { en: newName, ar: newName } }).then(() => queryClient.invalidateQueries({ queryKey:['users'] }));
-                        }
+                        handleEditUser(user);
                       }}>
                         <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
                       </Button>
@@ -354,6 +415,96 @@ export const UsersPage = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Add User Dialog */}
+      <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('common.addUser')}</DialogTitle>
+            <DialogDescription>Create a new user account. Fill in the required information below.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmitAdd}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="nameEn" className="text-sm font-medium">{t('common.name')} (English) *</label>
+                <Input id="nameEn" value={formData.nameEn} onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })} required />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="nameAr" className="text-sm font-medium">{t('common.name')} (Arabic)</label>
+                <Input id="nameAr" value={formData.nameAr} onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="email" className="text-sm font-medium">{t('common.email')} *</label>
+                <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="phone" className="text-sm font-medium">{t('common.phone')}</label>
+                <Input id="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="role" className="text-sm font-medium">{t('common.role')} *</label>
+                <select id="role" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700" required>
+                  <option value={UserRole.OWNER}>{t('common.customers')}</option>
+                  <option value={UserRole.PROVIDER}>{t('common.providers')}</option>
+                  <option value={UserRole.ADMIN}>{t('common.admins')}</option>
+                  <option value={UserRole.SUPER_ADMIN}>{t('common.superAdmin')}</option>
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsAddUserOpen(false)}>{t('common.cancel')}</Button>
+              <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={createMutation.isPending}>
+                {createMutation.isPending ? 'Creating...' : t('common.create')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('common.editUser')}</DialogTitle>
+            <DialogDescription>Update user information below.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmitEdit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="editNameEn" className="text-sm font-medium">{t('common.name')} (English) *</label>
+                <Input id="editNameEn" value={formData.nameEn} onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })} required />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="editNameAr" className="text-sm font-medium">{t('common.name')} (Arabic)</label>
+                <Input id="editNameAr" value={formData.nameAr} onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="editEmail" className="text-sm font-medium">{t('common.email')}</label>
+                <Input id="editEmail" type="email" value={formData.email} disabled className="bg-gray-100 dark:bg-gray-800" />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="editPhone" className="text-sm font-medium">{t('common.phone')}</label>
+                <Input id="editPhone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="editRole" className="text-sm font-medium">{t('common.role')} *</label>
+                <select id="editRole" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700" required>
+                  <option value={UserRole.OWNER}>{t('common.customers')}</option>
+                  <option value={UserRole.PROVIDER}>{t('common.providers')}</option>
+                  <option value={UserRole.ADMIN}>{t('common.admins')}</option>
+                  <option value={UserRole.SUPER_ADMIN}>{t('common.superAdmin')}</option>
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditUserOpen(false)}>{t('common.cancel')}</Button>
+              <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? 'Updating...' : t('common.save')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
