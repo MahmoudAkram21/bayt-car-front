@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { Search, Wrench, RefreshCw, LayoutGrid, List, ChevronRight, MapPin } from 'lucide-react';
+import { Search, Wrench, RefreshCw, LayoutGrid, List, ChevronRight, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { serviceService } from '../../services/service.service';
 import { serviceCategoryService } from '../../services/serviceCategory.service';
 import type { Service, PaginatedResponse, MultilingualText } from '../../types';
@@ -12,7 +12,15 @@ import { useTranslation } from 'react-i18next';
 
 type ViewMode = 'cards' | 'table';
 
-
+/** Resolve upload URLs to the API origin so images load from the backend. */
+const getImageUrl = (url: string | null | undefined) => {
+  if (!url) return '';
+  if (url.startsWith('blob:')) return url;
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const baseUrl = backendUrl.replace(/\/$/, '').replace(/\/api$/, '');
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return baseUrl + cleanUrl;
+};
 
 export const ServicesPage = () => {
   const { t } = useTranslation();
@@ -28,8 +36,11 @@ export const ServicesPage = () => {
     const price = s.base_price;
     return price != null ? `${Number(price).toFixed(0)} ${t('common.currency', { defaultValue: 'SAR' })}` : '—';
   };
-  const [categoryFilter, setCategoryFilter] = useState<number | ''>('');
+  const [categoryFilter, setCategoryFilter] = useState<number | string | ''>('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [emergencyFilter, setEmergencyFilter] = useState<boolean | 'all'>('all');
 
+  const queryClient = useQueryClient();
   const { data: categoriesData } = useQuery({
     queryKey: ['service-categories'],
     queryFn: () => serviceCategoryService.list(),
@@ -37,8 +48,21 @@ export const ServicesPage = () => {
   const categories = categoriesData?.data ?? [];
 
   const { data, isLoading, error } = useQuery<PaginatedResponse<Service>>({
-    queryKey: ['services', categoryFilter],
-    queryFn: () => serviceService.getAllServices({ categoryId: categoryFilter === '' ? undefined : categoryFilter }),
+    queryKey: ['services', categoryFilter, activeFilter, emergencyFilter],
+    queryFn: () =>
+      serviceService.getAllServices({
+        categoryId: categoryFilter === '' ? undefined : categoryFilter,
+        isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
+        is_emergency: emergencyFilter === 'all' ? undefined : emergencyFilter === true,
+      }),
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
+      active ? serviceService.activateService(id) : serviceService.deactivateService(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
   });
 
   const getName = (name: MultilingualText | string) => {
@@ -129,13 +153,31 @@ export const ServicesPage = () => {
             </div>
             <select
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value === '' ? '' : Number(e.target.value))}
+              onChange={(e) => setCategoryFilter(e.target.value === '' ? '' : e.target.value)}
               className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="">{t('common.allCategories')}</option>
               {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name_ar}</option>
+                <option key={c.id} value={String(c.id)}>{c.name_ar}</option>
               ))}
+            </select>
+            <select
+              value={activeFilter}
+              onChange={(e) => setActiveFilter(e.target.value as 'all' | 'active' | 'inactive')}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="all">{t('common.filterAllStatus')}</option>
+              <option value="active">{t('common.filterActiveOnly')}</option>
+              <option value="inactive">{t('common.filterInactiveOnly')}</option>
+            </select>
+            <select
+              value={emergencyFilter === 'all' ? 'all' : emergencyFilter ? 'yes' : 'no'}
+              onChange={(e) => setEmergencyFilter(e.target.value === 'all' ? 'all' : e.target.value === 'yes')}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="all">{t('common.filterAllServices')}</option>
+              <option value="yes">{t('common.filterEmergencyOnly')}</option>
+              <option value="no">{t('common.filterNoEmergency')}</option>
             </select>
             {/* View toggle: Cards | Table */}
             <div className="flex rounded-lg border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 overflow-hidden">
@@ -214,7 +256,7 @@ export const ServicesPage = () => {
                   <div className="relative h-40 w-full shrink-0 bg-gradient-to-br from-teal-500/10 to-teal-600/5">
                     {service.icon_url ? (
                       <img
-                        src={service.icon_url}
+                        src={getImageUrl(service.icon_url)}
                         alt={getName(service.name)}
                         className="h-full w-full object-cover transition-transform group-hover:scale-105"
                       />
@@ -225,6 +267,24 @@ export const ServicesPage = () => {
                     )}
                     <div className="absolute bottom-2 right-2 rounded-lg bg-white/90 px-2 py-1 text-xs font-medium text-gray-800 shadow dark:bg-gray-800/90 dark:text-gray-200">
                       {getPricingLabel(service)}
+                    </div>
+                    <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+                      <span
+                        className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium ${
+                          (service.is_active ?? service.isActive) !== false
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                            : 'bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-400'
+                        }`}
+                      >
+                        {(service.is_active ?? service.isActive) !== false ? <CheckCircle2 className="h-3 w-3" /> : null}
+                        {(service.is_active ?? service.isActive) !== false ? t('common.active') : t('common.inactive')}
+                      </span>
+                      {(service as Service & { is_emergency?: boolean }).is_emergency && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                          <AlertCircle className="h-3 w-3" />
+                          {t('common.emergency')}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="p-4">
@@ -252,6 +312,8 @@ export const ServicesPage = () => {
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.id')}</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.service')}</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.category')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.status')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.emergency')}</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.gpsRange')}</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.pricing')}</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.actions')}</th>
@@ -263,6 +325,34 @@ export const ServicesPage = () => {
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{service.id}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{getName(service.name)}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{service.category?.name_ar ?? '—'}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const active = (service.is_active ?? service.isActive) === false;
+                            toggleActiveMutation.mutate({ id: String(service.id), active });
+                          }}
+                          disabled={toggleActiveMutation.isPending}
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                            (service.is_active ?? service.isActive) !== false
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                              : 'bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-400'
+                          }`}
+                        >
+                          {(service.is_active ?? service.isActive) !== false ? <CheckCircle2 className="h-3 w-3" /> : null}
+                          {(service.is_active ?? service.isActive) !== false ? t('common.active') : t('common.inactive')}
+                        </button>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm">
+                        {(service as Service & { is_emergency?: boolean }).is_emergency ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                            <AlertCircle className="h-3 w-3" /> {t('common.yes')}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300 flex items-center gap-1">
                         {service.gps_radius_km != null ? (
                           <><MapPin className="h-3.5 w-3.5" /> {service.gps_radius_km} {t('common.km')}</>

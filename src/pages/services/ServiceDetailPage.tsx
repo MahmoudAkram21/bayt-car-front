@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Wrench, Tag, Coins, FileText, CheckCircle2, Hash, Info, MapPin, Truck, Plus, Trash2, Edit, X } from 'lucide-react';
+import { ArrowLeft, Wrench, Tag, Coins, FileText, CheckCircle2, Hash, Info, MapPin, Truck, Plus, Trash2, Edit, X, Palette, Image, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { serviceService } from '../../services/service.service';
 import { serviceCategoryService } from '../../services/serviceCategory.service';
+import { useTranslation } from 'react-i18next';
 
-import type { MultilingualText, ServiceAttribute, AttributeOption } from '../../types';
+import type { MultilingualText, ServiceAttribute, AttributeOption, ServiceIconShape, ServiceDetail } from '../../types';
 
 const getName = (name: string | MultilingualText | null | undefined) => {
   if (typeof name === 'string') return name;
@@ -22,12 +23,46 @@ const getDesc = (desc: string | MultilingualText | null | undefined) => {
   return desc?.en || desc?.ar || '';
 };
 
+/** Resolve upload URLs (e.g. /uploads/services/...) to the API origin so images load from the backend. */
+const getImageUrl = (url: string | null | undefined) => {
+  if (!url) return '';
+  if (url.startsWith('blob:')) return url;
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const baseUrl = backendUrl.replace(/\/$/, '').replace(/\/api$/, '');
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return baseUrl + cleanUrl;
+};
+
 export const ServiceDetailPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [gpsRadius, setGpsRadius] = useState<string>('');
   const [categoryId, setCategoryId] = useState<string>('');
+
+  // Admin display form state
+  const [displayForm, setDisplayForm] = useState({
+    name: '',
+    description: '',
+    display_color: '',
+    icon_shape: '' as ServiceIconShape | '',
+    is_active: true,
+    is_emergency: false,
+  });
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [iconPreviewUrl, setIconPreviewUrl] = useState<string | null>(null);
+
+  // Preview selected icon file; revoke object URL on change/unmount to avoid leaks
+  useEffect(() => {
+    if (!iconFile) {
+      setIconPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(iconFile);
+    setIconPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [iconFile]);
 
   // Attribute Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,13 +84,47 @@ export const ServiceDetailPage = () => {
   });
   const categories = categoriesData?.data ?? [];
 
-  // Catalog Mutation
+  // Catalog Mutation (category + gps; payload uses string category_id for API)
   const catalogMutation = useMutation({
-    mutationFn: (payload: { category_id?: number | null; gps_radius_km?: number | null }) =>
+    mutationFn: (payload: Parameters<typeof serviceService.updateServiceCatalog>[1]) =>
       serviceService.updateServiceCatalog(id!, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['service', id] });
       queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
+  });
+
+  // Sync display form when service loads
+  useEffect(() => {
+    if (!service) return;
+    const s = service as ServiceDetail & { display_color?: string; icon_shape?: string; is_emergency?: boolean };
+    setDisplayForm({
+      name: getName(service.name),
+      description: getDesc(service.description) || '',
+      display_color: s.display_color || '#0d9488',
+      icon_shape: (s.icon_shape as ServiceIconShape) || '',
+      is_active: service.is_active ?? service.isActive ?? true,
+      is_emergency: s.is_emergency ?? false,
+    });
+  }, [service]);
+
+  // Display save mutation (name, description, color, shape, is_active, is_emergency)
+  const displaySaveMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof serviceService.updateServiceCatalog>[1]) =>
+      serviceService.updateServiceCatalog(id!, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service', id] });
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
+  });
+
+  // Icon upload mutation
+  const iconUploadMutation = useMutation({
+    mutationFn: (file: File) => serviceService.uploadServiceIcon(id!, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service', id] });
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+      setIconFile(null);
     },
   });
 
@@ -92,11 +161,30 @@ export const ServiceDetailPage = () => {
   });
 
   const handleSaveCatalog = () => {
-    const payload: { category_id?: number | null; gps_radius_km?: number | null } = {};
-    if (categoryId !== '') payload.category_id = categoryId === 'none' ? null : parseInt(categoryId, 10);
+    const payload: Record<string, unknown> = {};
+    if (categoryId !== '') payload.category_id = categoryId === 'none' ? null : String(categoryId);
     if (gpsRadius !== '') payload.gps_radius_km = gpsRadius.trim() ? parseFloat(gpsRadius) : null;
     if (Object.keys(payload).length === 0) return;
-    catalogMutation.mutate(payload);
+    catalogMutation.mutate(payload as Parameters<typeof serviceService.updateServiceCatalog>[1]);
+  };
+
+  const handleSaveDisplay = () => {
+    displaySaveMutation.mutate({
+      name: displayForm.name || undefined,
+      description: displayForm.description || undefined,
+      display_color: displayForm.display_color || undefined,
+      icon_shape: displayForm.icon_shape || undefined,
+      is_active: displayForm.is_active,
+      is_emergency: displayForm.is_emergency,
+    });
+  };
+
+  const handleIconUpload = () => {
+    if (iconFile) iconUploadMutation.mutate(iconFile);
+  };
+
+  const handleRemoveIcon = () => {
+    displaySaveMutation.mutate({ icon_url: null });
   };
 
   // Attribute Handlers
@@ -217,7 +305,7 @@ export const ServiceDetailPage = () => {
               <div className="relative h-56 w-full shrink-0 bg-gradient-to-br from-teal-500/20 to-teal-600/10 sm:h-64 sm:w-72">
                 {service.icon_url ? (
                   <img
-                    src={service.icon_url}
+                    src={getImageUrl(service.icon_url)}
                     alt={getName(service.name)}
                     className="h-full w-full object-cover"
                   />
@@ -375,14 +463,14 @@ export const ServiceDetailPage = () => {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <div>
-                  <p className="font-medium text-gray-500 dark:text-gray-400">Status</p>
+                  <p className="font-medium text-gray-500 dark:text-gray-400">{t('common.status')}</p>
                   <p className="text-gray-900 dark:text-white">
                     {service.isActive !== false ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Active
+                        <CheckCircle2 className="h-3.5 w-3.5" /> {t('common.active')}
                       </span>
                     ) : (
-                      <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">Inactive</span>
+                      <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">{t('common.inactive')}</span>
                     )}
                   </p>
                 </div>
@@ -390,7 +478,7 @@ export const ServiceDetailPage = () => {
               {service.category && (
                 <div className="flex items-center gap-3 text-sm">
                   <div>
-                    <p className="font-medium text-gray-500 dark:text-gray-400">الفئة</p>
+                    <p className="font-medium text-gray-500 dark:text-gray-400">{t('common.categoryLabel')}</p>
                     <p className="text-gray-900 dark:text-white">{service.category?.name_ar ?? '—'}</p>
                   </div>
                 </div>
@@ -398,31 +486,151 @@ export const ServiceDetailPage = () => {
             </CardContent>
           </Card>
 
-          {/* Admin: تعديل الفئة ونطاق GPS */}
+          {/* Admin: Display & visibility (name, icon, color, shape, active, emergency) */}
+          <Card className="rounded-2xl border-violet-200 dark:border-violet-800 dark:bg-gray-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                <Palette className="h-5 w-5 text-violet-500" />
+                {t('common.displayAndVisibility')}
+              </CardTitle>
+              <CardDescription>{t('common.displayAndVisibilityDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>{t('common.serviceName')}</Label>
+                <Input
+                  value={displayForm.name}
+                  onChange={(e) => setDisplayForm((p) => ({ ...p, name: e.target.value }))}
+                  placeholder={t('common.serviceNamePlaceholder')}
+                  className="mt-1 rounded-lg"
+                />
+              </div>
+              <div>
+                <Label>{t('common.description')}</Label>
+                <textarea
+                  value={displayForm.description}
+                  onChange={(e) => setDisplayForm((p) => ({ ...p, description: e.target.value }))}
+                  placeholder={t('common.descriptionOptionalPlaceholder')}
+                  rows={2}
+                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Image className="h-4 w-4" /> {t('common.serviceIcon')}
+                </Label>
+                <div className="mt-1 flex flex-wrap items-center gap-3">
+                  {(iconPreviewUrl || service.icon_url) && (
+                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                      <img
+                        src={iconPreviewUrl || getImageUrl(service.icon_url) || ''}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                      {iconPreviewUrl && (
+                        <span className="absolute bottom-0 left-0 right-0 bg-black/60 py-0.5 text-center text-xs text-white">
+                          {t('common.preview')}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(e) => setIconFile(e.target.files?.[0] ?? null)}
+                    className="text-sm text-gray-600 dark:text-gray-400"
+                  />
+                  {iconFile && (
+                    <Button type="button" size="sm" onClick={handleIconUpload} disabled={iconUploadMutation.isPending} className="rounded-lg bg-violet-600 hover:bg-violet-700">
+                      {t('common.upload')}
+                    </Button>
+                  )}
+                  {service.icon_url && !iconPreviewUrl && (
+                    <Button type="button" variant="outline" size="sm" onClick={handleRemoveIcon} disabled={displaySaveMutation.isPending} className="rounded-lg text-red-600 hover:bg-red-50">
+                      {t('common.removeIcon')}
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-6">
+                <div>
+                  <Label className="flex items-center gap-1.5 text-sm">
+                    <span className="h-4 w-4 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: displayForm.display_color || '#0d9488' }} /> {t('common.displayColor')}
+                  </Label>
+                  <input
+                    type="color"
+                    value={displayForm.display_color || '#0d9488'}
+                    onChange={(e) => setDisplayForm((p) => ({ ...p, display_color: e.target.value }))}
+                    className="mt-1 h-9 w-14 cursor-pointer rounded border border-gray-300 dark:border-gray-600"
+                  />
+                </div>
+                <div>
+                  <Label>{t('common.iconShape')}</Label>
+                  <select
+                    value={displayForm.icon_shape || ''}
+                    onChange={(e) => setDisplayForm((p) => ({ ...p, icon_shape: e.target.value as ServiceIconShape }))}
+                    className="mt-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">{t('common.iconShapeDefault')}</option>
+                    <option value="circle">{t('common.iconShapeCircle')}</option>
+                    <option value="square">{t('common.iconShapeSquare')}</option>
+                    <option value="rounded">{t('common.iconShapeRounded')}</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-6">
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={displayForm.is_active}
+                    onChange={(e) => setDisplayForm((p) => ({ ...p, is_active: e.target.checked }))}
+                    className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('common.serviceVisibleEnabled')}</span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={displayForm.is_emergency}
+                    onChange={(e) => setDisplayForm((p) => ({ ...p, is_emergency: e.target.checked }))}
+                    className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <AlertCircle className="h-4 w-4 text-amber-500" /> {t('common.emergencyService')}
+                  </span>
+                </label>
+              </div>
+              <Button size="sm" className="rounded-lg bg-violet-600 hover:bg-violet-700" onClick={handleSaveDisplay} disabled={displaySaveMutation.isPending}>
+                {t('common.saveDisplayAndVisibility')}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Admin: GPS & category */}
           <Card className="rounded-2xl border-amber-200 dark:border-amber-800 dark:bg-gray-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
                 <MapPin className="h-5 w-5 text-amber-500" />
-                نطاق التوصيل (GPS) والفئة
+                {t('common.gpsAndCategory')}
               </CardTitle>
-              <CardDescription>تعديل الفئة ونطاق التوصيل بالكيلومتر من لوحة الإدارة</CardDescription>
+              <CardDescription>{t('common.gpsAndCategoryDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>الفئة</Label>
+                <Label>{t('common.categoryLabel')}</Label>
                 <select
                   value={categoryId !== '' ? categoryId : String(service.category_id ?? 'none')}
                   onChange={(e) => setCategoryId(e.target.value)}
                   className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="none">— بدون فئة</option>
+                  <option value="none">{t('common.noCategory')}</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>{c.name_ar}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <Label>نطاق GPS (كم)</Label>
+                <Label>{t('common.gpsRangeKm')}</Label>
                 <Input
                   type="number"
                   step="0.5"
@@ -434,7 +642,7 @@ export const ServiceDetailPage = () => {
                 />
               </div>
               <Button size="sm" className="rounded-lg bg-amber-600 hover:bg-amber-700" onClick={handleSaveCatalog} disabled={catalogMutation.isPending}>
-                حفظ التعديل
+                {t('common.saveCatalog')}
               </Button>
             </CardContent>
           </Card>
