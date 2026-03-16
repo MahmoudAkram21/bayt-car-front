@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   Users,
+  Shield,
   Building2,
   Wrench,
   Calendar,
@@ -59,6 +60,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
       title: t('common.management'),
       items: [
         { name: t('common.users'), href: '/users', icon: Users },
+        { name: t('common.admins'), href: '/admins', icon: Shield },
         { name: t('common.providers'), href: '/providers', icon: Building2 },
         { name: t('common.services'), href: '/services', icon: Wrench },
         { name: t('common.deliveries'), href: '/delivery', icon: Package },

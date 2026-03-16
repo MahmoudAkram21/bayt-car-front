@@ -1,18 +1,28 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { Search, Users, UserPlus, RefreshCw, LayoutGrid, List, Pencil, Trash2, Ban, UserCheck, Building2, Shield, CheckCircle } from 'lucide-react';
+import { Search, Users, UserPlus, RefreshCw, LayoutGrid, List, Pencil, Trash2, Ban, UserCheck, Building2, Shield, CheckCircle, Bell } from 'lucide-react';
 import { type User, UserRole, type PaginatedResponse } from '../../types';
 import { userService } from '../../services/user.service';
+import { adminUsersService, type AdminUser } from '../../services/adminUsers.service';
+import { notificationService } from '../../services/notification.service';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 
 import { useNavigate } from 'react-router-dom';
 
 type ViewMode = 'cards' | 'table';
+type UserTypeFilter = 'all' | 'app' | 'system';
+type AddUserType = 'app' | 'admin';
+
+/** Unified row for list: either app user or system admin */
+type UserRow =
+  | { type: 'app'; id: string; user: User }
+  | { type: 'system'; id: string; admin: AdminUser };
 
 export const UsersPage = () => {
   const { t } = useTranslation();
@@ -20,19 +30,65 @@ export const UsersPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
+  const [filterUserType, setFilterUserType] = useState<UserTypeFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [addUserType, setAddUserType] = useState<AddUserType>('app');
+  const [adminFormData, setAdminFormData] = useState({ name: '', email: '', password: '', roleName: 'ADMIN' as 'ADMIN' | 'SUPER_ADMIN' });
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({ nameEn: '', nameAr: '', email: '', phone: '', role: UserRole.OWNER });
+  const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
+  const [notifyTargetUser, setNotifyTargetUser] = useState<User | null>(null);
+  const [notifyForm, setNotifyForm] = useState({ titleEn: '', titleAr: '', bodyEn: '', bodyAr: '' });
 
   const { data, isLoading, error } = useQuery<PaginatedResponse<User>>({
     queryKey: ['users', { role: filterRole !== 'all' ? filterRole : undefined, search: searchTerm }],
     queryFn: () => userService.getAllUsers({
-      role: filterRole !== 'all' ? filterRole : undefined,
+      role: filterUserType === 'app' && filterRole !== 'all'
+        ? (filterRole === UserRole.OWNER ? 'CUSTOMER' : filterRole === UserRole.PROVIDER ? 'PROVIDER' : undefined)
+        : undefined,
       search: searchTerm || undefined,
     }),
+    enabled: filterUserType === 'all' || filterUserType === 'app',
   });
+
+  const { data: adminUsers = [], isLoading: isLoadingAdmins } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: () => adminUsersService.getAll(),
+    enabled: filterUserType === 'all' || filterUserType === 'system',
+  });
+
+  const { data: adminRoles = [] } = useQuery({
+    queryKey: ['admin-users-roles'],
+    queryFn: () => adminUsersService.getRoles(),
+    enabled: isAddUserOpen && addUserType === 'admin',
+  });
+
+  const combinedList = useMemo((): UserRow[] => {
+    const appList: UserRow[] = (data?.data ?? []).map((user) => ({ type: 'app', id: user.id, user }));
+    const systemList: UserRow[] = adminUsers.map((admin) => ({ type: 'system', id: `sys-${admin.id}`, admin }));
+    if (filterUserType === 'app') return appList;
+    if (filterUserType === 'system') return systemList;
+    return [...appList, ...systemList];
+  }, [data?.data, adminUsers, filterUserType]);
+
+  const filteredList = useMemo(() => {
+    if (filterRole === 'all') return combinedList;
+    return combinedList.filter((row) => {
+      if (row.type === 'app') {
+        const r = row.user.role;
+        if (filterRole === UserRole.OWNER) return r === UserRole.OWNER || r === 'CUSTOMER';
+        return r === filterRole;
+      }
+      return row.admin.role === filterRole;
+    });
+  }, [combinedList, filterUserType, filterRole]);
+
+  const applyStatFilter = (type: UserTypeFilter, role: string) => {
+    setFilterUserType(type);
+    setFilterRole(role);
+  };
 
   const createMutation = useMutation({
     mutationFn: (data: { name: { en: string; ar?: string }; email: string; phone?: string; role: string }) => userService.createUser(data),
@@ -40,6 +96,26 @@ export const UsersPage = () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setIsAddUserOpen(false);
       setFormData({ nameEn: '', nameAr: '', email: '', phone: '', role: UserRole.OWNER });
+      toast.success(t('common.userCreated') || 'User created successfully');
+    },
+    onError: (error: any) => {
+      const data = error.response?.data;
+      const msg = data?.error ?? data?.errors?.[0]?.msg ?? error.message ?? 'Failed to create user';
+      toast.error(msg);
+    },
+  });
+
+  const createAdminMutation = useMutation({
+    mutationFn: (data: { name: string; email: string; password: string; roleName: 'ADMIN' | 'SUPER_ADMIN' }) => adminUsersService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      setIsAddUserOpen(false);
+      setAdminFormData({ name: '', email: '', password: '', roleName: 'ADMIN' });
+      toast.success(t('common.adminCreated') || 'Admin created successfully');
+    },
+    onError: (error: any) => {
+      const msg = error.response?.data?.error ?? error.message ?? 'Failed to create admin';
+      toast.error(msg);
     },
   });
 
@@ -54,17 +130,70 @@ export const UsersPage = () => {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => userService.deleteUser(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success(t('common.userDeleted') || 'User deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || error.message || 'Failed to delete user');
+    },
+  });
+
+  const deleteAdminMutation = useMutation({
+    mutationFn: (id: string) => adminUsersService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success(t('common.adminDeleted') || 'Admin deleted successfully');
+    },
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || error.message || 'Failed to delete admin';
+      toast.error(msg);
+    },
   });
 
   const suspendMutation = useMutation({
     mutationFn: (id: string) => userService.suspendUser(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success(t('common.userSuspended') || 'User suspended');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to suspend user');
+    },
+  });
+
+  const activateMutation = useMutation({
+    mutationFn: (id: string) => userService.activateUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success(t('common.userActivated') || 'User activated');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to activate user');
+    },
+  });
+
+  const sendNotificationMutation = useMutation({
+    mutationFn: (params: { userId: string; titleEn?: string; titleAr?: string; bodyEn?: string; bodyAr?: string }) => notificationService.sendToUser(params),
+    onSuccess: () => {
+      console.log('[UsersPage] Send notification success');
+      toast.success(t('common.notificationSent') || 'Notification sent');
+      setIsNotifyModalOpen(false);
+      setNotifyTargetUser(null);
+      setNotifyForm({ titleEn: '', titleAr: '', bodyEn: '', bodyAr: '' });
+    },
+    onError: (error: any) => {
+      console.error('[UsersPage] Send notification error:', error?.response?.data ?? error?.message ?? error);
+      toast.error(error.response?.data?.error || error.message || 'Failed to send notification');
+    },
   });
 
   const getRoleBadge = (role: string) => {
     const colors: Record<string, string> = {
       [UserRole.OWNER]: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
+      CUSTOMER: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
       [UserRole.PROVIDER]: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
       [UserRole.ADMIN]: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
       [UserRole.SUPER_ADMIN]: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
@@ -74,11 +203,17 @@ export const UsersPage = () => {
 
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case UserRole.OWNER: return t('common.customers');
-      case UserRole.PROVIDER: return t('common.providers'); // Note: 'providers' key in en.json is "Providers", consistent with common.providers
-      case UserRole.ADMIN: return t('common.admins');
-      case UserRole.SUPER_ADMIN: return t('common.superAdmin');
-      default: return role;
+      case UserRole.OWNER:
+      case 'CUSTOMER':
+        return t('common.customers');
+      case UserRole.PROVIDER:
+        return t('common.providers');
+      case UserRole.ADMIN:
+        return t('common.admins');
+      case UserRole.SUPER_ADMIN:
+        return t('common.superAdmin');
+      default:
+        return role;
     }
   };
 
@@ -87,14 +222,24 @@ export const UsersPage = () => {
     return name?.en || name?.ar || 'N/A';
   };
 
-  const users = data?.data ?? [];
-  const total = data?.total ?? users.length;
-  const statCustomers = users.filter((u: User) => u.role === UserRole.OWNER).length;
-  const statProviders = users.filter((u: User) => u.role === UserRole.PROVIDER).length;
-  const statAdmins = users.filter((u: User) => u.role === UserRole.ADMIN || u.role === UserRole.SUPER_ADMIN).length;
+  const getRowDisplayName = (row: UserRow) => row.type === 'app' ? getName(row.user.name) : row.admin.name;
+  const getRowRole = (row: UserRow) => row.type === 'app' ? row.user.role : row.admin.role;
+  const getRowEmail = (row: UserRow) => row.type === 'app' ? row.user.email : row.admin.email;
+
+  const appUsers = data?.data ?? [];
+  const statCustomers = appUsers.filter((u: User) => u.role === UserRole.OWNER || u.role === 'CUSTOMER').length;
+  const statProviders = appUsers.filter((u: User) => u.role === UserRole.PROVIDER).length;
+  const statAdmins = adminUsers.length;
+  const total = filterUserType === 'app' ? (data?.total ?? appUsers.length) : filterUserType === 'system' ? adminUsers.length : (data?.total ?? 0) + adminUsers.length;
 
   const handleDelete = (id: string, name: string) => {
     if (window.confirm(t('common.confirmDelete', { name }))) deleteMutation.mutate(id);
+  };
+
+  const handleDeleteAdmin = (id: string, name: string) => {
+    if (window.confirm(t('common.confirmDeleteAdmin', { name }) || `Delete admin "${name}"? This cannot be undone.`)) {
+      deleteAdminMutation.mutate(id);
+    }
   };
 
   const handleSuspend = (id: string, name: string) => {
@@ -107,6 +252,34 @@ export const UsersPage = () => {
     setFormData({ nameEn: '', nameAr: '', email: '', phone: '', role: UserRole.OWNER });
     setIsAddUserOpen(true);
   };
+
+  const handleOpenNotifyModal = (user: User, e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('[UsersPage] Open notify modal for user:', user.id, user.email);
+    setNotifyTargetUser(user);
+    setNotifyForm({ titleEn: '', titleAr: '', bodyEn: '', bodyAr: '' });
+    setIsNotifyModalOpen(true);
+  };
+
+  const handleSendNotification = (e: React.FormEvent) => {
+    e.preventDefault();
+    const hasTitle = notifyForm.titleEn.trim() || notifyForm.titleAr.trim();
+    if (!notifyTargetUser || !hasTitle) {
+      console.log('[UsersPage] Send notification skipped: no target or no title', { notifyTargetUser: !!notifyTargetUser, titleEn: notifyForm.titleEn, titleAr: notifyForm.titleAr });
+      return;
+    }
+    const payload = {
+      userId: notifyTargetUser.id,
+      titleEn: notifyForm.titleEn.trim() || undefined,
+      titleAr: notifyForm.titleAr.trim() || undefined,
+      bodyEn: notifyForm.bodyEn.trim() || undefined,
+      bodyAr: notifyForm.bodyAr.trim() || undefined,
+    };
+    console.log('[UsersPage] Sending notification:', payload);
+    sendNotificationMutation.mutate(payload);
+  };
+
+  const notifyFormHasTitle = (notifyForm.titleEn?.trim() || notifyForm.titleAr?.trim()) ?? false;
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
@@ -124,24 +297,58 @@ export const UsersPage = () => {
 
   const handleSubmitAdd = (e: React.FormEvent) => {
     e.preventDefault();
+    const nameEn = formData.nameEn.trim();
+    const email = formData.email.trim();
+    if (!nameEn) {
+      toast.error(t('common.nameRequired') || 'Name (English) is required');
+      return;
+    }
+    if (!email) {
+      toast.error(t('common.emailRequired') || 'Valid email is required');
+      return;
+    }
     createMutation.mutate({
-      name: { en: formData.nameEn, ar: formData.nameAr || formData.nameEn },
-      email: formData.email,
-      phone: formData.phone || undefined,
+      name: { en: nameEn, ar: (formData.nameAr || nameEn).trim() || nameEn },
+      email,
+      phone: formData.phone?.trim() || undefined,
       role: formData.role,
+    });
+  };
+
+  const handleSubmitAddAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = adminFormData.name.trim();
+    const email = adminFormData.email.trim();
+    if (!name || !email || !adminFormData.password) {
+      toast.error(t('common.fillRequired') || 'Please fill required fields');
+      return;
+    }
+    if (adminFormData.password.length < 6) {
+      toast.error(t('common.min6Chars') || 'Password must be at least 6 characters');
+      return;
+    }
+    createAdminMutation.mutate({
+      name,
+      email,
+      password: adminFormData.password,
+      roleName: adminFormData.roleName,
     });
   };
 
   const handleSubmitEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
+    const payload = {
+      name: { en: formData.nameEn, ar: formData.nameAr || formData.nameEn },
+      phone: formData.phone || undefined,
+      role: formData.role,
+    };
+    // #region agent log
+    fetch('http://127.0.0.1:7851/ingest/636c300f-3a1d-4f92-81ef-e199f88d24ee',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2c0de6'},body:JSON.stringify({sessionId:'2c0de6',location:'UsersPage.tsx:handleSubmitEdit',message:'edit payload sent',data:{nameEn:formData.nameEn,nameAr:formData.nameAr,payloadName:payload.name},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     updateMutation.mutate({
       id: editingUser.id,
-      data: {
-        name: { en: formData.nameEn, ar: formData.nameAr || formData.nameEn },
-        phone: formData.phone || undefined,
-        role: formData.role,
-      },
+      data: payload,
     });
   };
 
@@ -157,28 +364,32 @@ export const UsersPage = () => {
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
-          <Button variant="outline" size="sm" className="rounded-xl gap-2 focus:ring-2 focus:ring-teal-500">
+          <Button variant="outline" size="sm" className="rounded-xl gap-2 focus:ring-2 focus:ring-teal-500" onClick={() => { queryClient.invalidateQueries({ queryKey: ['users'] }); queryClient.invalidateQueries({ queryKey: ['admin-users'] }); }}>
             <RefreshCw className="h-4 w-4" />
-            {t('common.update')}
+            {t('common.refresh')}
           </Button>
-          <Button size="sm" className="rounded-xl bg-teal-600 shadow-lg gap-2 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500" onClick={handleAddUser}>
+          <Button size="sm" className="rounded-xl bg-teal-600 shadow-lg gap-2 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500" onClick={() => { setAddUserType('app'); setAdminFormData({ name: '', email: '', password: '', roleName: 'ADMIN' }); handleAddUser(); }}>
             <UserPlus className="h-4 w-4" />
             {t('common.addUser')}
           </Button>
         </div>
       </div>
 
-      {/* Modern Stats Grid */}
+      {/* Modern Stats Grid - clickable to apply filter */}
       <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: t('common.totalUsers'), value: users.length || 0, icon: Users, color: 'text-blue-600', bg: 'bg-blue-100' },
-          { label: t('common.customers'), value: statCustomers, icon: UserCheck, color: 'text-teal-600', bg: 'bg-teal-100' },
-          { label: t('common.providers'), value: statProviders, icon: Building2, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-          { label: t('common.admins'), value: statAdmins, icon: Shield, color: 'text-amber-600', bg: 'bg-amber-100' },
+          { label: t('common.totalUsers'), value: filteredList.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-100', onClick: () => applyStatFilter('all', 'all') },
+          { label: t('common.customers'), value: statCustomers, icon: UserCheck, color: 'text-teal-600', bg: 'bg-teal-100', onClick: () => applyStatFilter('app', UserRole.OWNER) },
+          { label: t('common.providers'), value: statProviders, icon: Building2, color: 'text-emerald-600', bg: 'bg-emerald-100', onClick: () => applyStatFilter('app', UserRole.PROVIDER) },
+          { label: t('common.admins'), value: statAdmins, icon: Shield, color: 'text-amber-600', bg: 'bg-amber-100', onClick: () => applyStatFilter('system', 'all') },
         ].map((stat, i) => (
           <div
             key={i}
-            className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60"
+            role="button"
+            tabIndex={0}
+            onClick={stat.onClick}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); stat.onClick(); } }}
+            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60"
             style={{ animationDelay: `${i * 100}ms` }}
           >
             <div className="flex items-center justify-between">
@@ -209,15 +420,38 @@ export const UsersPage = () => {
               />
             </div>
             <select
+              value={filterUserType}
+              onChange={(e) => {
+                const next = e.target.value as UserTypeFilter;
+                setFilterUserType(next);
+                // Reset role when it's not valid for the new type
+                if (next === 'app' && (filterRole === 'ADMIN' || filterRole === 'SUPER_ADMIN')) setFilterRole('all');
+                if (next === 'system' && (filterRole === UserRole.OWNER || filterRole === UserRole.PROVIDER)) setFilterRole('all');
+              }}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="all">{t('common.all')}</option>
+              <option value="app">{t('common.appUsers') || 'App Users'}</option>
+              <option value="system">{t('common.admins')}</option>
+            </select>
+            <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
               className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="all">{t('common.all')}</option>
-              <option value={UserRole.OWNER}>{t('common.customers')}</option>
-              <option value={UserRole.PROVIDER}>{t('common.providers')}</option>
-              <option value={UserRole.ADMIN}>{t('common.admins')}</option>
-              <option value={UserRole.SUPER_ADMIN}>{t('common.superAdmin')}</option>
+              {filterUserType !== 'system' && (
+                <>
+                  <option value={UserRole.OWNER}>{t('common.customers')}</option>
+                  <option value={UserRole.PROVIDER}>{t('common.providers')}</option>
+                </>
+              )}
+              {filterUserType !== 'app' && (
+                <>
+                  <option value="ADMIN">{t('common.admin')}</option>
+                  <option value="SUPER_ADMIN">{t('common.superAdmin')}</option>
+                </>
+              )}
             </select>
             <div className="flex rounded-lg border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 overflow-hidden">
               <button
@@ -256,85 +490,93 @@ export const UsersPage = () => {
             {t('common.users')}
           </CardTitle>
           <CardDescription>
-            {data ? t('common.providersFound', { count: total }) : ''}
+            {filteredList.length > 0 ? (filterUserType === 'system' ? t('common.admins') : t('common.users')) + `: ${filteredList.length}` : ''}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading && (
+          {(isLoading || (filterUserType !== 'app' && isLoadingAdmins)) && (
             <div className="flex justify-center py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
             </div>
           )}
 
-          {error && (
+          {error && filterUserType !== 'system' && (
             <div className="rounded-xl border border-red-200 bg-red-50 py-8 text-center text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
               <p>Error loading users. Please try again.</p>
             </div>
           )}
 
-          {users.length === 0 && !isLoading && (
+          {filteredList.length === 0 && !isLoading && (filterUserType === 'app' || !isLoadingAdmins) && (
             <div className="flex flex-col items-center justify-center py-16">
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-900/30">
                 <Users className="h-12 w-12 text-teal-600 dark:text-teal-400" />
               </div>
               <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">No users found</p>
               <p className="mt-2 max-w-md text-center text-gray-500 dark:text-gray-400">
-                Try adjusting your search or role filter
+                Try adjusting your search or filter
               </p>
             </div>
           )}
 
-          {viewMode === 'cards' && users.length > 0 && (
+          {viewMode === 'cards' && filteredList.length > 0 && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {users.map((user: User) => (
+              {filteredList.map((row) => (
                 <div
-                  key={user.id}
-                  onClick={() => navigate(`/users/${user.id}`)}
+                  key={row.id}
+                  onClick={() => { if (row.type === 'app') navigate(`/users/${row.user.id}?type=app`); else navigate(`/users/${row.admin.id}?type=admin`); }}
                   className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-teal-600 cursor-pointer"
                 >
                   <div className="flex h-28 items-center justify-center bg-gradient-to-br from-teal-500/10 to-teal-600/5 dark:from-teal-900/30 dark:to-teal-800/20">
                     <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-xl font-bold text-teal-600 dark:bg-teal-800/50 dark:text-teal-300">
-                      {(getName(user.name) || 'U').charAt(0).toUpperCase()}
+                      {(getRowDisplayName(row) || 'U').charAt(0).toUpperCase()}
                     </div>
                   </div>
                   <div className="p-4">
-                    <p className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getRoleBadge(user.role)}`}>
-                      {getRoleLabel(user.role)}
+                    <p className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getRoleBadge(getRowRole(row))}`}>
+                      {getRoleLabel(getRowRole(row))}
                     </p>
+                    {row.type === 'system' && (
+                      <span className="ml-1 inline-flex rounded-full px-2 py-0.5 text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">{t('common.dashboardAdmin') || 'Dashboard Admin'}</span>
+                    )}
                     <h3 className="mt-2 font-semibold text-gray-900 dark:text-white line-clamp-1">
-                      {getName(user.name)}
+                      {getRowDisplayName(row)}
                     </h3>
-                    <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
-                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{user.phone || '—'}</p>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {user.createdAt ? format(new Date(user.createdAt), 'MMM dd, yyyy') : '—'}
-                    </p>
+                    <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400 truncate">{getRowEmail(row)}</p>
+                    {row.type === 'app' && <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{row.user.phone || '—'}</p>}
+                    {row.type === 'app' && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{row.user.createdAt ? format(new Date(row.user.createdAt), 'MMM dd, yyyy') : '—'}</p>}
                     <div className="mt-3 flex flex-wrap gap-1">
-                      <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs focus:ring-2 focus:ring-teal-500" onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditUser(user);
-                      }}>
-                        <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
-                      </Button>
-                      
-                      {user.isActive ? (
-                        <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-amber-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleSuspend(user.id, getName(user.name)); }}>
-                          <Ban className="h-3.5 w-3.5" /> {t('common.suspend')}
-                        </Button>
-                      ) : (
-                        <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-emerald-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => {
-                           e.stopPropagation();
-                           if(window.confirm(t('common.confirmActivate', { name: getName(user.name) }))) {
-                             userService.activateUser(user.id).then(() => queryClient.invalidateQueries({ queryKey:['users'] }));
-                           }
-                        }}>
-                          <CheckCircle className="h-3.5 w-3.5" /> {t('common.activate')}
-                        </Button>
+                      {row.type === 'app' && (
+                        <>
+                          <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleOpenNotifyModal(row.user, e); }} title={t('common.sendNotification')}>
+                            <Bell className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleEditUser(row.user); }}>
+                            <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
+                          </Button>
+                          {row.user.isActive ? (
+                            <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-amber-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleSuspend(row.user.id, getName(row.user.name)); }}>
+                              <Ban className="h-3.5 w-3.5" /> {t('common.suspend')}
+                            </Button>
+                          ) : (
+                            <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-emerald-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); if (window.confirm(t('common.confirmActivate', { name: getName(row.user.name) }))) activateMutation.mutate(row.user.id); }}>
+                              <CheckCircle className="h-3.5 w-3.5" /> {t('common.activate')}
+                            </Button>
+                          )}
+                          <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-red-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleDelete(row.user.id, getName(row.user.name)); }}>
+                            <Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}
+                          </Button>
+                        </>
                       )}
-
-                      <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-red-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleDelete(user.id, getName(user.name)); }}>
-                        <Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}
-                      </Button>
+                      {row.type === 'system' && (
+                        <>
+                          <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs" onClick={(e) => { e.stopPropagation(); navigate('/admins'); }}>
+                            <Shield className="h-3.5 w-3.5" /> {t('common.view')}
+                          </Button>
+                          <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-red-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleDeleteAdmin(row.admin.id, row.admin.name); }}>
+                            <Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -342,11 +584,12 @@ export const UsersPage = () => {
             </div>
           )}
 
-          {viewMode === 'table' && users.length > 0 && (
+          {viewMode === 'table' && filteredList.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-100 dark:bg-gray-700/70">
                   <tr>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.type') || 'Type'}</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.name')}</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.email')}</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.phone')}</th>
@@ -357,55 +600,50 @@ export const UsersPage = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {users.map((user: User) => (
-                    <tr key={user.id} onClick={() => navigate(`/users/${user.id}`)} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer">
-                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{getName(user.name)}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{user.email}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{user.phone || 'N/A'}</td>
+                  {filteredList.map((row) => (
+                    <tr key={row.id} onClick={() => { if (row.type === 'app') navigate(`/users/${row.user.id}?type=app`); else navigate(`/users/${row.admin.id}?type=admin`); }} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                        {row.type === 'app' ? (t('common.appUser') || 'App User') : (t('common.dashboardAdmin') || 'Dashboard Admin')}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{getRowDisplayName(row)}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{getRowEmail(row)}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{row.type === 'app' ? (row.user.phone || 'N/A') : '—'}</td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getRoleBadge(user.role)}`}>
-                          {getRoleLabel(user.role)}
+                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getRoleBadge(getRowRole(row))}`}>
+                          {getRoleLabel(getRowRole(row))}
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                          user.isActive ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
-                        }`}>
-                          {user.isActive ? t('common.active') : t('common.suspended')}
-                        </span>
+                        {row.type === 'app' ? (
+                          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${row.user.isActive ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'}`}>
+                            {row.user.isActive ? t('common.active') : (t('common.disabled') || t('common.suspended'))}
+                          </span>
+                        ) : '—'}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                        {user.createdAt ? format(new Date(user.createdAt), 'MMM dd, yyyy') : '—'}
+                        {row.type === 'app' && row.user.createdAt ? format(new Date(row.user.createdAt), 'MMM dd, yyyy') : '—'}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="mt-3 flex flex-wrap gap-1">
-
-                      <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs focus:ring-2 focus:ring-teal-500" onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditUser(user);
-                      }}>
-                        <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
-                      </Button>
-                      
-                      {user.isActive ? (
-                        <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-amber-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleSuspend(user.id, getName(user.name)); }}>
-                          <Ban className="h-3.5 w-3.5" /> {t('common.suspend')}
-                        </Button>
-                      ) : (
-                        <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-emerald-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => {
-                           e.stopPropagation();
-                           if(window.confirm(`${t('common.activate')} "${getName(user.name)}"?`)) {
-                             userService.activateUser(user.id).then(() => queryClient.invalidateQueries({ queryKey:['users'] }));
-                           }
-                        }}>
-                          <CheckCircle className="h-3.5 w-3.5" /> {t('common.activate')}
-                        </Button>
-                      )}
-
-                      <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-red-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleDelete(user.id, getName(user.name)); }}>
-                        <Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}
-                      </Button>
-                    </div>
+                        <div className="flex flex-wrap gap-1">
+                          {row.type === 'app' && (
+                            <>
+                              <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs" onClick={(e) => { e.stopPropagation(); handleOpenNotifyModal(row.user, e); }}><Bell className="h-3.5 w-3.5" /></Button>
+                              <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs" onClick={(e) => { e.stopPropagation(); handleEditUser(row.user); }}><Pencil className="h-3.5 w-3.5" /> {t('common.edit')}</Button>
+                              {row.user.isActive ? (
+                                <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-amber-600" onClick={(e) => { e.stopPropagation(); handleSuspend(row.user.id, getName(row.user.name)); }}><Ban className="h-3.5 w-3.5" /> {t('common.suspend')}</Button>
+                              ) : (
+                                <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-emerald-600" onClick={(e) => { e.stopPropagation(); if (window.confirm(t('common.confirmActivate', { name: getName(row.user.name) }))) activateMutation.mutate(row.user.id); }}><CheckCircle className="h-3.5 w-3.5" /> {t('common.activate')}</Button>
+                              )}
+                              <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-red-600" onClick={(e) => { e.stopPropagation(); handleDelete(row.user.id, getName(row.user.name)); }}><Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}</Button>
+                            </>
+                          )}
+                          {row.type === 'system' && (
+                            <>
+                              <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs" onClick={(e) => { e.stopPropagation(); navigate('/admins'); }}><Shield className="h-3.5 w-3.5" /> {t('common.view')}</Button>
+                              <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-red-600" onClick={(e) => { e.stopPropagation(); handleDeleteAdmin(row.admin.id, row.admin.name); }}><Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}</Button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -417,47 +655,90 @@ export const UsersPage = () => {
       </Card>
 
       {/* Add User Dialog */}
-      <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+      <Dialog open={isAddUserOpen} onOpenChange={(open) => { if (!open) setAddUserType('app'); setIsAddUserOpen(open); }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{t('common.addUser')}</DialogTitle>
-            <DialogDescription>Create a new user account. Fill in the required information below.</DialogDescription>
+            <DialogDescription>{t('common.addUserDescription') || 'Create an app user (customer/provider) or a dashboard admin.'}</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmitAdd}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <label htmlFor="nameEn" className="text-sm font-medium">{t('common.name')} (English) *</label>
-                <Input id="nameEn" value={formData.nameEn} onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })} required />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="nameAr" className="text-sm font-medium">{t('common.name')} (Arabic)</label>
-                <Input id="nameAr" value={formData.nameAr} onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="email" className="text-sm font-medium">{t('common.email')} *</label>
-                <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="phone" className="text-sm font-medium">{t('common.phone')}</label>
-                <Input id="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="role" className="text-sm font-medium">{t('common.role')} *</label>
-                <select id="role" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700" required>
-                  <option value={UserRole.OWNER}>{t('common.customers')}</option>
-                  <option value={UserRole.PROVIDER}>{t('common.providers')}</option>
-                  <option value={UserRole.ADMIN}>{t('common.admins')}</option>
-                  <option value={UserRole.SUPER_ADMIN}>{t('common.superAdmin')}</option>
-                </select>
-              </div>
+          <div className="grid gap-4 py-2">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">{t('common.userType') || 'User type'}</label>
+              <select
+                value={addUserType}
+                onChange={(e) => setAddUserType(e.target.value as AddUserType)}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="app">{t('common.appUser') || 'App User'} (Customer / Provider)</option>
+                <option value="admin">{t('common.dashboardAdmin') || 'Dashboard Admin'}</option>
+              </select>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsAddUserOpen(false)}>{t('common.cancel')}</Button>
-              <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={createMutation.isPending}>
-                {createMutation.isPending ? 'Creating...' : t('common.create')}
-              </Button>
-            </DialogFooter>
-          </form>
+          </div>
+          {addUserType === 'app' ? (
+            <form onSubmit={handleSubmitAdd}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <label htmlFor="nameEn" className="text-sm font-medium">{t('common.name')} (English) *</label>
+                  <Input id="nameEn" value={formData.nameEn} onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })} required />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="nameAr" className="text-sm font-medium">{t('common.name')} (Arabic)</label>
+                  <Input id="nameAr" value={formData.nameAr} onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="email" className="text-sm font-medium">{t('common.email')} *</label>
+                  <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="phone" className="text-sm font-medium">{t('common.phone')}</label>
+                  <Input id="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="role" className="text-sm font-medium">{t('common.role')} *</label>
+                  <select id="role" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700" required>
+                    <option value={UserRole.OWNER}>{t('common.customers')}</option>
+                    <option value={UserRole.PROVIDER}>{t('common.providers')}</option>
+                  </select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsAddUserOpen(false)}>{t('common.cancel')}</Button>
+                <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? t('common.creating') : t('common.create')}
+                </Button>
+              </DialogFooter>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmitAddAdmin}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <label htmlFor="adminName" className="text-sm font-medium">{t('common.name')} *</label>
+                  <Input id="adminName" value={adminFormData.name} onChange={(e) => setAdminFormData({ ...adminFormData, name: e.target.value })} required />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="adminEmail" className="text-sm font-medium">{t('common.email')} *</label>
+                  <Input id="adminEmail" type="email" value={adminFormData.email} onChange={(e) => setAdminFormData({ ...adminFormData, email: e.target.value })} required />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="adminPassword" className="text-sm font-medium">{t('common.password')} *</label>
+                  <Input id="adminPassword" type="password" value={adminFormData.password} onChange={(e) => setAdminFormData({ ...adminFormData, password: e.target.value })} placeholder={t('common.min6Chars')} minLength={6} required />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="adminRole" className="text-sm font-medium">{t('common.role')} *</label>
+                  <select id="adminRole" value={adminFormData.roleName} onChange={(e) => setAdminFormData({ ...adminFormData, roleName: e.target.value as 'ADMIN' | 'SUPER_ADMIN' })} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                    {adminRoles.map((r) => (<option key={r.id} value={r.name}>{r.name === 'SUPER_ADMIN' ? t('common.superAdmin') : t('common.admin')}</option>))}
+                    {adminRoles.length === 0 && (<><option value="ADMIN">{t('common.admin')}</option><option value="SUPER_ADMIN">{t('common.superAdmin')}</option></>)}
+                  </select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsAddUserOpen(false)}>{t('common.cancel')}</Button>
+                <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={createAdminMutation.isPending}>
+                  {createAdminMutation.isPending ? t('common.creating') : t('common.create')}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -500,6 +781,44 @@ export const UsersPage = () => {
               <Button type="button" variant="outline" onClick={() => setIsEditUserOpen(false)}>{t('common.cancel')}</Button>
               <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={updateMutation.isPending}>
                 {updateMutation.isPending ? 'Updating...' : t('common.save')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Notification Dialog */}
+      <Dialog open={isNotifyModalOpen} onOpenChange={(open) => { if (!open) { setNotifyTargetUser(null); setNotifyForm({ titleEn: '', titleAr: '', bodyEn: '', bodyAr: '' }); } setIsNotifyModalOpen(open); }}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>{t('common.sendNotification')}</DialogTitle>
+            <DialogDescription>
+              {notifyTargetUser ? t('common.sendNotificationTo', { name: getName(notifyTargetUser.name) }) : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSendNotification}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="notifyTitleEn" className="text-sm font-medium">{t('common.titleEnglish')} *</label>
+                <Input id="notifyTitleEn" value={notifyForm.titleEn} onChange={(e) => setNotifyForm({ ...notifyForm, titleEn: e.target.value })} placeholder={t('common.notificationTitleEn')} dir="ltr" />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="notifyTitleAr" className="text-sm font-medium">{t('common.titleArabic')} *</label>
+                <Input id="notifyTitleAr" value={notifyForm.titleAr} onChange={(e) => setNotifyForm({ ...notifyForm, titleAr: e.target.value })} placeholder={t('common.notificationTitleAr')} dir="rtl" />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="notifyBodyEn" className="text-sm font-medium">{t('common.bodyEnglish')}</label>
+                <textarea id="notifyBodyEn" value={notifyForm.bodyEn} onChange={(e) => setNotifyForm({ ...notifyForm, bodyEn: e.target.value })} placeholder={t('common.notificationBodyEn')} rows={2} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white w-full resize-y" dir="ltr" />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="notifyBodyAr" className="text-sm font-medium">{t('common.bodyArabic')}</label>
+                <textarea id="notifyBodyAr" value={notifyForm.bodyAr} onChange={(e) => setNotifyForm({ ...notifyForm, bodyAr: e.target.value })} placeholder={t('common.notificationBodyAr')} rows={2} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white w-full resize-y" dir="rtl" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsNotifyModalOpen(false)}>{t('common.cancel')}</Button>
+              <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={sendNotificationMutation.isPending || !notifyFormHasTitle}>
+                {sendNotificationMutation.isPending ? t('common.sending') : t('common.send')}
               </Button>
             </DialogFooter>
           </form>

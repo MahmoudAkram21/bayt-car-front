@@ -7,12 +7,15 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - add JWT token to all requests
+// Request interceptor - add JWT token; for FormData, drop Content-Type so browser sets multipart boundary
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
     }
     return config;
   },
