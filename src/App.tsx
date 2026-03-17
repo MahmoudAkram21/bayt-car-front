@@ -24,6 +24,7 @@ import { LoyaltyPage } from "./pages/loyalty/LoyaltyPage";
 import { CommissionRulesPage } from "./pages/commission-rules/CommissionRulesPage";
 import { TaxPage } from "./pages/tax/TaxPage";
 import { PromoPage } from "./pages/promo/PromoPage";
+import { PromoDetailPage } from "./pages/promo/PromoDetailPage";
 import { BannersPage } from "./pages/banners/BannersPage";
 import { SplashPage } from "./pages/splash/SplashPage";
 import { InvoicesPage } from "./pages/invoices/InvoicesPage";
@@ -83,6 +84,7 @@ function App() {
                   <Route path="/commission-rules" element={<CommissionRulesPage />} />
                   <Route path="/tax" element={<TaxPage />} />
                   <Route path="/promo" element={<PromoPage />} />
+                  <Route path="/promo/:id" element={<PromoDetailPage />} />
                   <Route path="/banners" element={<BannersPage />} />
                   <Route path="/splash" element={<SplashPage />} />
                   <Route path="/invoices" element={<InvoicesPage />} />
