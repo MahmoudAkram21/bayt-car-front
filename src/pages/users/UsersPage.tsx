@@ -78,7 +78,7 @@ export const UsersPage = () => {
     return combinedList.filter((row) => {
       if (row.type === 'app') {
         const r = row.user.role;
-        if (filterRole === UserRole.OWNER) return r === UserRole.OWNER || r === 'CUSTOMER';
+        if (filterRole === UserRole.OWNER) return r === UserRole.OWNER;
         return r === filterRole;
       }
       return row.admin.role === filterRole;
@@ -227,10 +227,9 @@ export const UsersPage = () => {
   const getRowEmail = (row: UserRow) => row.type === 'app' ? row.user.email : row.admin.email;
 
   const appUsers = data?.data ?? [];
-  const statCustomers = appUsers.filter((u: User) => u.role === UserRole.OWNER || u.role === 'CUSTOMER').length;
+  const statCustomers = appUsers.filter((u: User) => u.role === UserRole.OWNER).length;
   const statProviders = appUsers.filter((u: User) => u.role === UserRole.PROVIDER).length;
   const statAdmins = adminUsers.length;
-  const total = filterUserType === 'app' ? (data?.total ?? appUsers.length) : filterUserType === 'system' ? adminUsers.length : (data?.total ?? 0) + adminUsers.length;
 
   const handleDelete = (id: string, name: string) => {
     if (window.confirm(t('common.confirmDelete', { name }))) deleteMutation.mutate(id);

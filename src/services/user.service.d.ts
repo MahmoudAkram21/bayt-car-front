@@ -7,6 +7,15 @@ export declare const userService: {
         limit?: number;
     }): Promise<PaginatedResponse<User>>;
     getUserById(id: string): Promise<User>;
+    createUser(data: {
+        name: {
+            en: string;
+            ar?: string;
+        };
+        email: string;
+        phone?: string;
+        role: string;
+    }): Promise<User>;
     updateUser(id: string, data: Partial<User>): Promise<User>;
     deleteUser(id: string): Promise<void>;
     activateUser(id: string): Promise<User>;

@@ -199,7 +199,7 @@ export const ProvidersPage = () => {
 
           {viewMode === 'cards' && filteredData.length > 0 && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredData.map((provider: ServiceProvider & { isSuspended?: boolean; averageRating?: number; owner?: { name: MultilingualText | string }; user?: { name: string } }) => (
+              {filteredData.map((provider: any) => (
                 <div key={provider.id} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:border-orange-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-orange-600">
                   <Link to={`/providers/${provider.id}`} className="block">
                     <div className="flex h-24 items-center justify-center bg-gradient-to-br from-orange-500/10 to-amber-600/5 dark:from-orange-900/30 dark:to-amber-800/20">
@@ -256,14 +256,14 @@ export const ProvidersPage = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredData.map((provider: ServiceProvider & { isSuspended?: boolean; averageRating?: number; owner?: { name: MultilingualText | string }; user?: { name: string } }) => (
+                  {filteredData.map((provider: any) => (
                     <tr key={provider.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                         <Link to={`/providers/${provider.id}`} className="hover:text-orange-600 dark:hover:text-orange-400">
                           {getName(provider.businessName)}
                         </Link>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{getName(provider.owner?.name) || provider.user?.name || 'N/A'}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{getName(provider.owner?.name) || provider.user?.name || 'N/A' as any}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{getName(provider.city) ?? 'N/A'}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">⭐ {provider.averageRating?.toFixed(1) || 'N/A'}</td>
                       <td className="whitespace-nowrap px-6 py-4">

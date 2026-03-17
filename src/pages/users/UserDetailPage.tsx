@@ -29,7 +29,7 @@ export const UserDetailPage = () => {
   });
 
   const isApp = type === 'app';
-  const { data: user, isLoading, error } = isApp ? appQuery : adminQuery;
+  const { data: user } = isApp ? appQuery : adminQuery;
   const isLoadingAny = appQuery.isLoading || adminQuery.isLoading;
   const errorAny = appQuery.error || adminQuery.error;
 
