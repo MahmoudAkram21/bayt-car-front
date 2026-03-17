@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -15,17 +16,18 @@ import { Button } from '../../components/ui/button';
 import { promoService, type PromoOffer } from '../../services/promo.service';
 import { format } from 'date-fns';
 
-const SCOPE_LABELS: Record<string, string> = {
-  ALL: 'جميع الخدمات',
-  SERVICE: 'خدمة محددة',
-  SERVICES: 'خدمات محددة (متعددة)',
-};
-
 type OfferWithUsages = PromoOffer & {
   usages?: { id: string; discount_amount: number; used_at: string; service_request_id?: string }[];
 };
 
+const SCOPE_KEYS: Record<string, string> = {
+  ALL: 'common.promoScopeAll',
+  SERVICE: 'common.promoScopeSingle',
+  SERVICES: 'common.promoScopeMultiple',
+};
+
 export const PromoDetailPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -47,9 +49,9 @@ export const PromoDetailPage = () => {
     return (
       <div className="animate-fade-in flex flex-col items-center justify-center py-20">
         <AlertTriangle className="h-16 w-16 text-amber-500" />
-        <p className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">العرض الترويجي غير موجود</p>
+        <p className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">{t('common.promoOfferNotFound')}</p>
         <Button variant="outline" className="mt-6 rounded-xl" onClick={() => navigate('/promo')}>
-          العودة للعروض
+          {t('common.promoBackToOffersShort')}
         </Button>
       </div>
     );
@@ -68,7 +70,7 @@ export const PromoDetailPage = () => {
           onClick={() => navigate('/promo')}
         >
           <ArrowLeft className="h-4 w-4" />
-          العودة للعروض الترويجية
+          {t('common.promoBackToOffers')}
         </Button>
       </div>
 
@@ -85,15 +87,15 @@ export const PromoDetailPage = () => {
                 {o.code}
               </h1>
               <p className="mt-1 text-white/90">
-                {o.type === 'PERCENTAGE' ? `${Number(o.value)}% خصم` : `${Number(o.value)} ر.س خصم`}
+                {o.type === 'PERCENTAGE' ? t('common.promoDiscountPercent', { value: Number(o.value) }) : t('common.promoDiscountFixed', { value: Number(o.value) })}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium backdrop-blur ${o.is_active ? 'bg-white/20 text-white' : 'bg-black/20 text-white/90'}`}>
                   {o.is_active ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                  {o.is_active ? 'نشط' : 'معطل'}
+                  {o.is_active ? t('common.active') : t('common.disabled')}
                 </span>
                 <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-sm font-medium text-white backdrop-blur">
-                  {SCOPE_LABELS[o.scope] ?? o.scope}
+                  {SCOPE_KEYS[o.scope] ? t(SCOPE_KEYS[o.scope]) : o.scope}
                 </span>
               </div>
             </div>
@@ -104,7 +106,7 @@ export const PromoDetailPage = () => {
             className="rounded-xl bg-white/20 text-white hover:bg-white/30 backdrop-blur shrink-0"
             onClick={() => navigate('/promo', { state: { editId: o.id } })}
           >
-            تعديل العرض
+            {t('common.promoEditOfferBtn')}
           </Button>
         </div>
       </div>
@@ -115,41 +117,41 @@ export const PromoDetailPage = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
               <Ticket className="h-5 w-5 text-rose-500" />
-              تفاصيل العرض
+              {t('common.promoDetails')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500 dark:text-gray-400">النوع</span>
-              <span className="font-medium text-gray-900 dark:text-white">{o.type === 'PERCENTAGE' ? 'نسبة مئوية' : 'مبلغ ثابت'}</span>
+              <span className="text-gray-500 dark:text-gray-400">{t('common.type')}</span>
+              <span className="font-medium text-gray-900 dark:text-white">{o.type === 'PERCENTAGE' ? t('common.promoTypePercentage') : t('common.promoTypeFixed')}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500 dark:text-gray-400">القيمة</span>
+              <span className="text-gray-500 dark:text-gray-400">{t('common.promoValue')}</span>
               <span className="font-medium text-gray-900 dark:text-white">{o.type === 'PERCENTAGE' ? `${Number(o.value)}%` : `${Number(o.value)} ر.س`}</span>
             </div>
             {(o.min_order_amount != null && Number(o.min_order_amount) > 0) && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">الحد الأدنى للطلب</span>
+                <span className="text-gray-500 dark:text-gray-400">{t('common.promoMinOrderLabel')}</span>
                 <span className="font-medium text-gray-900 dark:text-white">{Number(o.min_order_amount)} ر.س</span>
               </div>
             )}
             {(o.max_discount != null && Number(o.max_discount) > 0) && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">الحد الأقصى للخصم</span>
+                <span className="text-gray-500 dark:text-gray-400">{t('common.promoMaxDiscountLabel')}</span>
                 <span className="font-medium text-gray-900 dark:text-white">{Number(o.max_discount)} ر.س</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500 dark:text-gray-400">الاستخدام</span>
+              <span className="text-gray-500 dark:text-gray-400">{t('common.promoUsageLabel')}</span>
               <span className="font-medium text-gray-900 dark:text-white">{o.usage_count} {o.usage_limit != null ? `/ ${o.usage_limit}` : ''}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500 dark:text-gray-400">صالح من</span>
+              <span className="text-gray-500 dark:text-gray-400">{t('common.promoValidFromLabel')}</span>
               <span className="font-medium text-gray-900 dark:text-white">{o.valid_from ? format(new Date(o.valid_from), 'PPp') : '—'}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500 dark:text-gray-400">صالح حتى</span>
-              <span className="font-medium text-gray-900 dark:text-white">{o.valid_to ? format(new Date(o.valid_to), 'PPp') : 'مفتوح'}</span>
+              <span className="text-gray-500 dark:text-gray-400">{t('common.promoValidToLabel')}</span>
+              <span className="font-medium text-gray-900 dark:text-white">{o.valid_to ? format(new Date(o.valid_to), 'PPp') : t('common.promoValidOpen')}</span>
             </div>
           </CardContent>
         </Card>
@@ -159,16 +161,16 @@ export const PromoDetailPage = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
               <Wrench className="h-5 w-5 text-rose-500" />
-              النطاق والخدمات
+              {t('common.promoScopeAndServices')}
             </CardTitle>
-            <CardDescription>{SCOPE_LABELS[o.scope] ?? o.scope}</CardDescription>
+            <CardDescription>{SCOPE_KEYS[o.scope] ? t(SCOPE_KEYS[o.scope]) : o.scope}</CardDescription>
           </CardHeader>
           <CardContent>
             {o.scope === 'ALL' && (
-              <p className="text-sm text-gray-600 dark:text-gray-300">هذا العرض ينطبق على جميع الخدمات.</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{t('common.promoScopeAllDesc')}</p>
             )}
             {o.scope === 'SERVICE' && o.entity_id && (
-              <p className="text-sm text-gray-600 dark:text-gray-300">خدمة واحدة محددة (معرف: {o.entity_id})</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{t('common.promoOneServiceDesc', { id: o.entity_id })}</p>
             )}
             {o.scope === 'SERVICES' && o.offer_services && o.offer_services.length > 0 && (
               <ul className="space-y-2">
@@ -181,7 +183,7 @@ export const PromoDetailPage = () => {
               </ul>
             )}
             {o.scope === 'SERVICES' && (!o.offer_services || o.offer_services.length === 0) && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">لم يتم تحديد خدمات.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('common.promoNoServicesSelected')}</p>
             )}
           </CardContent>
         </Card>
@@ -192,20 +194,20 @@ export const PromoDetailPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <DollarSign className="h-5 w-5 text-rose-500" />
-            سجل الاستخدام
+            {t('common.promoUsageHistory')}
           </CardTitle>
-          <CardDescription>آخر استخدامات هذا الكود</CardDescription>
+          <CardDescription>{t('common.promoUsageHistoryDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {usages.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">لا يوجد استخدام مسجل بعد.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('common.promoNoUsages')}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="border-b border-gray-200 dark:border-gray-700">
                   <tr>
-                    <th className="pb-2 text-right font-medium text-gray-500 dark:text-gray-400">المبلغ المخفض</th>
-                    <th className="pb-2 text-right font-medium text-gray-500 dark:text-gray-400">التاريخ</th>
+                    <th className="pb-2 text-right font-medium text-gray-500 dark:text-gray-400">{t('common.promoDiscountAmount')}</th>
+                    <th className="pb-2 text-right font-medium text-gray-500 dark:text-gray-400">{t('common.promoDate')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
