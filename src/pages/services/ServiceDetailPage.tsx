@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { serviceService } from '../../services/service.service';
 import { serviceCategoryService } from '../../services/serviceCategory.service';
+import { systemSettingsService } from '../../services/systemSettings.service';
 import { useTranslation } from 'react-i18next';
 
 import type { MultilingualText, ServiceAttribute, AttributeOption, ServiceIconShape, ServiceDetail } from '../../types';
@@ -78,6 +79,10 @@ export const ServiceDetailPage = () => {
     queryFn: () => serviceService.getServiceById(id!),
     enabled: !!id,
   });
+  const { data: systemSettings } = useQuery({
+    queryKey: ['system-settings'],
+    queryFn: systemSettingsService.getSettings,
+  });
   const { data: categoriesData } = useQuery({
     queryKey: ['service-categories'],
     queryFn: () => serviceCategoryService.list(),
@@ -94,19 +99,23 @@ export const ServiceDetailPage = () => {
     },
   });
 
-  // Sync display form when service loads
+  // Sync display form when service or settings load
   useEffect(() => {
     if (!service) return;
+
     const s = service as ServiceDetail & { display_color?: string; icon_shape?: string; is_emergency?: boolean };
+    const iconShape = (systemSettings?.service_icon_shape as ServiceIconShape) ?? (s.icon_shape as ServiceIconShape) ?? '';
+    const displayColor = systemSettings?.service_display_color ?? s.display_color ?? '#0d9488';
+
     setDisplayForm({
       name: getName(service.name),
       description: getDesc(service.description) || '',
-      display_color: s.display_color || '#0d9488',
-      icon_shape: (s.icon_shape as ServiceIconShape) || '',
+      display_color: displayColor,
+      icon_shape: iconShape,
       is_active: service.is_active ?? service.isActive ?? true,
       is_emergency: s.is_emergency ?? false,
     });
-  }, [service]);
+  }, [service, systemSettings]);
 
   // Display save mutation (name, description, color, shape, is_active, is_emergency)
   const displaySaveMutation = useMutation({
@@ -493,7 +502,7 @@ export const ServiceDetailPage = () => {
                 <Palette className="h-5 w-5 text-violet-500" />
                 {t('common.displayAndVisibility')}
               </CardTitle>
-              <CardDescription>{t('common.displayAndVisibilityDesc')}</CardDescription>
+              {/* <CardDescription>{t('common.displayAndVisibilityDesc')}</CardDescription> */}
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -553,30 +562,6 @@ export const ServiceDetailPage = () => {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-6">
-                <div>
-                  <Label className="flex items-center gap-1.5 text-sm">
-                    <span className="h-4 w-4 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: displayForm.display_color || '#0d9488' }} /> {t('common.displayColor')}
-                  </Label>
-                  <input
-                    type="color"
-                    value={displayForm.display_color || '#0d9488'}
-                    onChange={(e) => setDisplayForm((p) => ({ ...p, display_color: e.target.value }))}
-                    className="mt-1 h-9 w-14 cursor-pointer rounded border border-gray-300 dark:border-gray-600"
-                  />
-                </div>
-                <div>
-                  <Label>{t('common.iconShape')}</Label>
-                  <select
-                    value={displayForm.icon_shape || ''}
-                    onChange={(e) => setDisplayForm((p) => ({ ...p, icon_shape: e.target.value as ServiceIconShape }))}
-                    className="mt-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  >
-                    <option value="">{t('common.iconShapeDefault')}</option>
-                    <option value="circle">{t('common.iconShapeCircle')}</option>
-                    <option value="square">{t('common.iconShapeSquare')}</option>
-                    <option value="rounded">{t('common.iconShapeRounded')}</option>
-                  </select>
-                </div>
               </div>
               <div className="flex flex-wrap items-center gap-6">
                 <label className="flex cursor-pointer items-center gap-2">

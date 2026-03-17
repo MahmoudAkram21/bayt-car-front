@@ -50,6 +50,8 @@ export const SettingsPage = () => {
     { key: 'PAYMENT_TIMEOUT_MINUTES', label: 'مهلة إتمام الدفع (دقيقة)', type: 'number', description: 'الوقت المسموح لإتمام الدفع بعد قبول الطلب؛ بعدها يُلغى الطلب تلقائياً', icon: Clock },
     { key: 'support_phone', label: 'رقم هاتف الدعم', type: 'text', description: 'رقم التواصل الظاهر في التطبيق', icon: Phone },
     { key: 'support_email', label: 'بريد الدعم الإلكتروني', type: 'email', description: 'البريد الإلكتروني للتواصل الظاهر في التطبيق', icon: Mail },
+    { key: 'service_icon_shape', label: 'شكل أيقونة الخدمة', type: 'select', description: 'شكل الأيقونة الافتراضي للخدمات', icon: Globe, options: ['circle', 'square', 'rounded'] },
+    { key: 'service_display_color', label: 'لون عرض الخدمة', type: 'color', description: 'اللون الافتراضي المستخدم في عرض الخدمة', icon: Globe },
   ];
 
   if (isLoading) {
@@ -105,6 +107,67 @@ export const SettingsPage = () => {
           <CardContent className="grid gap-6 p-6 sm:grid-cols-2">
             {defaultKeys.map((item) => {
               const Icon = item.icon;
+              
+              // Render color picker for color type
+              if (item.type === 'color') {
+                return (
+                  <div key={item.key} className="space-y-2">
+                    <Label htmlFor={item.key} className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <Icon className="h-4 w-4 text-indigo-500" />
+                      {item.label}
+                    </Label>
+                    <div className="flex gap-3 items-center">
+                      <input
+                        id={item.key}
+                        type="color"
+                        value={formData[item.key] || '#0d9488'}
+                        onChange={(e) => handleChange(item.key, e.target.value)}
+                        className="h-10 w-16 rounded-lg border-2 border-gray-200 cursor-pointer dark:border-gray-600 transition-colors hover:border-indigo-400"
+                        title={item.label}
+                      />
+                      <Input
+                        value={formData[item.key] || ''}
+                        onChange={(e) => handleChange(item.key, e.target.value)}
+                        placeholder="#0d9488"
+                        className="flex-1 rounded-xl border-gray-200 bg-white/50 font-mono text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700/50"
+                      />
+                    </div>
+                    {item.description && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{item.description}</p>
+                    )}
+                  </div>
+                );
+              }
+              
+              // Render dropdown for select type
+              if (item.type === 'select') {
+                return (
+                  <div key={item.key} className="space-y-2">
+                    <Label htmlFor={item.key} className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <Icon className="h-4 w-4 text-indigo-500" />
+                      {item.label}
+                    </Label>
+                    <select
+                      id={item.key}
+                      value={formData[item.key] || ''}
+                      onChange={(e) => handleChange(item.key, e.target.value)}
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white/50 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-indigo-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300"
+                    >
+                      <option value="">-- اختر بشكل أيقونة --</option>
+                      {item.options?.map((option: string) => (
+                        <option key={option} value={option}>
+                          {option === 'circle' ? 'دائري (Circle)' : option === 'square' ? 'مربع (Square)' : 'مستدير الزوايا (Rounded)'}
+                        </option>
+                      ))}
+                    </select>
+                    {item.description && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{item.description}</p>
+                    )}
+                  </div>
+                );
+              }
+              
+              // Render standard input for other types
               return (
                 <div key={item.key} className="space-y-2">
                   <Label htmlFor={item.key} className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">

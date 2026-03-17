@@ -70,6 +70,8 @@ export interface ServiceCategoryRef {
     slug: string;
 }
 export type PricingType = 'FIXED' | 'BY_OPTION' | 'PER_UNIT' | 'CUSTOMER_DEFINED';
+/** Service icon display shape (admin-configurable) */
+export type ServiceIconShape = 'circle' | 'square' | 'rounded';
 export interface Service {
     id: string | number;
     name: MultilingualText | string;
@@ -88,6 +90,9 @@ export interface Service {
     isNegotiable?: boolean;
     is_active?: boolean;
     isActive?: boolean;
+    is_emergency?: boolean;
+    icon_shape?: ServiceIconShape | string | null;
+    display_color?: string | null;
     createdAt?: string;
     updatedAt?: string;
     attributes?: ServiceAttribute[];
