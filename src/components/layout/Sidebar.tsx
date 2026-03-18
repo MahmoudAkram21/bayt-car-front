@@ -24,7 +24,8 @@ import {
   Sun,
   ChevronLeft,
   ChevronRight,
-  LayoutGrid
+  LayoutGrid,
+  Ticket
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -73,6 +74,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         { name: t('common.services'), href: '/services', icon: Wrench },
         { name: t('common.deliveries'), href: '/delivery', icon: Package },
         { name: t('common.bookings'), href: '/bookings', icon: Calendar },
+        { name: t('common.supportTickets'), href: '/support-tickets', icon: Ticket },
       ]
     },
     {

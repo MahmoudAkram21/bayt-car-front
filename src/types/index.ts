@@ -220,3 +220,27 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
 }
+
+// Support ticket = service request in support view (same entity, support-specific fields)
+export interface SupportTicketItem {
+  id: string;
+  status: string;
+  cancelRequestStatus: string | null;
+  isFlaggedForSupport: boolean;
+  adminNote: string | null;
+  customerId: string;
+  providerId: string | null;
+  finalPrice: number | null;
+  cancelReason: string | null;
+  cancelledBy: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  service?: Service;
+  customer?: { id: string; name: string; email: string };
+  provider?: { id: string; name: string; email: string; phone?: string } | null;
+}
+
+export interface SupportTicketsResponse {
+  data: SupportTicketItem[];
+  pagination: { total: number; page: number; limit: number; totalPages: number };
+}
