@@ -1,21 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { promoService, type PromoOffer, type OfferType, type OfferScope } from '../../services/promo.service';
-import { Tag, Percent, Plus, Pencil, Trash2, RefreshCw, CheckCircle2, Ticket, Calendar } from 'lucide-react';
+import { serviceService } from '../../services/service.service';
+import { Tag, Percent, Plus, Pencil, Trash2, RefreshCw, CheckCircle2, Ticket, Calendar, Wrench, Eye } from 'lucide-react';
 import { format } from 'date-fns';
-
-const TYPE_OPTIONS: { value: OfferType; label: string }[] = [
-  { value: 'PERCENTAGE', label: 'نسبة مئوية' },
-  { value: 'FIXED', label: 'مبلغ ثابت' },
-];
-const SCOPE_OPTIONS: { value: OfferScope; label: string }[] = [
-  { value: 'ALL', label: 'جميع الخدمات' },
-  { value: 'SERVICE', label: 'خدمة محددة' },
-];
 
 const emptyForm = () => ({
   code: '',
@@ -28,19 +22,69 @@ const emptyForm = () => ({
   usage_limit: '',
   scope: 'ALL' as OfferScope,
   entity_id: '',
+  entity_ids: [] as string[],
   is_active: true,
 });
 
 export const PromoPage = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const providerPromosOnly = searchParams.get('providerPromosOnly') === 'true';
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm());
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['promo-offers'],
-    queryFn: () => promoService.list(),
+  const TYPE_OPTIONS: { value: OfferType; label: string }[] = [
+    { value: 'PERCENTAGE', label: t('common.promoTypePercentage') },
+    { value: 'FIXED', label: t('common.promoTypeFixed') },
+  ];
+  const SCOPE_OPTIONS: { value: OfferScope; label: string }[] = [
+    { value: 'ALL', label: t('common.promoScopeAll') },
+    { value: 'SERVICE', label: t('common.promoScopeSingle') },
+    { value: 'SERVICES', label: t('common.promoScopeMultiple') },
+  ];
+
+  const editIdFromState = (location.state as { editId?: string } | null)?.editId;
+  const { data: editOffer } = useQuery({
+    queryKey: ['promo-offer-edit', editIdFromState],
+    queryFn: () => promoService.getById(editIdFromState!),
+    enabled: !!editIdFromState,
   });
+  useEffect(() => {
+    if (!editOffer || !editIdFromState) return;
+    const o = editOffer as PromoOffer;
+    const entityIds = o.offer_services?.map((os) => os.service_id) ?? [];
+    setEditingId(o.id);
+    setForm({
+      code: o.code,
+      type: o.type,
+      value: String(o.value),
+      min_order_amount: o.min_order_amount != null ? String(o.min_order_amount) : '',
+      max_discount: o.max_discount != null ? String(o.max_discount) : '',
+      valid_from: o.valid_from ? o.valid_from.slice(0, 16) : '',
+      valid_to: o.valid_to ? o.valid_to.slice(0, 16) : '',
+      usage_limit: o.usage_limit != null ? String(o.usage_limit) : '',
+      scope: o.scope,
+      entity_id: o.entity_id ?? '',
+      entity_ids: entityIds,
+      is_active: o.is_active,
+    });
+    setShowForm(true);
+    navigate('/promo', { replace: true, state: {} });
+  }, [editOffer, editIdFromState, navigate]);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['promo-offers', providerPromosOnly],
+    queryFn: () => promoService.list(providerPromosOnly ? { providerPromosOnly: true } : undefined),
+  });
+  const { data: servicesData } = useQuery({
+    queryKey: ['services-list-promo'],
+    queryFn: () => serviceService.getAllServices({ limit: 500 }),
+  });
+  const services = servicesData?.data ?? [];
   const offers = data?.data ?? [];
   const activeCount = offers.filter((o: PromoOffer) => o.is_active).length;
 
@@ -53,33 +97,43 @@ export const PromoPage = () => {
     },
   });
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<PromoOffer> }) => promoService.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof promoService.update>[1] }) => promoService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['promo-offers'] });
       setEditingId(null);
     },
   });
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => promoService.delete(id),
+    mutationFn: (id: string) => promoService.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['promo-offers'] }),
   });
 
-  const toPayload = () => ({
-    code: form.code.trim(),
-    type: form.type,
-    value: parseFloat(form.value),
-    min_order_amount: form.min_order_amount.trim() ? parseFloat(form.min_order_amount) : null,
-    max_discount: form.max_discount.trim() ? parseFloat(form.max_discount) : null,
-    valid_from: form.valid_from.trim() || null,
-    valid_to: form.valid_to.trim() || null,
-    usage_limit: form.usage_limit.trim() ? parseInt(form.usage_limit, 10) : null,
-    scope: form.scope,
-    entity_id: form.entity_id.trim() ? parseInt(form.entity_id, 10) : null,
-    is_active: form.is_active,
-  });
+  const toPayload = (): Parameters<typeof promoService.create>[0] => {
+    const base = {
+      code: form.code.trim(),
+      type: form.type,
+      value: parseFloat(form.value),
+      min_order_amount: form.min_order_amount.trim() ? parseFloat(form.min_order_amount) : null,
+      max_discount: form.max_discount.trim() ? parseFloat(form.max_discount) : null,
+      valid_from: form.valid_from.trim() || null,
+      valid_to: form.valid_to.trim() || null,
+      usage_limit: form.usage_limit.trim() ? parseInt(form.usage_limit, 10) : null,
+      scope: form.scope,
+      is_active: form.is_active,
+    };
+    if (form.scope === 'SERVICE') return { ...base, entity_id: form.entity_id.trim() || null };
+    if (form.scope === 'SERVICES') return { ...base, entity_ids: form.entity_ids };
+    return base;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (form.scope === 'SERVICES' && form.entity_ids.length === 0) {
+      return;
+    }
+    if (form.scope === 'SERVICE' && !form.entity_id.trim()) {
+      return;
+    }
     const payload = toPayload();
     if (editingId) {
       updateMutation.mutate({ id: editingId, data: payload });
@@ -89,6 +143,7 @@ export const PromoPage = () => {
   };
   const startEdit = (o: PromoOffer) => {
     setEditingId(o.id);
+    const entityIds = o.offer_services?.map((os) => os.service_id) ?? [];
     setForm({
       code: o.code,
       type: o.type,
@@ -99,13 +154,22 @@ export const PromoPage = () => {
       valid_to: o.valid_to ? o.valid_to.slice(0, 16) : '',
       usage_limit: o.usage_limit != null ? String(o.usage_limit) : '',
       scope: o.scope,
-      entity_id: o.entity_id != null ? String(o.entity_id) : '',
+      entity_id: o.entity_id ?? '',
+      entity_ids: entityIds,
       is_active: o.is_active,
     });
     setShowForm(true);
   };
-  const handleDelete = (id: number) => {
-    if (window.confirm('هل تريد حذف العرض الترويجي؟')) deleteMutation.mutate(id);
+  const handleDelete = (id: string) => {
+    if (window.confirm(t('common.promoDeleteConfirm'))) deleteMutation.mutate(id);
+  };
+
+  const toggleServiceInForm = (serviceId: string) => {
+    const id = String(serviceId);
+    setForm((p) => ({
+      ...p,
+      entity_ids: p.entity_ids.includes(id) ? p.entity_ids.filter((s) => s !== id) : [...p.entity_ids, id],
+    }));
   };
 
   return (
@@ -117,10 +181,10 @@ export const PromoPage = () => {
            </div>
            <div>
              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-               العروض الترويجية
+               {t('common.promoTitle')}
              </h1>
              <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-               إدارة أكواد الخصم والعروض الخاصة
+               {t('common.promoSubtitle')}
              </p>
            </div>
         </div>
@@ -132,7 +196,7 @@ export const PromoPage = () => {
             onClick={() => queryClient.invalidateQueries({ queryKey: ['promo-offers'] })}
           >
             <RefreshCw className="h-4 w-4" />
-            تحديث
+            {t('common.refresh')}
           </Button>
           <Button 
             size="sm" 
@@ -140,7 +204,7 @@ export const PromoPage = () => {
             onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm()); }}
           >
             <Plus className="h-4 w-4" />
-            إضافة عرض
+            {t('common.promoAddOffer')}
           </Button>
         </div>
       </div>
@@ -148,69 +212,108 @@ export const PromoPage = () => {
       {showForm && (
         <Card className="border-rose-100 bg-rose-50/50 backdrop-blur-sm dark:border-rose-900/50 dark:bg-rose-900/10">
           <CardHeader>
-            <CardTitle className="text-lg text-gray-900 dark:text-white">{editingId ? 'تعديل العرض الترويجي' : 'إضافة عرض ترويجي جديد'}</CardTitle>
+            <CardTitle className="text-lg text-gray-900 dark:text-white">{editingId ? t('common.promoEditOffer') : t('common.promoNewOffer')}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
-                <Label>الكود</Label>
+                <Label>{t('common.promoCode')}</Label>
                 <div className="relative">
                   <Tag className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <Input value={form.code} onChange={(e) => setForm((p) => ({ ...p, code: e.target.value.toUpperCase() }))} placeholder="SUMMER20" className="bg-white pr-9 font-mono uppercase dark:bg-gray-800" required />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>النوع</Label>
+                <Label>{t('common.promoType')}</Label>
                 <select value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value as OfferType }))} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white" required>
                   {TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
-                <Label>القيمة (نسبة أو مبلغ)</Label>
+                <Label>{t('common.promoValue')}</Label>
                 <Input type="number" step="0.01" min="0" value={form.value} onChange={(e) => setForm((p) => ({ ...p, value: e.target.value }))} className="bg-white dark:bg-gray-800" required />
               </div>
               <div className="space-y-2">
-                <Label>الحد الأدنى للطلب (اختياري)</Label>
+                <Label>{t('common.promoMinOrder')}</Label>
                 <Input type="number" min="0" value={form.min_order_amount} onChange={(e) => setForm((p) => ({ ...p, min_order_amount: e.target.value }))} className="bg-white dark:bg-gray-800" />
               </div>
               <div className="space-y-2">
-                <Label>الحد الأقصى للخصم (اختياري)</Label>
+                <Label>{t('common.promoMaxDiscount')}</Label>
                 <Input type="number" min="0" value={form.max_discount} onChange={(e) => setForm((p) => ({ ...p, max_discount: e.target.value }))} className="bg-white dark:bg-gray-800" />
               </div>
               <div className="space-y-2">
-                <Label>صالح من (اختياري)</Label>
+                <Label>{t('common.promoValidFrom')}</Label>
                 <Input type="datetime-local" value={form.valid_from} onChange={(e) => setForm((p) => ({ ...p, valid_from: e.target.value }))} className="bg-white dark:bg-gray-800" />
               </div>
               <div className="space-y-2">
-                <Label>صالح حتى (اختياري)</Label>
+                <Label>{t('common.promoValidTo')}</Label>
                 <Input type="datetime-local" value={form.valid_to} onChange={(e) => setForm((p) => ({ ...p, valid_to: e.target.value }))} className="bg-white dark:bg-gray-800" />
               </div>
               <div className="space-y-2">
-                <Label>حد الاستخدام (اختياري)</Label>
+                <Label>{t('common.promoUsageLimit')}</Label>
                 <Input type="number" min="0" value={form.usage_limit} onChange={(e) => setForm((p) => ({ ...p, usage_limit: e.target.value }))} className="bg-white dark:bg-gray-800" />
               </div>
               <div className="space-y-2">
-                <Label>النطاق</Label>
+                <Label>{t('common.promoScope')}</Label>
                 <select value={form.scope} onChange={(e) => setForm((p) => ({ ...p, scope: e.target.value as OfferScope }))} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
                   {SCOPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
-              <div className="space-y-2">
-                <Label>معرف الخدمة (للنطاق المحدد)</Label>
-                <Input type="number" min="0" value={form.entity_id} onChange={(e) => setForm((p) => ({ ...p, entity_id: e.target.value }))} className="bg-white dark:bg-gray-800" placeholder="ID الخدمة" />
-              </div>
+              {form.scope === 'SERVICE' && (
+                <div className="space-y-2">
+                  <Label>{t('common.promoServiceLabel')}</Label>
+                  <select
+                    value={form.entity_id}
+                    onChange={(e) => setForm((p) => ({ ...p, entity_id: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  >
+                    <option value="">{t('common.promoSelectService')}</option>
+                    {services.map((s) => (
+                      <option key={String(s.id)} value={String(s.id)}>
+                        {typeof s.name === 'string' ? s.name : (s.name as { ar?: string; en?: string })?.ar ?? (s.name as { ar?: string; en?: string })?.en ?? String(s.id)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {form.scope === 'SERVICES' && (
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>{t('common.promoServicesLabel')}</Label>
+                  <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-600 dark:bg-gray-800">
+                    {services.length === 0 && <p className="text-sm text-gray-500">{t('common.promoLoadingServices')}</p>}
+                    {services.map((s) => {
+                      const sid = String(s.id);
+                      const name = typeof s.name === 'string' ? s.name : (s.name as { ar?: string; en?: string })?.ar ?? (s.name as { ar?: string; en?: string })?.en ?? sid;
+                      return (
+                        <label key={sid} className="flex cursor-pointer items-center gap-2 rounded py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                          <input
+                            type="checkbox"
+                            checked={form.entity_ids.includes(sid)}
+                            onChange={() => toggleServiceInForm(sid)}
+                            className="h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {form.entity_ids.length > 0 && (
+                    <p className="text-xs text-gray-500">{t('common.promoSelectedCount', { count: form.entity_ids.length })}</p>
+                  )}
+                </div>
+              )}
               <div className="flex items-center pb-2">
                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500" />
-                  مفعّل ونشط
+                  {t('common.promoActiveLabel')}
                 </label>
               </div>
               <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-1">
                 <Button type="submit" size="sm" className="w-full rounded-xl bg-rose-600 hover:bg-rose-700" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingId ? 'حفظ' : 'إضافة'}
+                  {editingId ? t('common.save') : t('common.promoAddOffer')}
                 </Button>
                 <Button type="button" variant="outline" size="sm" className="w-full rounded-xl" onClick={() => { setShowForm(false); setEditingId(null); setForm(emptyForm()); }}>
-                  إلغاء
+                  {t('common.cancel')}
                 </Button>
               </div>
             </form>
@@ -223,7 +326,7 @@ export const PromoPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي العروض</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('common.promoTotalOffers')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{offers.length}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400">
@@ -234,7 +337,7 @@ export const PromoPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">العروض النشطة</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('common.promoActiveOffers')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{activeCount}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
@@ -245,10 +348,10 @@ export const PromoPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
              <div>
-               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">نوع الخصم</p>
+               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('common.promoDiscountType')}</p>
                <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                  <span className="font-semibold">{offers.filter((o: any) => o.type === 'PERCENTAGE').length}</span> نسبة / 
-                  <span className="font-semibold"> {offers.filter((o: any) => o.type === 'FIXED').length}</span> ثابت
+                  <span className="font-semibold">{offers.filter((o: any) => o.type === 'PERCENTAGE').length}</span> {t('common.promoTypePercentLabel')} /
+                  <span className="font-semibold"> {offers.filter((o: any) => o.type === 'FIXED').length}</span> {t('common.promoTypeFixedLabel')}
                </div>
              </div>
              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">
@@ -262,9 +365,27 @@ export const PromoPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <Tag className="h-5 w-5 text-rose-500" />
-            قائمة العروض
+            {t('common.promoListTitle')}
           </CardTitle>
-          <CardDescription>إدارة وتتبع استخدام كود الخصم</CardDescription>
+          <CardDescription>{t('common.promoListDesc')}</CardDescription>
+          <div className="mt-3 flex gap-2">
+            <Button
+              variant={!providerPromosOnly ? 'default' : 'outline'}
+              size="sm"
+              className="rounded-full"
+              onClick={() => setSearchParams({})}
+            >
+              {t('common.filterAllPromos')}
+            </Button>
+            <Button
+              variant={providerPromosOnly ? 'default' : 'outline'}
+              size="sm"
+              className="rounded-full"
+              onClick={() => setSearchParams({ providerPromosOnly: 'true' })}
+            >
+              {t('common.filterProviderPromosOnly')}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading && (
@@ -274,7 +395,7 @@ export const PromoPage = () => {
           )}
           {error && (
             <div className="py-8 text-center text-red-600 dark:text-red-400">
-              فشل تحميل العروض.
+              {t('common.promoLoadError')}
             </div>
           )}
           {!isLoading && !error && offers.length === 0 && (
@@ -282,7 +403,7 @@ export const PromoPage = () => {
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-900/20">
                 <Ticket className="h-8 w-8 text-rose-300 dark:text-rose-600" />
               </div>
-              <p className="mt-4 text-gray-500 dark:text-gray-400">لا توجد عروض ترويجية.</p>
+              <p className="mt-4 text-gray-500 dark:text-gray-400">{t('common.promoNoOffers')}</p>
             </div>
           )}
           {!isLoading && offers.length > 0 && (
@@ -290,17 +411,23 @@ export const PromoPage = () => {
               <table className="w-full">
                 <thead className="bg-gray-100/50 dark:bg-gray-700/40">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الكود</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">القيمة</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الصلاحية</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الاستخدام</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الحالة</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجراءات</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.promoCode')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.providerName')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.promoValue')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.promoScopeServices')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.promoValidity')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.promoUsage')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.status')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {offers.map((o: PromoOffer) => (
-                    <tr key={o.id} className="transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
+                    <tr
+                      key={o.id}
+                      className="cursor-pointer transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30"
+                      onClick={() => navigate(`/promo/${o.id}`)}
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                            <span className="flex h-8 items-center justify-center rounded-md bg-rose-100 px-2 font-mono text-sm font-bold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
@@ -308,16 +435,40 @@ export const PromoPage = () => {
                            </span>
                         </div>
                       </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                        {o.provider?.user?.name ?? '—'}
+                      </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                            {o.type === 'PERCENTAGE' ? `${Number(o.value)}%` : `${Number(o.value)} ر.س`}
                         </div>
-                        <div className="text-xs text-gray-500">{o.type === 'PERCENTAGE' ? 'نسبة' : 'ثابت'}</div>
+                        <div className="text-xs text-gray-500">{o.type === 'PERCENTAGE' ? t('common.promoTypePercentLabel') : t('common.promoTypeFixedLabel')}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
+                          {o.scope === 'ALL' && <>{t('common.promoScopeAll')}</>}
+                          {o.scope === 'SERVICE' && (() => {
+                            const svc = services.find((s) => String(s.id) === o.entity_id);
+                            const name = svc?.name != null ? (typeof svc.name === 'string' ? svc.name : (svc.name as { ar?: string; en?: string })?.ar ?? (svc.name as { ar?: string; en?: string })?.en) : null;
+                            return (
+                              <>
+                                <Wrench className="h-3.5 w-3.5 text-gray-400" />
+                                {o.entity_id ? (name ?? o.entity_id) : '—'}
+                              </>
+                            );
+                          })()}
+                          {o.scope === 'SERVICES' && o.offer_services && o.offer_services.length > 0 && (
+                            <span title={o.offer_services.map((os) => os.service?.name ?? os.service_id).join(', ')}>
+                              {t('common.promoNServices', { count: o.offer_services.length })}
+                            </span>
+                          )}
+                          {o.scope === 'SERVICES' && (!o.offer_services || o.offer_services.length === 0) && '—'}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
                            <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                           {o.valid_to ? format(new Date(o.valid_to), 'PP') : 'مفتوح'}
+                           {o.valid_to ? format(new Date(o.valid_to), 'PP') : t('common.promoValidOpen')}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -328,15 +479,18 @@ export const PromoPage = () => {
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${o.is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${o.is_active ? 'bg-emerald-500' : 'bg-gray-500'}`} />
-                          {o.is_active ? 'نشط' : 'معطل'}
+                          {o.is_active ? t('common.active') : t('common.disabled')}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/20 dark:hover:text-rose-400" onClick={() => startEdit(o)} title="تعديل">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/20 dark:hover:text-rose-400" onClick={() => navigate(`/promo/${o.id}`)} title={t('common.view')}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/20 dark:hover:text-rose-400" onClick={() => startEdit(o)} title={t('common.edit')}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleDelete(o.id)} title="حذف">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleDelete(o.id)} title={t('common.delete')}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>

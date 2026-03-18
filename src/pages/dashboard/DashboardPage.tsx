@@ -31,6 +31,7 @@ import {
   Plus,
   Receipt,
   Sparkles,
+  Tag,
   Ticket,
   TrendingUp,
   UserCheck,
@@ -41,6 +42,7 @@ import {
 } from 'lucide-react';
 import { dashboardService } from '../../services/dashboard.service';
 import { systemSettingsService } from '../../services/systemSettings.service';
+import { promoService } from '../../services/promo.service';
 import { Button } from '../../components/ui/button';
 
 const COLORS = ['#f97316', '#10b981', '#0ea5e9', '#8b5cf6', '#f59e0b'];
@@ -62,6 +64,12 @@ export const DashboardPage = () => {
     queryKey: ['system-settings'],
     queryFn: systemSettingsService.getSettings,
   });
+
+  const { data: providerPromosData } = useQuery({
+    queryKey: ['promo-provider-promos'],
+    queryFn: () => promoService.listProviderPromos(),
+  });
+  const providerPromos = providerPromosData?.data ?? [];
 
   const text = (ar: string, en: string) => (isArabic ? ar : en);
 
@@ -441,6 +449,71 @@ export const DashboardPage = () => {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="rounded-[30px] border border-gray-200/70 bg-white/88 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-white/10 dark:bg-gray-950/70">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-gray-400">{t('common.promo')}</p>
+            <h3 className="mt-2 text-xl font-bold text-gray-950 dark:text-white">{t('dashboard.providerPromoCodes')}</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t('dashboard.providerPromoCodesDesc')}</p>
+          </div>
+          <Link to="/promo?providerPromosOnly=true">
+            <Button variant="outline" size="sm" className="rounded-full gap-2">
+              <Tag className="h-4 w-4" />
+              {t('common.viewAllProviderPromos')}
+            </Button>
+          </Link>
+        </div>
+        {providerPromos.length === 0 ? (
+          <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">{t('dashboard.providerPromoNoOffers')}</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="pb-3 pr-4 font-semibold text-gray-500 dark:text-gray-400">{t('common.promoCode')}</th>
+                  <th className="pb-3 pr-4 font-semibold text-gray-500 dark:text-gray-400">{t('common.providerName')}</th>
+                  <th className="pb-3 pr-4 font-semibold text-gray-500 dark:text-gray-400">{t('common.promoValue')}</th>
+                  <th className="pb-3 pr-4 font-semibold text-gray-500 dark:text-gray-400">{t('common.servicesApplied')}</th>
+                  <th className="pb-3 pr-4 font-semibold text-gray-500 dark:text-gray-400">{t('common.promoUsage')}</th>
+                  <th className="pb-3 font-semibold text-gray-500 dark:text-gray-400">{t('common.status')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {providerPromos.slice(0, 10).map((o: { id: string; code: string; type: string; value: number; provider?: { user?: { name: string } }; offer_services?: { service: { name: string } }[]; usage_count: number; usage_limit: number | null; is_active: boolean }) => (
+                  <tr key={o.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30">
+                    <td className="py-3 pr-4">
+                      <span className="inline-flex rounded-md bg-rose-100 px-2 py-0.5 font-mono text-sm font-semibold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
+                        {o.code}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4 font-medium text-gray-900 dark:text-white">{o.provider?.user?.name ?? '—'}</td>
+                    <td className="py-3 pr-4">
+                      {o.type === 'PERCENTAGE' ? `${Number(o.value)}%` : `${Number(o.value)} ${t('dashboard.sar')}`}
+                    </td>
+                    <td className="py-3 pr-4 text-gray-600 dark:text-gray-300">
+                      {o.offer_services && o.offer_services.length > 0
+                        ? o.offer_services.map((os: { service?: { name?: string }; service_id?: string }) => os.service?.name ?? os.service_id ?? '').filter(Boolean).join(', ')
+                        : '—'}
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium dark:bg-gray-700">
+                        {o.usage_count}{o.usage_limit != null ? ` / ${o.usage_limit}` : ''}
+                      </span>
+                    </td>
+                    <td className="py-3">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${o.is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${o.is_active ? 'bg-emerald-500' : 'bg-gray-500'}`} />
+                        {o.is_active ? t('common.active') : t('common.disabled')}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section className="grid gap-6 lg:grid-cols-4">
