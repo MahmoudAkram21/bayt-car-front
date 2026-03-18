@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
@@ -31,6 +31,8 @@ export const PromoPage = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const providerPromosOnly = searchParams.get('providerPromosOnly') === 'true';
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm());
@@ -75,8 +77,8 @@ export const PromoPage = () => {
   }, [editOffer, editIdFromState, navigate]);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['promo-offers'],
-    queryFn: () => promoService.list(),
+    queryKey: ['promo-offers', providerPromosOnly],
+    queryFn: () => promoService.list(providerPromosOnly ? { providerPromosOnly: true } : undefined),
   });
   const { data: servicesData } = useQuery({
     queryKey: ['services-list-promo'],
@@ -366,6 +368,24 @@ export const PromoPage = () => {
             {t('common.promoListTitle')}
           </CardTitle>
           <CardDescription>{t('common.promoListDesc')}</CardDescription>
+          <div className="mt-3 flex gap-2">
+            <Button
+              variant={!providerPromosOnly ? 'default' : 'outline'}
+              size="sm"
+              className="rounded-full"
+              onClick={() => setSearchParams({})}
+            >
+              {t('common.filterAllPromos')}
+            </Button>
+            <Button
+              variant={providerPromosOnly ? 'default' : 'outline'}
+              size="sm"
+              className="rounded-full"
+              onClick={() => setSearchParams({ providerPromosOnly: 'true' })}
+            >
+              {t('common.filterProviderPromosOnly')}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading && (
@@ -392,6 +412,7 @@ export const PromoPage = () => {
                 <thead className="bg-gray-100/50 dark:bg-gray-700/40">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.promoCode')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.providerName')}</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.promoValue')}</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.promoScopeServices')}</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.promoValidity')}</th>
@@ -413,6 +434,9 @@ export const PromoPage = () => {
                              {o.code}
                            </span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                        {o.provider?.user?.name ?? '—'}
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">

@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
-import { Settings, Save, RefreshCw, Globe, Server, Phone, Mail, MapPin, DollarSign, MessageSquare, Clock } from 'lucide-react';
+import { Settings, Save, RefreshCw, Globe, Server, Phone, Mail, MapPin, DollarSign, MessageSquare, Clock, Gift } from 'lucide-react';
 import { systemSettingsService } from '../../services/systemSettings.service';
 import { Toaster, toast } from 'sonner';
 
 export const SettingsPage = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Record<string, string>>({});
 
@@ -19,7 +21,16 @@ export const SettingsPage = () => {
 
   useEffect(() => {
     if (settings) {
-      setFormData(settings);
+      const validRefundType =
+        settings.cancellation_refund_type === 'FULL_REFUND' ||
+        settings.cancellation_refund_type === 'REFUND_WITH_COMMISSION';
+      const validDiscountMode =
+        settings.discount_mode === 'DISABLED' || settings.discount_mode === 'PROVIDER';
+      setFormData({
+        ...settings,
+        cancellation_refund_type: validRefundType ? settings.cancellation_refund_type : 'FULL_REFUND',
+        discount_mode: validDiscountMode ? settings.discount_mode : 'PROVIDER',
+      });
     }
   }, [settings]);
 
@@ -27,10 +38,10 @@ export const SettingsPage = () => {
     mutationFn: systemSettingsService.updateSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-settings'] });
-      toast.success('تم تحديث الإعدادات بنجاح');
+      toast.success(t('settingsPage.saveSuccess'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'فشل تحديث الإعدادات');
+      toast.error(error.response?.data?.error || t('settingsPage.saveError'));
     },
   });
 
@@ -43,15 +54,18 @@ export const SettingsPage = () => {
   };
 
   const defaultKeys = [
-    { key: 'welcome_message_ar', label: 'رسالة الترحيب (عربي)', type: 'text', description: 'الرسالة التي تظهر للمستخدمين في شاشة التطبيق', icon: MessageSquare },
-    { key: 'welcome_message_en', label: 'رسالة الترحيب (إنجليزي)', type: 'text', description: 'Welcome message shown to users in the mobile app', icon: MessageSquare },
-    { key: 'search_radius_km', label: 'نطاق البحث الافتراضي (كم)', type: 'number', description: 'نطاق البحث عن مقدمي الخدمة حول العميل', icon: MapPin },
-    { key: 'commission_percent', label: 'نسبة العمولة الافتراضية (%)', type: 'number', description: 'النسبة المقتطعة من أرباح مقدم الخدمة', icon: DollarSign },
-    { key: 'PAYMENT_TIMEOUT_MINUTES', label: 'مهلة إتمام الدفع (دقيقة)', type: 'number', description: 'الوقت المسموح لإتمام الدفع بعد قبول الطلب؛ بعدها يُلغى الطلب تلقائياً', icon: Clock },
-    { key: 'support_phone', label: 'رقم هاتف الدعم', type: 'text', description: 'رقم التواصل الظاهر في التطبيق', icon: Phone },
-    { key: 'support_email', label: 'بريد الدعم الإلكتروني', type: 'email', description: 'البريد الإلكتروني للتواصل الظاهر في التطبيق', icon: Mail },
-    { key: 'service_icon_shape', label: 'شكل أيقونة الخدمة', type: 'select', description: 'شكل الأيقونة الافتراضي للخدمات', icon: Globe, options: ['circle', 'square', 'rounded'] },
-    { key: 'service_display_color', label: 'لون عرض الخدمة', type: 'color', description: 'اللون الافتراضي المستخدم في عرض الخدمة', icon: Globe },
+    { key: 'welcome_message_ar', labelKey: 'settingsPage.welcomeMessageAr', descriptionKey: 'settingsPage.welcomeMessageArDesc', type: 'text', icon: MessageSquare },
+    { key: 'welcome_message_en', labelKey: 'settingsPage.welcomeMessageEn', descriptionKey: 'settingsPage.welcomeMessageEnDesc', type: 'text', icon: MessageSquare },
+    { key: 'search_radius_km', labelKey: 'settingsPage.searchRadiusKm', descriptionKey: 'settingsPage.searchRadiusKmDesc', type: 'number', icon: MapPin },
+    { key: 'commission_percent', labelKey: 'settingsPage.commissionPercent', descriptionKey: 'settingsPage.commissionPercentDesc', type: 'number', icon: DollarSign },
+    { key: 'loyalty_points_multiplier', labelKey: 'settingsPage.loyaltyPointsMultiplier', descriptionKey: 'settingsPage.loyaltyPointsMultiplierDesc', type: 'number', icon: Gift },
+    { key: 'PAYMENT_TIMEOUT_MINUTES', labelKey: 'settingsPage.paymentTimeoutMinutes', descriptionKey: 'settingsPage.paymentTimeoutMinutesDesc', type: 'number', icon: Clock },
+    { key: 'cancellation_refund_type', labelKey: 'common.settingsCancellationRefundTypeLabel', descriptionKey: 'common.settingsCancellationRefundTypeDesc', type: 'select', icon: RefreshCw, options: ['FULL_REFUND', 'REFUND_WITH_COMMISSION'] },
+    { key: 'discount_mode', labelKey: 'settingsPage.discountMode', descriptionKey: 'settingsPage.discountModeDesc', type: 'select', icon: DollarSign, options: ['DISABLED', 'PROVIDER'] },
+    { key: 'support_phone', labelKey: 'settingsPage.supportPhone', descriptionKey: 'settingsPage.supportPhoneDesc', type: 'text', icon: Phone },
+    { key: 'support_email', labelKey: 'settingsPage.supportEmail', descriptionKey: 'settingsPage.supportEmailDesc', type: 'email', icon: Mail },
+    { key: 'service_icon_shape', labelKey: 'settingsPage.serviceIconShape', descriptionKey: 'settingsPage.serviceIconShapeDesc', type: 'select', icon: Globe, options: ['circle', 'square', 'rounded'] },
+    { key: 'service_display_color', labelKey: 'settingsPage.serviceDisplayColor', descriptionKey: 'settingsPage.serviceDisplayColorDesc', type: 'color', icon: Globe },
   ];
 
   if (isLoading) {
@@ -73,10 +87,10 @@ export const SettingsPage = () => {
            </div>
            <div>
              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-               إعدادات النظام
+               {t('settingsPage.pageTitle')}
              </h1>
              <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-               تكوين الإعدادات العالمية للتطبيق
+               {t('settingsPage.pageSubtitle')}
              </p>
            </div>
         </div>
@@ -86,7 +100,7 @@ export const SettingsPage = () => {
           className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-lg shadow-indigo-600/20"
         >
           {updateMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          حفظ التغييرات
+          {t('settingsPage.saveChanges')}
         </Button>
       </div>
 
@@ -99,8 +113,8 @@ export const SettingsPage = () => {
                 <Globe className="h-5 w-5" />
               </div>
               <div>
-                <CardTitle className="text-lg text-gray-900 dark:text-white">الإعدادات العامة</CardTitle>
-                <CardDescription>إدارة المعاملات الأساسية للمنصة</CardDescription>
+                <CardTitle className="text-lg text-gray-900 dark:text-white">{t('settingsPage.generalTitle')}</CardTitle>
+                <CardDescription>{t('settingsPage.generalDesc')}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -110,11 +124,13 @@ export const SettingsPage = () => {
               
               // Render color picker for color type
               if (item.type === 'color') {
+                const label = 'labelKey' in item && item.labelKey ? t(item.labelKey) : (item as { label?: string }).label;
+                const description = 'descriptionKey' in item && item.descriptionKey ? t(item.descriptionKey) : (item as { description?: string }).description;
                 return (
                   <div key={item.key} className="space-y-2">
                     <Label htmlFor={item.key} className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                       <Icon className="h-4 w-4 text-indigo-500" />
-                      {item.label}
+                      {label}
                     </Label>
                     <div className="flex gap-3 items-center">
                       <input
@@ -123,7 +139,7 @@ export const SettingsPage = () => {
                         value={formData[item.key] || '#0d9488'}
                         onChange={(e) => handleChange(item.key, e.target.value)}
                         className="h-10 w-16 rounded-lg border-2 border-gray-200 cursor-pointer dark:border-gray-600 transition-colors hover:border-indigo-400"
-                        title={item.label}
+                        title={String(label ?? '')}
                       />
                       <Input
                         value={formData[item.key] || ''}
@@ -132,8 +148,8 @@ export const SettingsPage = () => {
                         className="flex-1 rounded-xl border-gray-200 bg-white/50 font-mono text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700/50"
                       />
                     </div>
-                    {item.description && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{item.description}</p>
+                    {description && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
                     )}
                   </div>
                 );
@@ -141,11 +157,28 @@ export const SettingsPage = () => {
               
               // Render dropdown for select type
               if (item.type === 'select') {
+                const label = 'labelKey' in item && item.labelKey ? t(item.labelKey) : (item as { label?: string }).label;
+                const description = 'descriptionKey' in item && item.descriptionKey ? t(item.descriptionKey) : (item as { description?: string }).description;
+                const placeholder =
+                  item.key === 'cancellation_refund_type'
+                    ? t('common.settingsRefundTypePlaceholder')
+                    : item.key === 'discount_mode'
+                      ? t('settingsPage.discountMode')
+                      : t('settingsPage.iconShapePlaceholder');
+                const optionLabel =
+                  item.key === 'cancellation_refund_type'
+                    ? (opt: string) =>
+                        opt === 'FULL_REFUND' ? t('common.settingsRefundTypeFull') : t('common.settingsRefundTypeWithCommission')
+                    : item.key === 'discount_mode'
+                      ? (opt: string) =>
+                          opt === 'DISABLED' ? t('settingsPage.discountModeDisabled') : t('settingsPage.discountModeProvider')
+                      : (opt: string) =>
+                          opt === 'circle' ? t('settingsPage.iconShapeCircle') : opt === 'square' ? t('settingsPage.iconShapeSquare') : t('settingsPage.iconShapeRounded');
                 return (
                   <div key={item.key} className="space-y-2">
                     <Label htmlFor={item.key} className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                       <Icon className="h-4 w-4 text-indigo-500" />
-                      {item.label}
+                      {label}
                     </Label>
                     <select
                       id={item.key}
@@ -153,26 +186,28 @@ export const SettingsPage = () => {
                       onChange={(e) => handleChange(item.key, e.target.value)}
                       className="w-full rounded-xl border-2 border-gray-200 bg-white/50 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-indigo-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300"
                     >
-                      <option value="">-- اختر بشكل أيقونة --</option>
+                      <option value="">-- {placeholder} --</option>
                       {item.options?.map((option: string) => (
                         <option key={option} value={option}>
-                          {option === 'circle' ? 'دائري (Circle)' : option === 'square' ? 'مربع (Square)' : 'مستدير الزوايا (Rounded)'}
+                          {optionLabel(option)}
                         </option>
                       ))}
                     </select>
-                    {item.description && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{item.description}</p>
+                    {description && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
                     )}
                   </div>
                 );
               }
               
               // Render standard input for other types
+              const label = 'labelKey' in item && item.labelKey ? t(item.labelKey) : (item as { label?: string }).label;
+              const description = 'descriptionKey' in item && item.descriptionKey ? t(item.descriptionKey) : (item as { description?: string }).description;
               return (
                 <div key={item.key} className="space-y-2">
                   <Label htmlFor={item.key} className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     <Icon className="h-4 w-4 text-indigo-500" />
-                    {item.label}
+                    {label}
                   </Label>
                   <Input
                     id={item.key}
@@ -181,8 +216,8 @@ export const SettingsPage = () => {
                     onChange={(e) => handleChange(item.key, e.target.value)}
                     className="rounded-xl border-gray-200 bg-white/50 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700/50"
                   />
-                  {item.description && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{item.description}</p>
+                  {description && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
                   )}
                 </div>
               );
@@ -198,8 +233,8 @@ export const SettingsPage = () => {
                   <Server className="h-5 w-5" />
                 </div>
                 <div>
-                   <CardTitle className="text-lg text-gray-900 dark:text-white">إعدادات أخرى</CardTitle>
-                   <CardDescription>إعدادات إضافية موجودة في قاعدة البيانات</CardDescription>
+                   <CardTitle className="text-lg text-gray-900 dark:text-white">{t('settingsPage.otherTitle')}</CardTitle>
+                   <CardDescription>{t('settingsPage.otherDesc')}</CardDescription>
                 </div>
              </div>
           </CardHeader>
@@ -222,7 +257,7 @@ export const SettingsPage = () => {
               })}
               {Object.keys(formData).every(key => defaultKeys.find(k => k.key === key)) && (
                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <p className="text-sm text-gray-500 italic">لا توجد إعدادات إضافية.</p>
+                    <p className="text-sm text-gray-500 italic">{t('settingsPage.noOtherSettings')}</p>
                  </div>
               )}
             </div>

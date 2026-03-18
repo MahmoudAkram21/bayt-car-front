@@ -8,6 +8,12 @@ export interface PromoOfferServiceRef {
   service: { id: string; name: string };
 }
 
+export interface PromoOfferProviderRef {
+  id: string;
+  user_id: string;
+  user?: { id: string; name: string; email: string };
+}
+
 export interface PromoOffer {
   id: string;
   code: string;
@@ -21,7 +27,9 @@ export interface PromoOffer {
   usage_count: number;
   scope: OfferScope;
   entity_id: string | null;
+  provider_id?: string | null;
   offer_services?: PromoOfferServiceRef[];
+  provider?: PromoOfferProviderRef | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -31,8 +39,10 @@ export type PromoCreatePayload = Partial<PromoOffer> & { code: string; type: Off
 export type PromoUpdatePayload = Partial<PromoOffer> & { entity_id?: string | null; entity_ids?: string[] };
 
 export const promoService = {
-  list: (params?: { is_active?: boolean; code?: string }) =>
+  list: (params?: { is_active?: boolean; code?: string; providerPromosOnly?: boolean }) =>
     api.get<{ data: PromoOffer[] }>('/promo', { params }).then((r) => r.data),
+  listProviderPromos: () =>
+    api.get<{ data: PromoOffer[] }>('/promo', { params: { providerPromosOnly: 'true' } }).then((r) => r.data),
   getById: (id: string) => api.get<PromoOffer>(`/promo/${id}`).then((r) => r.data),
   create: (data: PromoCreatePayload) => {
     const body: Record<string, unknown> = { ...data };

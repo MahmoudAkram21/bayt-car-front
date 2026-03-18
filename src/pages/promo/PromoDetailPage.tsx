@@ -121,6 +121,12 @@ export const PromoDetailPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {o.provider && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">{t('common.providerName')}</span>
+                <span className="font-medium text-gray-900 dark:text-white">{o.provider.user?.name ?? '—'}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-gray-500 dark:text-gray-400">{t('common.type')}</span>
               <span className="font-medium text-gray-900 dark:text-white">{o.type === 'PERCENTAGE' ? t('common.promoTypePercentage') : t('common.promoTypeFixed')}</span>

@@ -1,12 +1,12 @@
 export interface Report {
-    id: number;
+    id: string | number;
     report_type: string;
     title: string | null;
     period_from: string | null;
     period_to: string | null;
     summary: Record<string, unknown> | null;
     created_at: string;
-    created_by: number | null;
+    created_by: string | number | null;
 }
 export declare const reportService: {
     getAll(params?: {
