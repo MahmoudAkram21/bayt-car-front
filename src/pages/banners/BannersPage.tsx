@@ -130,7 +130,7 @@ export const BannersPage = () => {
         toast.error(t('common.bannerImageRequired'));
         return;
       }
-      createMutation.mutate(payload);
+      createMutation.mutate(payload as any);
     }
   };
 

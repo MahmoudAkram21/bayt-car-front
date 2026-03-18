@@ -7,6 +7,55 @@ export interface DashboardStats {
     totalWalletBalance?: number;
     totalFrozenBalance?: number;
     totalReports?: number;
+    totalServiceRequests?: number;
+    totalInvoiceRevenue?: number;
+    totalPlatformCommission?: number;
+    totalTaxCollected?: number;
+    totalTransactions?: number;
+    totalDiscounts?: number;
+    totalCashback?: number;
+    totalRegions?: number;
+    topRegions?: {
+        region: string;
+        count: number;
+    }[];
+    commissionByService?: {
+        serviceName: string;
+        commission: number;
+    }[];
+    providersByService?: {
+        serviceName: string;
+        providerCount: number;
+    }[];
+    providersByRating?: {
+        avgRating: number;
+        totalReviews: number;
+        ratingDistribution?: {
+            range: string;
+            count: number;
+        }[];
+    };
+    servicesIndicators?: {
+        completedRequests: number;
+        cancelledRequests: number;
+        openRequests: number;
+        byServiceAndRegion?: {
+            serviceName: string;
+            regions: {
+                region: string;
+                count: number;
+            }[];
+        }[];
+    };
+    totalCustomers?: number;
+    totalProviders?: number;
+    activeUsers?: number;
+    totalPaidRequests?: number;
+    openAfterPayment?: number;
+    completedAfterPayment?: number;
+    totalCancelled?: number;
+    loyaltyPointsBalance?: number;
+    loyaltyAccountsCount?: number;
 }
 export declare const dashboardService: {
     getStats(): Promise<DashboardStats>;

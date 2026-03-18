@@ -1,0 +1,145 @@
+import fs from 'fs';
+
+const enPath = 'public/locales/en/translation.json';
+const arPath = 'public/locales/ar/translation.json';
+
+let en = JSON.parse(fs.readFileSync(enPath, 'utf8'));
+let ar = JSON.parse(fs.readFileSync(arPath, 'utf8'));
+
+if (!en.reports.buttons) en.reports.buttons = {};
+if (!ar.reports.buttons) ar.reports.buttons = {};
+if (!en.reports.empty) en.reports.empty = {};
+if (!ar.reports.empty) ar.reports.empty = {};
+if (!en.reports.details) en.reports.details = {};
+if (!ar.reports.details) ar.reports.details = {};
+
+// EN - Buttons
+en.reports.buttons.walletSummary = 'Wallet Summary';
+en.reports.buttons.financialReport = 'Financial Report';
+en.reports.buttons.servicesByRegion = 'Services by Region';
+en.reports.buttons.openAfterPayment = 'Open After Payment';
+en.reports.buttons.usersReport = 'Users Report';
+en.reports.buttons.cancelledRequests = 'Cancelled Requests';
+en.reports.buttons.loyaltyPoints = 'Loyalty Points';
+en.reports.buttons.supportTickets = 'Support Tickets';
+en.reports.buttons.discountsCashback = 'Discounts & Cashback';
+en.reports.buttons.invoicesByService = 'Invoices by Service';
+en.reports.buttons.servicesIndicators = 'Services Indicators';
+en.reports.buttons.providersByService = 'Providers by Service';
+
+// AR - Buttons
+ar.reports.buttons.walletSummary = 'ملخص المحفظة';
+ar.reports.buttons.financialReport = 'التقرير المالي';
+ar.reports.buttons.servicesByRegion = 'الخدمات حسب المنطقة';
+ar.reports.buttons.openAfterPayment = 'مفتوح بعد الدفع';
+ar.reports.buttons.usersReport = 'تقرير المستخدمين';
+ar.reports.buttons.cancelledRequests = 'الطلبات الملغاة';
+ar.reports.buttons.loyaltyPoints = 'نقاط الولاء';
+ar.reports.buttons.supportTickets = 'تذاكر الدعم';
+ar.reports.buttons.discountsCashback = 'الخصومات والاسترداد النقدي';
+ar.reports.buttons.invoicesByService = 'الفواتير حسب الخدمة';
+ar.reports.buttons.servicesIndicators = 'مؤشرات الخدمات';
+ar.reports.buttons.providersByService = 'مقدمو الخدمة حسب الخدمة';
+
+// EN - Empty States & Headers
+en.reports.empty.failedLoad = 'Failed to load reports.';
+en.reports.empty.noReportsYet = 'No reports yet';
+en.reports.empty.clickToGenerate = 'Click "Generate Wallet Summary" to create your first report.';
+en.reports.details.reportDetails = 'Report Details';
+en.reports.details.totalBalance = 'Total Balance';
+en.reports.details.frozenAmount = 'Frozen Amount';
+en.reports.details.totalWallets = 'Total Wallets';
+en.reports.details.detailedBreakdown = 'Detailed Breakdown';
+en.reports.details.user = 'User';
+en.reports.details.role = 'Role';
+en.reports.details.balance = 'Balance';
+en.reports.details.frozen = 'Frozen';
+en.reports.details.unknownUser = 'Unknown User';
+en.reports.details.provider = 'Provider';
+en.reports.details.customer = 'Customer';
+en.reports.details.platformCommission = 'Platform Commission';
+en.reports.details.taxCollected = 'Tax Collected';
+en.reports.details.totalTransactions = 'Total Transactions';
+en.reports.details.baseRevenue = 'Base Revenue';
+en.reports.details.discountsGiven = 'Discounts Given';
+en.reports.details.cashbackUsed = 'Cashback Used';
+en.reports.details.providerCommissions = 'Provider Commissions';
+en.reports.details.paidTransactions = 'Paid Transactions';
+en.reports.details.refundedTransactions = 'Refunded Transactions';
+en.reports.details.invoice = 'Invoice';
+en.reports.details.service = 'Service';
+en.reports.details.base = 'Base';
+en.reports.details.commission = 'Commission';
+en.reports.details.tax = 'Tax';
+en.reports.details.status = 'Status';
+en.reports.details.percentage = 'Percentage';
+en.reports.details.completionRate = 'Completion Rate';
+en.reports.details.active = 'Active';
+en.reports.details.inactive = 'Inactive';
+en.reports.details.unverified = 'unverified';
+en.reports.details.business = 'Business';
+en.reports.details.phone = 'Phone';
+en.reports.details.price = 'Price';
+en.reports.details.reason = 'Reason';
+en.reports.details.unverifiedProviders = 'Unverified Providers';
+en.reports.details.verifiedProviders = 'Verified Providers';
+en.reports.details.totalRegions = 'Total Regions';
+en.reports.details.openRequestsByStatus = 'Open Requests by Status';
+en.reports.details.recentOpenRequests = 'Recent Open Requests';
+en.reports.details.recentUsers = 'Recent Users';
+en.reports.details.topCustomers = 'Top Customers';
+en.reports.details.topProviders = 'Top Providers';
+
+// AR - Empty States & Headers
+ar.reports.empty.failedLoad = 'فشل في تحميل التقارير.';
+ar.reports.empty.noReportsYet = 'لا توجد تقارير بعد';
+ar.reports.empty.clickToGenerate = 'انقر على "إنشاء ملخص المحفظة" لإنشاء تقريرك الأول.';
+ar.reports.details.reportDetails = 'تفاصيل التقرير';
+ar.reports.details.totalBalance = 'إجمالي الرصيد';
+ar.reports.details.frozenAmount = 'المبلغ المجمد';
+ar.reports.details.totalWallets = 'إجمالي المحافظ';
+ar.reports.details.detailedBreakdown = 'تفصيل دقيق';
+ar.reports.details.user = 'المستخدم';
+ar.reports.details.role = 'الدور';
+ar.reports.details.balance = 'الرصيد';
+ar.reports.details.frozen = 'مجمد';
+ar.reports.details.unknownUser = 'مستخدم غير معروف';
+ar.reports.details.provider = 'مقدم الخدمة';
+ar.reports.details.customer = 'العميل';
+ar.reports.details.platformCommission = 'عمولة المنصة';
+ar.reports.details.taxCollected = 'الضريبة المحصلة';
+ar.reports.details.totalTransactions = 'إجمالي المعاملات';
+ar.reports.details.baseRevenue = 'الإيرادات الأساسية';
+ar.reports.details.discountsGiven = 'الخصومات الممنوحة';
+ar.reports.details.cashbackUsed = 'الاسترداد النقدي المستخدم';
+ar.reports.details.providerCommissions = 'عمولات مقدم الخدمة';
+ar.reports.details.paidTransactions = 'المعاملات المدفوعة';
+ar.reports.details.refundedTransactions = 'المعاملات المستردة';
+ar.reports.details.invoice = 'الفاتورة';
+ar.reports.details.service = 'الخدمة';
+ar.reports.details.base = 'أساسي';
+ar.reports.details.commission = 'العمولة';
+ar.reports.details.tax = 'الضريبة';
+ar.reports.details.status = 'الحالة';
+ar.reports.details.percentage = 'النسبة المئوية';
+ar.reports.details.completionRate = 'معدل الإكمال';
+ar.reports.details.active = 'نشط';
+ar.reports.details.inactive = 'غير نشط';
+ar.reports.details.unverified = 'غير موثق';
+ar.reports.details.business = 'العمل التجاري';
+ar.reports.details.phone = 'رقم الهاتف';
+ar.reports.details.price = 'السعر';
+ar.reports.details.reason = 'السبب';
+ar.reports.details.unverifiedProviders = 'مقدمي الخدمة غير الموثقين';
+ar.reports.details.verifiedProviders = 'مقدمي الخدمة الموثقين';
+ar.reports.details.totalRegions = 'إجمالي المناطق';
+ar.reports.details.openRequestsByStatus = 'الطلبات المفتوحة حسب الحالة';
+ar.reports.details.recentOpenRequests = 'الطلبات المفتوحة الأخيرة';
+ar.reports.details.recentUsers = 'المستخدمين الجدد';
+ar.reports.details.topCustomers = 'أفضل العملاء';
+ar.reports.details.topProviders = 'أفضل مقدمي الخدمة';
+
+fs.writeFileSync(enPath, JSON.stringify(en, null, 2), 'utf8');
+fs.writeFileSync(arPath, JSON.stringify(ar, null, 2), 'utf8');
+
+console.log('JSON translations updated.');

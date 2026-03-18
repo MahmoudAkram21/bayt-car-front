@@ -1,5 +1,6 @@
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { DashboardFooter } from './DashboardFooter';
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
 
@@ -36,6 +37,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             {children}
           </div>
         </main>
+        <DashboardFooter />
       </div>
     </div>
   );

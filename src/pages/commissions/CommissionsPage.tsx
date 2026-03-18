@@ -49,7 +49,7 @@ export const CommissionsPage = () => {
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Unpaid</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
-                ${stats?.totalUnpaid?.toFixed(2) || '0.00'}
+                ${stats?.totalUnpaid?.toFixed ? Number(stats?.totalUnpaid || 0).toFixed(2) : '0.00'}
               </p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400">
@@ -63,7 +63,7 @@ export const CommissionsPage = () => {
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Paid</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
-                ${stats?.totalPaid?.toFixed(2) || '0.00'}
+                ${stats?.totalPaid?.toFixed ? Number(stats?.totalPaid || 0).toFixed(2) : '0.00'}
               </p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
@@ -167,7 +167,7 @@ export const CommissionsPage = () => {
                       {commission.isPaid ? 'Paid' : 'Unpaid'}
                     </span>
                     <h3 className="mt-2 font-semibold text-gray-900 dark:text-white">{getName(commission.provider?.businessName) || '—'}</h3>
-                    <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">${commission.amount?.toFixed(2) || '0.00'}</p>
+                    <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">${Number(commission.amount || 0).toFixed(2)}</p>
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{commission.dueDate ? format(new Date(commission.dueDate), 'MMM dd, yyyy') : '—'}</p>
                   </div>
                 </div>
@@ -197,7 +197,7 @@ export const CommissionsPage = () => {
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                         {getName(commission.booking?.service?.name) || 'N/A'}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">${commission.amount?.toFixed(2) || '0.00'}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">${Number(commission.amount || 0).toFixed(2)}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                         {commission.dueDate ? format(new Date(commission.dueDate), 'MMM dd, yyyy') : 'N/A'}
                       </td>

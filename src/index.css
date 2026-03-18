@@ -52,6 +52,12 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --scrollbar-size: 12px;
+  --scrollbar-track: color-mix(in oklab, var(--background) 92%, var(--foreground) 8%);
+  --scrollbar-thumb: color-mix(in oklab, var(--primary) 34%, var(--background) 66%);
+  --scrollbar-thumb-hover: color-mix(in oklab, var(--primary) 52%, var(--background) 48%);
+  --scrollbar-thumb-active: color-mix(in oklab, var(--primary) 68%, var(--background) 32%);
+  --scrollbar-shadow: color-mix(in oklab, var(--background) 45%, transparent);
 }
 
 .dark {
@@ -87,6 +93,11 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+  --scrollbar-track: color-mix(in oklab, var(--background) 78%, var(--foreground) 22%);
+  --scrollbar-thumb: color-mix(in oklab, var(--primary) 40%, var(--background) 60%);
+  --scrollbar-thumb-hover: color-mix(in oklab, var(--primary) 58%, var(--background) 42%);
+  --scrollbar-thumb-active: color-mix(in oklab, var(--primary) 72%, var(--background) 28%);
+  --scrollbar-shadow: color-mix(in oklab, var(--background) 60%, transparent);
 }
 
 @theme inline {
@@ -135,6 +146,49 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+  }
+
+  html {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
+
+  body::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-track {
+    background:
+      linear-gradient(180deg, color-mix(in oklab, var(--scrollbar-track) 88%, white 12%), var(--scrollbar-track));
+    border-radius: 999px;
+  }
+
+  body::-webkit-scrollbar-thumb,
+  *::-webkit-scrollbar-thumb {
+    background:
+      linear-gradient(180deg, var(--scrollbar-thumb-hover), var(--scrollbar-thumb));
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, white 18%, transparent),
+      0 10px 24px -18px var(--scrollbar-shadow);
+    min-height: 48px;
+  }
+
+  body::-webkit-scrollbar-thumb:hover,
+  *::-webkit-scrollbar-thumb:hover {
+    background:
+      linear-gradient(180deg, var(--scrollbar-thumb-active), var(--scrollbar-thumb-hover));
+  }
+
+  body::-webkit-scrollbar-thumb:active,
+  *::-webkit-scrollbar-thumb:active {
+    background: var(--scrollbar-thumb-active);
   }
 
   /* Typography: Poppins (EN) / Alexandria (AR) — applied via font-family in HTML */
