@@ -6,6 +6,7 @@
     "services": "الخدمات",
     "deliveries": "التوصيل",
     "bookings": "الحجوزات",
+    "supportTickets": "تذاكر الدعم",
     "commissions": "العمولات",
     "wallets": "المحافظ",
     "invoices": "الفواتير",
@@ -546,6 +547,28 @@
       "topCustomers": "أفضل العملاء",
       "topProviders": "أفضل مقدمي الخدمة"
     }
+  },
+  "supportTickets": {
+    "title": "تذاكر الدعم",
+    "description": "الطلبات التي تحتاج متابعة أو اهتمام الإدارة: ملغاة، أو بانتظار إلغاء، أو مُعلّمة، أو مدفوعة وغير مكتملة.",
+    "noTickets": "لا توجد تذاكر دعم",
+    "noTicketsDesc": "لا توجد طلبات تحتاج متابعة حالياً.",
+    "customer": "العميل",
+    "service": "الخدمة",
+    "date": "التاريخ",
+    "total": "الإجمالي",
+    "flag": "تعليم للمتابعة",
+    "unflag": "إزالة التعليم",
+    "adminNote": "ملاحظة الإدارة",
+    "adminNotePlaceholder": "أضف ملاحظة داخلية...",
+    "flagged": "مُعلّم",
+    "cancelPending": "إلغاء بانتظار الموافقة",
+    "resolved": "تم الحل",
+    "closed": "مغلق",
+    "refresh": "تحديث",
+    "loadingError": "فشل تحميل تذاكر الدعم.",
+    "flagSuccess": "تم تحديث التذكرة.",
+    "viewRequest": "عرض الطلب"
   },
   "sidebar": {
     "collapse": "طي الشريط",

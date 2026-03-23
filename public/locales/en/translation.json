@@ -6,6 +6,7 @@
     "services": "Services",
     "deliveries": "Deliveries",
     "bookings": "Bookings",
+    "supportTickets": "Support Tickets",
     "commissions": "Commissions",
     "wallets": "Wallets",
     "invoices": "Invoices",
@@ -546,6 +547,28 @@
       "topCustomers": "Top Customers",
       "topProviders": "Top Providers"
     }
+  },
+  "supportTickets": {
+    "title": "Support Tickets",
+    "description": "Requests that need support or admin attention: cancelled, pending cancellation, flagged, or paid and not completed.",
+    "noTickets": "No support tickets",
+    "noTicketsDesc": "No requests need support attention right now.",
+    "customer": "Customer",
+    "service": "Service",
+    "date": "Date",
+    "total": "Total",
+    "flag": "Flag for support",
+    "unflag": "Remove flag",
+    "adminNote": "Admin note",
+    "adminNotePlaceholder": "Add an internal note...",
+    "flagged": "Flagged",
+    "cancelPending": "Cancellation pending",
+    "resolved": "Resolved",
+    "closed": "Closed",
+    "refresh": "Refresh",
+    "loadingError": "Failed to load support tickets.",
+    "flagSuccess": "Ticket updated.",
+    "viewRequest": "View request"
   },
   "sidebar": {
     "collapse": "Collapse",
