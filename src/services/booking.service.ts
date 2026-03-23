@@ -10,21 +10,21 @@ export const bookingService = {
     page?: number;
     limit?: number;
   }): Promise<PaginatedResponse<Booking>> {
-    const response = await api.get<PaginatedResponse<Booking>>('/bookings', { params });
+    const response = await api.get<PaginatedResponse<Booking>>('/service-requests', { params });
     return response.data;
   },
 
   async getBookingById(id: string): Promise<Booking> {
-    const response = await api.get<Booking>(`/bookings/${id}`);
+    const response = await api.get<Booking>(`/service-requests/${id}`);
     return response.data;
   },
 
   async updateBookingStatus(id: string, status: BookingStatus): Promise<Booking> {
-    const response = await api.patch<Booking>(`/bookings/${id}`, { status });
+    const response = await api.put<Booking>(`/service-requests/${id}/status`, { status });
     return response.data;
   },
 
   async deleteBooking(id: string): Promise<void> {
-    await api.delete(`/bookings/${id}`);
+    await api.delete(`/service-requests/${id}`, { data: { cancelReason: "Admin cancelled" } });
   },
 };
