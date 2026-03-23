@@ -3,10 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Search, Calendar, RefreshCw, LayoutGrid, List, CheckCircle, XCircle, Clock, User, Briefcase } from 'lucide-react';
+import { Search, Calendar, RefreshCw, LayoutGrid, List, CheckCircle, XCircle, Clock, User, Briefcase, Eye } from 'lucide-react';
 import { BookingStatus } from '../../types';
 import { bookingService } from '../../services/booking.service';
 import { format } from 'date-fns';
+import { BookingDetailsModal } from './BookingDetailsModal';
 
 type ViewMode = 'cards' | 'table';
 
@@ -23,6 +24,7 @@ export const BookingsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['bookings', { status: activeTab, search: searchTerm }],
@@ -248,10 +250,20 @@ export const BookingsPage = () => {
                   </div>
 
                   <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-700">
-                     <span className="text-xs text-gray-500">Total</span>
-                     <span className="text-lg font-bold text-gray-900 dark:text-white">
-                       {booking.finalPrice != null ? `${Number(booking.finalPrice).toFixed(2)}` : '0.00'} <span className="text-xs font-normal text-gray-500">SAR</span>
-                     </span>
+                     <div className="flex flex-col">
+                       <span className="text-xs text-gray-500">Total</span>
+                       <span className="text-lg font-bold text-gray-900 dark:text-white">
+                         {booking.finalPrice != null ? `${Number(booking.finalPrice).toFixed(2)}` : '0.00'} <span className="text-xs font-normal text-gray-500">SAR</span>
+                       </span>
+                     </div>
+                     <Button 
+                       variant="outline" 
+                       size="sm" 
+                       onClick={() => setSelectedBookingId(booking.id)} 
+                       className="h-8 gap-1.5 rounded-lg border-teal-200 text-teal-700 hover:bg-teal-50 hover:text-teal-800 dark:border-teal-800 dark:text-teal-400 dark:hover:bg-teal-900/30"
+                     >
+                       <Eye className="h-3.5 w-3.5" /> View
+                     </Button>
                   </div>
                 </div>
               ))}
@@ -269,6 +281,7 @@ export const BookingsPage = () => {
                     <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Date</th>
                     <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Total</th>
                     <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
+                    <th className="px-6 py-4 text-end text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -299,6 +312,16 @@ export const BookingsPage = () => {
                           {booking.status}
                         </span>
                       </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-end">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setSelectedBookingId(booking.id)} 
+                          className="h-8 w-8 p-0 rounded-full hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/30 dark:hover:text-teal-400"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -307,6 +330,8 @@ export const BookingsPage = () => {
           )}
         </CardContent>
       </Card>
+      
+      <BookingDetailsModal bookingId={selectedBookingId} onClose={() => setSelectedBookingId(null)} />
     </div>
   );
 };
