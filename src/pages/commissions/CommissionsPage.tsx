@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
-import { Search, DollarSign, AlertTriangle, LayoutGrid, List } from 'lucide-react';
+import { Button } from '../../components/ui/button';
+import { Search, DollarSign, AlertTriangle, LayoutGrid, List, Eye } from 'lucide-react';
 import { commissionService } from '../../services/commission.service';
 import { format } from 'date-fns';
+import { CommissionDetailsModal } from './CommissionDetailsModal';
 
 type ViewMode = 'cards' | 'table';
 
@@ -12,6 +14,7 @@ export const CommissionsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [selectedCommission, setSelectedCommission] = useState<any | null>(null);
 
   const { data: stats } = useQuery({
     queryKey: ['commission-stats'],
@@ -166,9 +169,14 @@ export const CommissionsPage = () => {
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${commission.isPaid ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'}`}>
                       {commission.isPaid ? 'Paid' : 'Unpaid'}
                     </span>
-                    <h3 className="mt-2 font-semibold text-gray-900 dark:text-white">{getName(commission.provider?.businessName) || '—'}</h3>
+                    <h3 className="mt-2 font-semibold text-gray-900 dark:text-white">{commission.provider?.user?.name || commission.provider?.businessName && getName(commission.provider.businessName) || '—'}</h3>
                     <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">${Number(commission.amount || 0).toFixed(2)}</p>
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{commission.dueDate ? format(new Date(commission.dueDate), 'MMM dd, yyyy') : '—'}</p>
+                  </div>
+                  <div className="border-t border-gray-100 px-4 py-3 dark:border-gray-700">
+                    <Button variant="ghost" size="sm" className="w-full gap-1.5 text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900/20" onClick={() => setSelectedCommission(commission)}>
+                      <Eye className="h-4 w-4" /> View Details
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -186,16 +194,21 @@ export const CommissionsPage = () => {
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Due Date</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
                     <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Paid Date</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {(data as any).data.map((commission: any) => (
                     <tr key={commission.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                        {getName(commission.provider?.businessName) || 'N/A'}
+                        {commission.provider?.user?.name || getName(commission.provider?.businessName) || 'N/A'}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                        {getName(commission.booking?.service?.name) || 'N/A'}
+                        {commission.serviceRequest?.service?.name
+                          ? (typeof commission.serviceRequest.service.name === 'string'
+                            ? commission.serviceRequest.service.name
+                            : commission.serviceRequest.service.name?.en || commission.serviceRequest.service.name?.ar)
+                          : getName(commission.booking?.service?.name) || 'N/A'}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">${Number(commission.amount || 0).toFixed(2)}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
@@ -213,6 +226,11 @@ export const CommissionsPage = () => {
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                         {commission.isPaid && commission.paidAt ? format(new Date(commission.paidAt), 'MMM dd, yyyy') : '—'}
                       </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <Button variant="ghost" size="sm" className="h-8 gap-1.5 rounded-lg text-teal-600 hover:bg-teal-50 dark:text-teal-400" onClick={() => setSelectedCommission(commission)}>
+                          <Eye className="h-4 w-4" /> View
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -221,6 +239,12 @@ export const CommissionsPage = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Commission Details Modal */}
+      <CommissionDetailsModal
+        commission={selectedCommission}
+        onClose={() => setSelectedCommission(null)}
+      />
     </div>
   );
 };
