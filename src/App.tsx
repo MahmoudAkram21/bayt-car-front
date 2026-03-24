@@ -32,6 +32,8 @@ import { DeliveryPage } from "./pages/delivery/DeliveryPage";
 import { FurnitureDeliveryPage } from "./pages/furniture-delivery/FurnitureDeliveryPage";
 import { ReportsPage } from "./pages/reports/ReportsPage";
 import { SupportTicketsPage } from "./pages/support-tickets/SupportTicketsPage";
+import { AdminSupportChatsPage } from "./pages/admins/support-chats/AdminSupportChatsPage";
+import { AdminSupportChatDetailPage } from "./pages/admins/support-chats/AdminSupportChatDetailPage";
 import { SettingsPage } from "./pages/settings/Settings";
 import { Err400Page } from "./pages/errors/Err400Page";
 import { Err403Page } from "./pages/errors/Err403Page";
@@ -91,6 +93,8 @@ function App() {
                   <Route path="/invoices" element={<InvoicesPage />} />
                   <Route path="/reports" element={<ReportsPage />} />
                   <Route path="/support-tickets" element={<SupportTicketsPage />} />
+                  <Route path="/admin/support-chats" element={<AdminSupportChatsPage />} />
+                  <Route path="/admin/support-chats/:ticketId" element={<AdminSupportChatDetailPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                 </Routes>
               </AdminLayout>
