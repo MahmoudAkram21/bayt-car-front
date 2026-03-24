@@ -8,11 +8,14 @@ import { Label } from '../../components/ui/label';
 import { Settings, Save, RefreshCw, Globe, Server, Phone, Mail, MapPin, DollarSign, MessageSquare, Clock, Gift } from 'lucide-react';
 import { systemSettingsService } from '../../services/systemSettings.service';
 import { Toaster, toast } from 'sonner';
+import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 export const SettingsPage = () => {
   const { t } = useTranslation();
+  const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const canUpdateSettings = can('SETTINGS', 'UPDATE');
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ['system-settings'],
@@ -50,6 +53,7 @@ export const SettingsPage = () => {
   };
 
   const handleSave = () => {
+    if (!canUpdateSettings) return;
     updateMutation.mutate(formData);
   };
 
@@ -96,7 +100,7 @@ export const SettingsPage = () => {
         </div>
         <Button 
           onClick={handleSave} 
-          disabled={updateMutation.isPending} 
+          disabled={!canUpdateSettings || updateMutation.isPending} 
           className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-lg shadow-indigo-600/20"
         >
           {updateMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -138,12 +142,14 @@ export const SettingsPage = () => {
                         type="color"
                         value={formData[item.key] || '#0d9488'}
                         onChange={(e) => handleChange(item.key, e.target.value)}
+                        disabled={!canUpdateSettings}
                         className="h-10 w-16 rounded-lg border-2 border-gray-200 cursor-pointer dark:border-gray-600 transition-colors hover:border-indigo-400"
                         title={String(label ?? '')}
                       />
                       <Input
                         value={formData[item.key] || ''}
                         onChange={(e) => handleChange(item.key, e.target.value)}
+                        disabled={!canUpdateSettings}
                         placeholder="#0d9488"
                         className="flex-1 rounded-xl border-gray-200 bg-white/50 font-mono text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700/50"
                       />
@@ -184,6 +190,7 @@ export const SettingsPage = () => {
                       id={item.key}
                       value={formData[item.key] || ''}
                       onChange={(e) => handleChange(item.key, e.target.value)}
+                      disabled={!canUpdateSettings}
                       className="w-full rounded-xl border-2 border-gray-200 bg-white/50 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-indigo-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300"
                     >
                       <option value="">-- {placeholder} --</option>
@@ -214,6 +221,7 @@ export const SettingsPage = () => {
                     type={item.type}
                     value={formData[item.key] || ''}
                     onChange={(e) => handleChange(item.key, e.target.value)}
+                    disabled={!canUpdateSettings}
                     className="rounded-xl border-gray-200 bg-white/50 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700/50"
                   />
                   {description && (
@@ -250,6 +258,7 @@ export const SettingsPage = () => {
                     <Input
                       value={value}
                       onChange={(e) => handleChange(key, e.target.value)}
+                      disabled={!canUpdateSettings}
                       className="rounded-lg border-gray-200 bg-white/50 text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700/50"
                     />
                   </div>

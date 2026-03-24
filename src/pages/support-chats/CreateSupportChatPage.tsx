@@ -9,10 +9,13 @@ import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 export const CreateSupportChatPage = () => {
   const { t } = useTranslation();
+  const { can } = useRolePermissions();
   const navigate = useNavigate();
+  const canCreateTicket = can('SUPPORT_TICKETS', 'CREATE');
   const [formData, setFormData] = useState({
     service_request_id: '',
     subject: '',
@@ -31,6 +34,7 @@ export const CreateSupportChatPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canCreateTicket) return;
     createMutation.mutate(formData);
   };
 
@@ -56,6 +60,7 @@ export const CreateSupportChatPage = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            <fieldset disabled={!canCreateTicket || createMutation.isPending} className="space-y-6">
             {/* Service Request Id */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -152,7 +157,7 @@ export const CreateSupportChatPage = () => {
             <div className="flex gap-3 pt-4">
               <Button
                 type="submit"
-                disabled={createMutation.isPending}
+                disabled={!canCreateTicket || createMutation.isPending}
                 className="flex-1"
               >
                 {createMutation.isPending
@@ -171,6 +176,7 @@ export const CreateSupportChatPage = () => {
                 {(createMutation.error as any).message}
               </div>
             )}
+            </fieldset>
           </form>
         </CardContent>
       </Card>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -22,6 +23,7 @@ const statusTabs = [
 ];
 
 export const BookingsPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
@@ -34,6 +36,13 @@ export const BookingsPage = () => {
   React.useEffect(() => {
     setPage(1);
   }, [searchTerm, activeTab]);
+
+  React.useEffect(() => {
+    const serviceRequestId = searchParams.get('serviceRequestId');
+    if (serviceRequestId) {
+      setSelectedBookingId(serviceRequestId);
+    }
+  }, [searchParams]);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['bookings', { status: activeTab, search: searchTerm, page }],
@@ -373,7 +382,17 @@ export const BookingsPage = () => {
         </CardContent>
       </Card>
       
-      <BookingDetailsModal bookingId={selectedBookingId} onClose={() => setSelectedBookingId(null)} />
+      <BookingDetailsModal
+        bookingId={selectedBookingId}
+        onClose={() => {
+          setSelectedBookingId(null);
+          if (searchParams.has('serviceRequestId')) {
+            const next = new URLSearchParams(searchParams);
+            next.delete('serviceRequestId');
+            setSearchParams(next, { replace: true });
+          }
+        }}
+      />
     </div>
   );
 };
