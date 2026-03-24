@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/button';
 import { RefreshCw, Ticket, MessageSquare } from 'lucide-react';
 import { supportChatsService, type SupportTicket } from '../../services/supportChats.service';
 import { format } from 'date-fns';
+import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 const getStatusColor = (status: string): string => {
   const colorMap: Record<string, string> = {
@@ -18,6 +19,7 @@ const getStatusColor = (status: string): string => {
 
 export const SupportTicketsPage = () => {
   const { t, i18n } = useTranslation();
+  const { can } = useRolePermissions();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -59,6 +61,8 @@ export const SupportTicketsPage = () => {
     };
     return statusMap[status] || status;
   };
+  const canReadTickets = can('SUPPORT_TICKETS', 'READ');
+  const canReplyToTickets = can('SUPPORT_TICKETS', 'REPLY');
 
   const handleViewTicket = (ticketId: string) => {
     navigate(`/admin/support-chats/${ticketId}`);
@@ -176,10 +180,11 @@ export const SupportTicketsPage = () => {
                           variant="ghost"
                           size="sm"
                           className="gap-1.5"
+                          disabled={!canReadTickets}
                           onClick={() => handleViewTicket(ticket.id)}
                         >
                           <MessageSquare className="h-4 w-4" />
-                          {t('supportTickets.view', 'View')}
+                          {canReplyToTickets ? t('supportTickets.reply', 'Reply') : t('supportTickets.view', 'View')}
                         </Button>
                       </td>
                     </tr>

@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/button';
 import { providerService, type ProviderDetail } from '../../services/provider.service';
 import { format } from 'date-fns';
+import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 const getName = (name: string | { en?: string; ar?: string } | undefined) => {
   if (typeof name === 'string') return name;
@@ -55,6 +56,8 @@ const statusBadge = (status: string) => {
 export const ProviderDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { can } = useRolePermissions();
+  const canUpdateProvider = can('PROVIDERS', 'UPDATE');
 
   const { data: provider, isLoading, error } = useQuery({
     queryKey: ['provider-detail', id],
@@ -137,14 +140,16 @@ export const ProviderDetailPage = () => {
             </div>
           </div>
           <div className="flex shrink-0 gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="rounded-xl bg-white/20 text-white hover:bg-white/30"
-              onClick={() => id && navigate(`/providers/${id}/edit`)}
-            >
-              Edit
-            </Button>
+            {canUpdateProvider && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="rounded-xl bg-white/20 text-white hover:bg-white/30"
+                onClick={() => id && navigate(`/providers/${id}/edit`)}
+              >
+                Edit
+              </Button>
+            )}
             <Button
               variant="secondary"
               size="sm"
