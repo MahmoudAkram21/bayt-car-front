@@ -6,7 +6,7 @@ export function DashboardFooter() {
       className="shrink-0 border-t border-gray-200/80 bg-white/80 backdrop-blur-sm text-gray-500 dark:border-gray-700/80 dark:bg-gray-800/80 dark:text-gray-400 transition-colors"
       role="contentinfo"
     >
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-4 sm:flex-row sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-3 sm:flex-row sm:px-6 lg:px-8">
         {/* Left: Copyright */}
         <p className="order-2 text-center text-xs font-medium tracking-wide text-gray-500 sm:order-1 sm:text-left dark:text-gray-400">
           Copyright © 2026 · All Rights Reserved

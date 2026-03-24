@@ -16,12 +16,8 @@ import {
   Monitor,
   FileCheck,
   Package,
-  LogOut,
   Tag,
   Receipt,
-  Globe,
-  Moon,
-  Sun,
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
@@ -29,7 +25,6 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
-import { useTheme } from '../theme-provider';
 import { useRolePermissions } from '../../hooks/useRolePermissions';
 import type { PermissionModuleKey } from '../../lib/rbac';
 
@@ -39,8 +34,7 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
-  const { t, i18n } = useTranslation();
-  const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
   const { can } = useRolePermissions();
   const routePermissions: Record<string, PermissionModuleKey> = {
     '/': 'DASHBOARD',
@@ -65,17 +59,6 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
   };
 
   
-  const isRTL = i18n.dir() === 'rtl';
-
-  const toggleLanguage = () => {
-    const newLang = i18n.language === 'ar' ? 'en' : 'ar';
-    i18n.changeLanguage(newLang);
-  };
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-
   const textBadge = (href: string) => {
     if (href === '/') return 'Live';
     if (href === '/reports') return 'Data';
@@ -136,35 +119,19 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
     {
       key: 'collapse',
       label: t('sidebar.collapse'),
-      icon: isRTL
-        ? (isCollapsed ? ChevronLeft : ChevronRight)
-        : (isCollapsed ? ChevronRight : ChevronLeft),
+      icon: isCollapsed ? ChevronRight : ChevronLeft,
       onClick: () => setIsCollapsed(!isCollapsed),
       tone: 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white',
-    },
-    {
-      key: 'theme',
-      label: theme === 'dark' ? t('sidebar.darkMode') : t('sidebar.lightMode'),
-      icon: theme === 'dark' ? Moon : Sun,
-      onClick: toggleTheme,
-      tone: 'text-gray-600 hover:text-orange-600 dark:text-gray-300 dark:hover:text-orange-300',
-    },
-    {
-      key: 'language',
-      label: i18n.language === 'ar' ? 'English' : 'العربية',
-      icon: Globe,
-      onClick: toggleLanguage,
-      tone: 'text-gray-600 hover:text-sky-600 dark:text-gray-300 dark:hover:text-sky-300',
     },
   ];
 
   return (
     <aside 
       className={cn(
-        "fixed inset-y-0 z-30 flex flex-col border-r border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(249,250,251,0.94))] backdrop-blur-2xl shadow-[0_24px_80px_-24px_rgba(15,23,42,0.28)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(17,24,39,0.96),rgba(10,14,22,0.98))] transition-all duration-300",
+        "flex flex-col border-r border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(249,250,251,0.94))] backdrop-blur-2xl shadow-[0_24px_80px_-24px_rgba(15,23,42,0.28)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(17,24,39,0.96),rgba(10,14,22,0.98))] transition-all duration-300",
         isCollapsed ? "w-20" : "w-72",
-        // Logic for positioning: start-0 handles LTR (left) and RTL (right) automatically if dir="rtl" is set on html body
-        "start-0" 
+        "start-0 lg:fixed lg:inset-y-0 lg:z-30",
+        "h-full"
       )}
     >
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -269,22 +236,8 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         </div>
       </nav>
 
-      {/* Footer / Settings */}
+      {/* Footer / Collapse */}
       <div className="relative border-t border-white/60 bg-white/65 p-3 backdrop-blur-xl dark:border-white/8 dark:bg-white/4">
-        {!isCollapsed && (
-          <div className="mb-3 rounded-[22px] border border-white/70 bg-[linear-gradient(135deg,rgba(249,115,22,0.12),rgba(255,255,255,0.72))] p-3 dark:border-white/8 dark:bg-[linear-gradient(135deg,rgba(249,115,22,0.16),rgba(255,255,255,0.03))]">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
-              {t('common.settings')}
-            </p>
-            <p className="mt-1 text-sm font-medium text-gray-800 dark:text-gray-100">
-              {theme === 'dark' ? t('sidebar.darkMode') : t('sidebar.lightMode')}
-            </p>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {i18n.language === 'ar' ? 'AR' : 'EN'}
-            </p>
-          </div>
-        )}
-
         <div className={cn("flex flex-col gap-2", isCollapsed && "items-center")}>
           {footerActions.map((action) => (
             <Button
@@ -302,17 +255,6 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
               {!isCollapsed && <span>{action.label}</span>}
             </Button>
           ))}
-
-          <button
-            className={cn(
-              "group flex h-11 w-full items-center gap-3 rounded-2xl border border-red-200/70 bg-red-50/80 px-3 text-sm font-medium text-red-600 transition-all duration-200 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/8 dark:text-red-300 dark:hover:bg-red-500/12",
-              isCollapsed && "h-12 w-12 justify-center rounded-[18px] px-0"
-            )}
-            title={isCollapsed ? t('common.logout') : undefined}
-          >
-            <LogOut className="h-5 w-5 shrink-0 transition-transform group-hover:-translate-x-0.5" />
-            {!isCollapsed && <span>{t('common.logout')}</span>}
-          </button>
         </div>
       </div>
     </aside>
