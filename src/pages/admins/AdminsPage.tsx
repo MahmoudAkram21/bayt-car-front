@@ -81,17 +81,35 @@ export const AdminsPage = () => {
             <RefreshCw className="h-4 w-4" />
             {t('common.refresh')}
           </Button>
-          <Button
-            size="sm"
-            className="rounded-xl bg-teal-600 shadow-lg gap-2 hover:bg-teal-700"
-            onClick={() => {
-              setFormData({ name: '', email: '', password: '', roleName: 'ADMIN' });
-              setIsAddOpen(true);
-            }}
-          >
-            <UserPlus className="h-4 w-4" />
-            {t('common.addAdmin') || 'Add Admin'}
-          </Button>
+          {can('SYSTEM_USERS', 'CREATE') && (
+            <Button
+              size="sm"
+              className="rounded-xl bg-teal-600 shadow-lg gap-2 hover:bg-teal-700"
+              onClick={() => {
+                setFormData({
+                  name: '',
+                  email: '',
+                  password: '',
+                  roleId: roles[0]?.id ?? '',
+                });
+                setIsAddOpen(true);
+              }}
+            >
+              <UserPlus className="h-4 w-4" />
+              {t('common.addAdmin') || 'Add Admin'}
+            </Button>
+          )}
+          {/* {can('SYSTEM_USERS', 'CREATE') && (
+            <Button
+              size="sm"
+              className="rounded-xl gap-2"
+              variant="outline"
+              onClick={openCreateRole}
+            >
+              <KeyRound className="h-4 w-4" />
+              {t('common.manageRoles')}
+            </Button>
+          )} */}
         </div>
       </div>
 
