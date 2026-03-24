@@ -29,7 +29,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         isCollapsed ? "lg:ms-20" : "lg:ms-72"
       )}>
         {/* Header — Design System: sticky, z-20, h-14 sm:h-16 */}
-        <Header />
+        <Header isSidebarOpen={isCollapsed} setIsSidebarOpen={setIsCollapsed} />
 
         {/* Content Area — Design System: bg-transparent (layout handles bg), p-4 sm:p-6 lg:p-8 */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
