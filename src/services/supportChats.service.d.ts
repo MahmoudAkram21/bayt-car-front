@@ -1,3 +1,8 @@
+export interface SupportTicketClient {
+    id: string;
+    name: string | null;
+    email: string | null;
+}
 export interface SupportTicket {
     id: string;
     ticketId: string;
@@ -15,6 +20,8 @@ export interface SupportTicket {
     updated_at: string;
     unread_count?: number;
     messages?: SupportMessage[];
+    /** Customer who opened the ticket (included on admin/list/detail responses). */
+    client?: SupportTicketClient | null;
 }
 export interface SupportMessage {
     id: string;

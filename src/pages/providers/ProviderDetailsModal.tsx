@@ -3,8 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../componen
 import { providerService, type ProviderDetail } from '../../services/provider.service';
 import { format } from 'date-fns';
 import {
-  User, Building2, Phone, Mail, Star, CheckCircle,
-  AlertTriangle, Wallet, Briefcase, Calendar, DollarSign, Wrench,
+  Building2, Phone, Mail, Star, CheckCircle,
+  AlertTriangle, Briefcase, Calendar, DollarSign, Wrench,
 } from 'lucide-react';
 
 interface ProviderDetailsModalProps {
