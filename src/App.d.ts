@@ -1,3 +1,4 @@
+/** @format */
 import "./lib/i18n";
 import "./App.css";
 declare function App(): import("react/jsx-runtime").JSX.Element;

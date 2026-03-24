@@ -9,7 +9,7 @@ interface AdminLayoutProps {
 }
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => window.innerWidth < 1024);
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden">
