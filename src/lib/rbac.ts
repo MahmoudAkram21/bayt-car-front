@@ -58,7 +58,7 @@ function getLegacyModulesFromSlugPrefix(prefix: string): PermissionModuleKey[] {
     finance: ['WALLETS', 'COMMISSIONS', 'INVOICES', 'DASHBOARD'],
     reports: ['REPORTS', 'DASHBOARD'],
     settings: ['SETTINGS'],
-    roles: ['SYSTEM_USERS', 'ROLES'],
+    roles: ['SYSTEM_USERS'],
     banners: ['BANNERS'],
   };
   return map[prefix] ?? [];
