@@ -246,7 +246,7 @@ export const BookingsPage = () => {
                 >
                   <div className="absolute right-3 top-3">
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(booking.status)}`}>
-                      {t(`bookings.status.${booking.status}`, booking.status)}
+                      {String(t(`bookings.status.${booking.status}`, booking.status))}
                     </span>
                   </div>
                   
@@ -333,7 +333,7 @@ export const BookingsPage = () => {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(booking.status)}`}>
-                          {t(`bookings.status.${booking.status}`, booking.status)}
+                          {String(t(`bookings.status.${booking.status}`, booking.status))}
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-end">

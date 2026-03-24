@@ -4,7 +4,7 @@ import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { Shield, UserPlus, RefreshCw, KeyRound, Pencil, Trash2 } from 'lucide-react';
+import { Shield, UserPlus, RefreshCw, Pencil, Trash2 } from 'lucide-react';
 import {
   adminUsersService,
   type AdminUser,
