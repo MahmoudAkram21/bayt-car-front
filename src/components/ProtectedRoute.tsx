@@ -1,14 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
-import type { UserRole } from '../types';
+import { UserRole } from '../types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: UserRole[];
 }
 
-export const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children, allowedRoles = [UserRole.ADMIN, UserRole.SUPER_ADMIN] }: ProtectedRouteProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user, isHydrated } = useAuthStore();
 

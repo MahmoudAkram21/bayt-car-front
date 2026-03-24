@@ -28,7 +28,6 @@ export interface SupportMessage {
     ticket_id: string;
     sender_id: string;
     sender_role: 'CLIENT' | 'ADMIN';
-    sender_name?: string;
     content: string;
     is_read: boolean;
     read_at: string | null;

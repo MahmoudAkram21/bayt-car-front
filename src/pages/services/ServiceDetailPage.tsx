@@ -10,7 +10,6 @@ import { serviceService } from '../../services/service.service';
 import { serviceCategoryService } from '../../services/serviceCategory.service';
 import { systemSettingsService } from '../../services/systemSettings.service';
 import { useTranslation } from 'react-i18next';
-import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 import type { MultilingualText, ServiceAttribute, AttributeOption, ServiceIconShape, ServiceDetail } from '../../types';
 
@@ -37,7 +36,6 @@ const getImageUrl = (url: string | null | undefined) => {
 
 export const ServiceDetailPage = () => {
   const { t } = useTranslation();
-  const { can } = useRolePermissions();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -75,9 +73,6 @@ export const ServiceDetailPage = () => {
     labelAr: '',
     options: [{ label: '', price: 0 }]
   });
-  const canCreateService = can('SERVICES', 'CREATE');
-  const canUpdateService = can('SERVICES', 'UPDATE');
-  const canDeleteService = can('SERVICES', 'DELETE');
 
   const { data: service, isLoading, error } = useQuery({
     queryKey: ['service', id],
@@ -175,7 +170,6 @@ export const ServiceDetailPage = () => {
   });
 
   const handleSaveCatalog = () => {
-    if (!canUpdateService) return;
     const payload: Record<string, unknown> = {};
     if (categoryId !== '') payload.category_id = categoryId === 'none' ? null : String(categoryId);
     if (gpsRadius !== '') payload.gps_radius_km = gpsRadius.trim() ? parseFloat(gpsRadius) : null;
@@ -184,7 +178,6 @@ export const ServiceDetailPage = () => {
   };
 
   const handleSaveDisplay = () => {
-    if (!canUpdateService) return;
     displaySaveMutation.mutate({
       name: displayForm.name || undefined,
       description: displayForm.description || undefined,
@@ -196,12 +189,10 @@ export const ServiceDetailPage = () => {
   };
 
   const handleIconUpload = () => {
-    if (!canUpdateService) return;
     if (iconFile) iconUploadMutation.mutate(iconFile);
   };
 
   const handleRemoveIcon = () => {
-    if (!canUpdateService) return;
     displaySaveMutation.mutate({ icon_url: null });
   };
 
@@ -212,13 +203,11 @@ export const ServiceDetailPage = () => {
   };
 
   const openCreateModal = () => {
-    if (!canCreateService) return;
     resetForm();
     setIsModalOpen(true);
   };
 
   const openEditModal = (attr: ServiceAttribute) => {
-    if (!canUpdateService) return;
     setEditingAttribute(attr);
     // Parse label if object or string
     const labelEn = typeof attr.label === 'string' ? attr.label : attr.label?.en || '';
@@ -240,8 +229,6 @@ export const ServiceDetailPage = () => {
 
   const handleAttrSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingAttribute && !canUpdateService) return;
-    if (!editingAttribute && !canCreateService) return;
     const payload = {
       label: { en: attrFormData.labelEn, ar: attrFormData.labelAr || attrFormData.labelEn },
       options: attrFormData.options.filter(o => o.label.trim() !== '')
@@ -425,12 +412,12 @@ export const ServiceDetailPage = () => {
                           )}
                         </div>
                         <div className="flex gap-2">
-                          {canUpdateService && <Button variant="ghost" size="icon" onClick={() => openEditModal(attr)} className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                          <Button variant="ghost" size="icon" onClick={() => openEditModal(attr)} className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20">
                             <Edit className="h-4 w-4" />
-                          </Button>}
-                          {canDeleteService && <Button variant="ghost" size="icon" onClick={() => deleteAttrMutation.mutate(String(attr.id))} className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20">
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => deleteAttrMutation.mutate(String(attr.id))} className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20">
                             <Trash2 className="h-4 w-4" />
-                          </Button>}
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -523,7 +510,6 @@ export const ServiceDetailPage = () => {
                 <Input
                   value={displayForm.name}
                   onChange={(e) => setDisplayForm((p) => ({ ...p, name: e.target.value }))}
-                  disabled={!canUpdateService}
                   placeholder={t('common.serviceNamePlaceholder')}
                   className="mt-1 rounded-lg"
                 />
@@ -533,7 +519,6 @@ export const ServiceDetailPage = () => {
                 <textarea
                   value={displayForm.description}
                   onChange={(e) => setDisplayForm((p) => ({ ...p, description: e.target.value }))}
-                  disabled={!canUpdateService}
                   placeholder={t('common.descriptionOptionalPlaceholder')}
                   rows={2}
                   className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
@@ -562,16 +547,15 @@ export const ServiceDetailPage = () => {
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     onChange={(e) => setIconFile(e.target.files?.[0] ?? null)}
-                    disabled={!canUpdateService}
                     className="text-sm text-gray-600 dark:text-gray-400"
                   />
                   {iconFile && (
-                    <Button type="button" size="sm" onClick={handleIconUpload} disabled={!canUpdateService || iconUploadMutation.isPending} className="rounded-lg bg-violet-600 hover:bg-violet-700">
+                    <Button type="button" size="sm" onClick={handleIconUpload} disabled={iconUploadMutation.isPending} className="rounded-lg bg-violet-600 hover:bg-violet-700">
                       {t('common.upload')}
                     </Button>
                   )}
                   {service.icon_url && !iconPreviewUrl && (
-                    <Button type="button" variant="outline" size="sm" onClick={handleRemoveIcon} disabled={!canUpdateService || displaySaveMutation.isPending} className="rounded-lg text-red-600 hover:bg-red-50">
+                    <Button type="button" variant="outline" size="sm" onClick={handleRemoveIcon} disabled={displaySaveMutation.isPending} className="rounded-lg text-red-600 hover:bg-red-50">
                       {t('common.removeIcon')}
                     </Button>
                   )}
@@ -585,7 +569,6 @@ export const ServiceDetailPage = () => {
                     type="checkbox"
                     checked={displayForm.is_active}
                     onChange={(e) => setDisplayForm((p) => ({ ...p, is_active: e.target.checked }))}
-                    disabled={!canUpdateService}
                     className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
                   />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('common.serviceVisibleEnabled')}</span>
@@ -595,7 +578,6 @@ export const ServiceDetailPage = () => {
                     type="checkbox"
                     checked={displayForm.is_emergency}
                     onChange={(e) => setDisplayForm((p) => ({ ...p, is_emergency: e.target.checked }))}
-                    disabled={!canUpdateService}
                     className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
                   />
                   <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -603,7 +585,7 @@ export const ServiceDetailPage = () => {
                   </span>
                 </label>
               </div>
-              <Button size="sm" className="rounded-lg bg-violet-600 hover:bg-violet-700" onClick={handleSaveDisplay} disabled={!canUpdateService || displaySaveMutation.isPending}>
+              <Button size="sm" className="rounded-lg bg-violet-600 hover:bg-violet-700" onClick={handleSaveDisplay} disabled={displaySaveMutation.isPending}>
                 {t('common.saveDisplayAndVisibility')}
               </Button>
             </CardContent>
@@ -624,7 +606,6 @@ export const ServiceDetailPage = () => {
                 <select
                   value={categoryId !== '' ? categoryId : String(service.category_id ?? 'none')}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  disabled={!canUpdateService}
                   className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="none">{t('common.noCategory')}</option>
@@ -642,11 +623,10 @@ export const ServiceDetailPage = () => {
                   placeholder={String(service.gps_radius_km ?? '25')}
                   value={gpsRadius}
                   onChange={(e) => setGpsRadius(e.target.value)}
-                  disabled={!canUpdateService}
                   className="mt-1 rounded-lg"
                 />
               </div>
-              <Button size="sm" className="rounded-lg bg-amber-600 hover:bg-amber-700" onClick={handleSaveCatalog} disabled={!canUpdateService || catalogMutation.isPending}>
+              <Button size="sm" className="rounded-lg bg-amber-600 hover:bg-amber-700" onClick={handleSaveCatalog} disabled={catalogMutation.isPending}>
                 {t('common.saveCatalog')}
               </Button>
             </CardContent>
@@ -693,7 +673,6 @@ export const ServiceDetailPage = () => {
             </CardHeader>
             <form onSubmit={handleAttrSubmit}>
               <CardContent className="space-y-6 pt-6">
-                <fieldset disabled={(editingAttribute ? !canUpdateService : !canCreateService) || createAttrMutation.isPending || updateAttrMutation.isPending} className="space-y-6">
                 <div className="space-y-2">
                   <Label>Attribute Name</Label>
                   <div className="grid grid-cols-2 gap-4">
@@ -753,7 +732,6 @@ export const ServiceDetailPage = () => {
                     ))}
                   </div>
                 </div>
-                </fieldset>
               </CardContent>
               <CardFooter className="flex justify-end border-t border-gray-100 dark:border-gray-800 pt-4">
                 <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="mr-2">Cancel</Button>

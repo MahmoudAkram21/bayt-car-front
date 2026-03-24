@@ -9,7 +9,6 @@ import { serviceService } from '../../services/service.service';
 import { serviceCategoryService } from '../../services/serviceCategory.service';
 import type { Service, PaginatedResponse, MultilingualText } from '../../types';
 import { useTranslation } from 'react-i18next';
-import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 type ViewMode = 'cards' | 'table';
 
@@ -25,7 +24,6 @@ const getImageUrl = (url: string | null | undefined) => {
 
 export const ServicesPage = () => {
   const { t } = useTranslation();
-  const { can } = useRolePermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
 
@@ -41,8 +39,6 @@ export const ServicesPage = () => {
   const [categoryFilter, setCategoryFilter] = useState<number | string | ''>('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [emergencyFilter, setEmergencyFilter] = useState<boolean | 'all'>('all');
-  const canCreateServices = can('SERVICES', 'CREATE');
-  const canUpdateServices = can('SERVICES', 'UPDATE');
 
   const queryClient = useQueryClient();
   const { data: categoriesData } = useQuery({
@@ -96,9 +92,9 @@ export const ServicesPage = () => {
             <RefreshCw className="h-4 w-4" />
             {t('common.refresh')}
           </Button>
-          {canCreateServices && <Button size="sm" className="rounded-xl bg-teal-600 shadow-lg gap-2 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500">
+          <Button size="sm" className="rounded-xl bg-teal-600 shadow-lg gap-2 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500">
             {t('common.addService')}
-          </Button>}
+          </Button>
         </div>
       </div>
 
@@ -330,7 +326,7 @@ export const ServicesPage = () => {
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{getName(service.name)}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{service.category?.name_ar ?? '—'}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
-                        {canUpdateServices && <button
+                        <button
                           type="button"
                           onClick={(e) => {
                             e.preventDefault();
@@ -346,16 +342,7 @@ export const ServicesPage = () => {
                         >
                           {(service.is_active ?? service.isActive) !== false ? <CheckCircle2 className="h-3 w-3" /> : null}
                           {(service.is_active ?? service.isActive) !== false ? t('common.active') : t('common.inactive')}
-                        </button>}
-                        {!canUpdateServices && (
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                            (service.is_active ?? service.isActive) !== false
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                              : 'bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-400'
-                          }`}>
-                            {(service.is_active ?? service.isActive) !== false ? t('common.active') : t('common.inactive')}
-                          </span>
-                        )}
+                        </button>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
                         {(service as Service & { is_emergency?: boolean }).is_emergency ? (

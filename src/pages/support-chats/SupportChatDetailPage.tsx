@@ -17,16 +17,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { format } from 'date-fns';
 import { SupportChatMessages } from '../../components/support-chat/SupportChatMessages';
 import { SupportChatComposer } from '../../components/support-chat/SupportChatComposer';
-import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 export const SupportChatDetailPage = () => {
   const { t } = useTranslation();
-  const { can } = useRolePermissions();
   const { ticketId } = useParams<{ ticketId: string }>();
   const queryClient = useQueryClient();
   const [messageContent, setMessageContent] = useState('');
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-  const canReplyToTicket = can('SUPPORT_TICKETS', 'REPLY');
 
   // Fetch ticket
   const { data: ticket, isLoading } = useQuery({
@@ -190,14 +187,14 @@ export const SupportChatDetailPage = () => {
           <SupportChatMessages messages={ticket.messages ?? []} isAdminView={false} />
         </CardContent>
 
-        {ticket.status !== 'COMPLETED' && canReplyToTicket && (
+        {ticket.status !== 'COMPLETED' && (
           <SupportChatComposer
             messageContent={messageContent}
             onMessageChange={setMessageContent}
             pendingFiles={pendingFiles}
             onPendingFilesChange={setPendingFiles}
             onSubmit={handleSendMessage}
-            disabled={!canReplyToTicket}
+            disabled={false}
             isSending={sendMessageMutation.isPending}
             placeholder={t('supportChats.typePlaceholder', 'Type your message...')}
             voiceLabels={{
@@ -213,11 +210,6 @@ export const SupportChatDetailPage = () => {
               attachFile: t('supportChats.attachFile', 'Attach file'),
             }}
           />
-        )}
-        {ticket.status !== 'COMPLETED' && !canReplyToTicket && (
-          <div className="border-t p-4 bg-gray-50 dark:bg-gray-800 text-center text-gray-600 dark:text-gray-400 text-sm">
-            {t('admin.supportChats.replyPermissionRequired', 'You do not have permission to reply to this ticket.')}
-          </div>
         )}
 
         {ticket.status === 'COMPLETED' && (

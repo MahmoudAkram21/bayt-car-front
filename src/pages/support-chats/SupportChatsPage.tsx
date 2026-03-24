@@ -7,14 +7,11 @@ import { Button } from '../../components/ui/button';
 import { MessageSquare, Plus, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
-import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 export const SupportChatsPage = () => {
   const { t, i18n } = useTranslation();
-  const { can } = useRolePermissions();
   const [page, setPage] = useState(1);
   const isArabic = i18n.language === 'ar';
-  const canCreateTicket = can('SUPPORT_TICKETS', 'CREATE');
 
   const { data: ticketsData, isLoading } = useQuery({
     queryKey: ['support-chats', page],
@@ -66,14 +63,12 @@ export const SupportChatsPage = () => {
             {t('supportChats.subtitle', 'View and manage your support conversations')}
           </p>
         </div>
-        {canCreateTicket && (
-          <Link to="/support-chats/create">
-            <Button className="gap-2">
-              <Plus size={20} />
-              {t('supportChats.newTicket', 'New Ticket')}
-            </Button>
-          </Link>
-        )}
+        <Link to="/support-chats/create">
+          <Button className="gap-2">
+            <Plus size={20} />
+            {t('supportChats.newTicket', 'New Ticket')}
+          </Button>
+        </Link>
       </div>
 
       {/* Empty State */}
