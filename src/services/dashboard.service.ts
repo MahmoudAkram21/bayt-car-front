@@ -49,7 +49,7 @@ export const dashboardService = {
   },
 
   async getRecentBookings(limit: number = 10) {
-    const response = await api.get('/bookings', { params: { limit, sort: '-createdAt' } });
+    const response = await api.get('/service-requests', { params: { limit, sort: '-createdAt' } });
     return response.data;
   },
 

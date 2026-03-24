@@ -3,10 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Search, Calendar, RefreshCw, LayoutGrid, List, CheckCircle, XCircle, Clock, User, Briefcase } from 'lucide-react';
+import React from 'react';
+import { Search, Calendar, RefreshCw, LayoutGrid, List, CheckCircle, XCircle, Clock, User, Briefcase, Eye } from 'lucide-react';
 import { BookingStatus } from '../../types';
 import { bookingService } from '../../services/booking.service';
 import { format } from 'date-fns';
+import { BookingDetailsModal } from './BookingDetailsModal';
 
 type ViewMode = 'cards' | 'table';
 
@@ -23,12 +25,23 @@ export const BookingsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+  
+  const [page, setPage] = useState(1);
+  const limit = 12;
+
+  // Reset page when filters change
+  React.useEffect(() => {
+    setPage(1);
+  }, [searchTerm, activeTab]);
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['bookings', { status: activeTab, search: searchTerm }],
+    queryKey: ['bookings', { status: activeTab, search: searchTerm, page }],
     queryFn: () => bookingService.getAllBookings({
       status: activeTab !== 'all' ? (activeTab as BookingStatus) : undefined,
       search: searchTerm || undefined,
+      page,
+      limit,
     }),
   });
 
@@ -56,6 +69,8 @@ export const BookingsPage = () => {
   const statPending = list.filter((b: any) => b.status === BookingStatus.PENDING).length;
   const statCompleted = list.filter((b: any) => b.status === BookingStatus.COMPLETED).length;
   const statCancelled = list.filter((b: any) => b.status === BookingStatus.CANCELLED).length;
+
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -235,23 +250,33 @@ export const BookingsPage = () => {
                   <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
                      <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        <span className="truncate">{getName(booking.owner?.name) || 'Unknown User'}</span>
+                        <span className="truncate">{getName(booking.customer?.name || booking.owner?.name) || 'Unknown User'}</span>
                      </div>
                      <div className="flex items-center gap-2">
                         <Briefcase className="h-4 w-4" />
-                        <span className="truncate">{getName(booking.provider?.name) || getName(booking.provider?.businessName) || 'Unknown Provider'}</span>
+                        <span className="truncate">{getName(booking.provider?.user?.name || booking.provider?.name) || getName(booking.provider?.businessName) || 'Unknown Provider'}</span>
                      </div>
                      <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        <span>{booking.createdAt ? format(new Date(booking.createdAt), 'MMM dd, yyyy') : '—'}</span>
+                        <span>{(booking.created_at || booking.createdAt) ? format(new Date(booking.created_at || booking.createdAt), 'MMM dd, yyyy') : '—'}</span>
                      </div>
                   </div>
 
                   <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-700">
-                     <span className="text-xs text-gray-500">Total</span>
-                     <span className="text-lg font-bold text-gray-900 dark:text-white">
-                       {booking.finalPrice != null ? `${Number(booking.finalPrice).toFixed(2)}` : '0.00'} <span className="text-xs font-normal text-gray-500">SAR</span>
-                     </span>
+                     <div className="flex flex-col">
+                       <span className="text-xs text-gray-500">Total</span>
+                       <span className="text-lg font-bold text-gray-900 dark:text-white">
+                         {(booking.final_agreed_price ?? booking.finalPrice) != null ? `${Number(booking.final_agreed_price ?? booking.finalPrice).toFixed(2)}` : '0.00'} <span className="text-xs font-normal text-gray-500">SAR</span>
+                       </span>
+                     </div>
+                     <Button 
+                       variant="outline" 
+                       size="sm" 
+                       onClick={() => setSelectedBookingId(booking.id)} 
+                       className="h-8 gap-1.5 rounded-lg border-teal-200 text-teal-700 hover:bg-teal-50 hover:text-teal-800 dark:border-teal-800 dark:text-teal-400 dark:hover:bg-teal-900/30"
+                     >
+                       <Eye className="h-3.5 w-3.5" /> View
+                     </Button>
                   </div>
                 </div>
               ))}
@@ -269,6 +294,7 @@ export const BookingsPage = () => {
                     <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Date</th>
                     <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Total</th>
                     <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
+                    <th className="px-6 py-4 text-end text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -279,25 +305,35 @@ export const BookingsPage = () => {
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                                 <User className="h-4 w-4" />
                             </div>
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">{getName(booking.owner?.name) || 'N/A'}</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">{getName(booking.customer?.name || booking.owner?.name) || 'N/A'}</span>
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                          {getName(booking.service?.name) || 'N/A'}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                         {getName(booking.provider?.name) || getName(booking.provider?.businessName) || 'N/A'}
+                         {getName(booking.provider?.user?.name || booking.provider?.name) || getName(booking.provider?.businessName) || 'N/A'}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                        {booking.createdAt ? format(new Date(booking.createdAt), 'MMM dd, yyyy') : '—'}
+                        {(booking.created_at || booking.createdAt) ? format(new Date(booking.created_at || booking.createdAt), 'MMM dd, yyyy') : '—'}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                        {booking.finalPrice != null ? `${Number(booking.finalPrice).toFixed(2)} SAR` : '—'}
+                        {(booking.final_agreed_price ?? booking.finalPrice) != null ? `${Number(booking.final_agreed_price ?? booking.finalPrice).toFixed(2)} SAR` : '—'}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(booking.status)}`}>
                           {booking.status}
                         </span>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-end">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setSelectedBookingId(booking.id)} 
+                          className="h-8 w-8 p-0 rounded-full hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/30 dark:hover:text-teal-400"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -305,8 +341,39 @@ export const BookingsPage = () => {
               </table>
             </div>
           )}
+          
+          {totalPages > 1 && list.length > 0 && (
+            <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-4 dark:border-gray-700">
+              <span className="text-sm text-gray-500">
+                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total} bookings
+              </span>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setPage(p => Math.max(1, p - 1))} 
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center justify-center px-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Page {page} of {totalPages}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                  disabled={page === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
+      
+      <BookingDetailsModal bookingId={selectedBookingId} onClose={() => setSelectedBookingId(null)} />
     </div>
   );
 };

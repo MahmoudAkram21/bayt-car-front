@@ -9,6 +9,7 @@ import { providerService } from '../../services/provider.service';
 import { format } from 'date-fns';
 import { type ServiceProvider, type PaginatedResponse, type MultilingualText } from '../../types';
 import { useTranslation } from 'react-i18next';
+import { ProviderDetailsModal } from './ProviderDetailsModal';
 
 const tabs = ['all', 'pending', 'verified', 'suspended'];
 
@@ -19,6 +20,7 @@ export const ProvidersPage = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery<PaginatedResponse<ServiceProvider>>({
     queryKey: ['providers', { verified: activeTab === 'verified', search: searchTerm }],
@@ -222,10 +224,8 @@ export const ProvidersPage = () => {
                     </div>
                   </Link>
                   <div className="flex gap-2 border-t border-gray-100 px-4 py-3 dark:border-gray-700">
-                    <Button variant="ghost" size="sm" className="flex-1 rounded-lg gap-1.5 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20" asChild>
-                      <Link to={`/providers/${provider.id}`}>
-                        <Eye className="h-4 w-4" /> {t('common.view')}
-                      </Link>
+                    <Button variant="ghost" size="sm" className="flex-1 rounded-lg gap-1.5 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20" onClick={() => setSelectedProviderId(String(provider.id))}>
+                      <Eye className="h-4 w-4" /> {t('common.view')}
                     </Button>
                     <Button variant="ghost" size="sm" className="flex-1 rounded-lg gap-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700" asChild>
                       <Link to={`/providers/${provider.id}/edit`}>
@@ -280,8 +280,8 @@ export const ProvidersPage = () => {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" className="h-8 rounded-lg text-orange-600 hover:bg-orange-50 dark:text-orange-400" asChild>
-                            <Link to={`/providers/${provider.id}`}><Eye className="h-4 w-4" /></Link>
+                          <Button variant="ghost" size="sm" className="h-8 rounded-lg text-orange-600 hover:bg-orange-50 dark:text-orange-400" onClick={() => setSelectedProviderId(String(provider.id))}>
+                            <Eye className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm" className="h-8 rounded-lg text-gray-600 dark:text-gray-400" asChild>
                             <Link to={`/providers/${provider.id}/edit`}><Pencil className="h-4 w-4" /></Link>
@@ -299,6 +299,12 @@ export const ProvidersPage = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Provider Details Modal */}
+      <ProviderDetailsModal
+        providerId={selectedProviderId}
+        onClose={() => setSelectedProviderId(null)}
+      />
 
       {/* Delete confirmation modal */}
       {deleteTarget && (
