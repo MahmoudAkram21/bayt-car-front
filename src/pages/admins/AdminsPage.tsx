@@ -368,7 +368,7 @@ export const AdminsPage = () => {
               {t('common.addAdmin') || 'Add Admin'}
             </Button>
           )}
-          {can('SYSTEM_USERS', 'CREATE') && (
+          {/* {can('SYSTEM_USERS', 'CREATE') && (
             <Button
               size="sm"
               className="rounded-xl gap-2"
@@ -378,7 +378,7 @@ export const AdminsPage = () => {
               <KeyRound className="h-4 w-4" />
               {t('common.manageRoles')}
             </Button>
-          )}
+          )} */}
         </div>
       </div>
 
