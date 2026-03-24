@@ -1,75 +1,77 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { RefreshCw, Ticket, User, Flag, FlagOff } from 'lucide-react';
-import { supportTicketsService } from '../../services/supportTickets.service';
+import { RefreshCw, Ticket, MessageSquare } from 'lucide-react';
+import { supportChatsService, type SupportTicket } from '../../services/supportChats.service';
 import { format } from 'date-fns';
-import type { SupportTicketItem } from '../../types';
 
-const getName = (name: unknown): string => {
-  if (typeof name === 'string') return name;
-  const o = name as { en?: string; ar?: string };
-  return o?.en || o?.ar || '—';
+const getStatusColor = (status: string): string => {
+  const colorMap: Record<string, string> = {
+    PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
+    COMPLETED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  };
+  return colorMap[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-900/40 dark:text-gray-300';
 };
 
 export const SupportTicketsPage = () => {
   const { t, i18n } = useTranslation();
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const limit = 20;
+  const limit = 10;
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['support-tickets', page],
-    queryFn: () => supportTicketsService.getSupportTickets({ page, limit }),
+    queryKey: ['admin-support-tickets', page],
+    queryFn: () => supportChatsService.listAllTickets({ page, limit }),
   });
 
-  const flagMutation = useMutation({
-    mutationFn: ({ id, is_flagged_for_support, admin_note }: { id: string; is_flagged_for_support: boolean; admin_note?: string | null }) =>
-      supportTicketsService.updateFlag(id, { is_flagged_for_support, admin_note }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
-    },
-  });
-
-  const list = data?.data ?? [];
+  const tickets: SupportTicket[] = data?.data ?? [];
   const pagination = data?.pagination;
   const isArabic = i18n.language === 'ar';
-
-  const getStatusLabel = (item: SupportTicketItem) => {
-    if (item.cancelRequestStatus === 'PENDING') return t('supportTickets.cancelPending');
-    if (item.isFlaggedForSupport) return t('supportTickets.flagged');
-    if (['COMPLETED'].includes(item.status)) return t('supportTickets.resolved');
-    if (['CANCELLED', 'REJECTED'].includes(item.status)) return t('supportTickets.closed');
-    return item.status;
+  const getCategoryLabel = (category?: string): string => {
+    if (!category) return '—';
+    const keyMap: Record<string, string> = {
+      TECHNICAL_ISSUE: 'supportChats.categoryTechnical',
+      BILLING_PAYMENT: 'supportChats.categoryBilling',
+      SERVICE_QUALITY: 'supportChats.categoryServiceQuality',
+      PROVIDER_ISSUE: 'supportChats.categoryProviderIssue',
+      FEATURE_REQUEST: 'supportChats.categoryFeatureRequest',
+      ACCOUNT_ISSUE: 'supportChats.categoryAccountIssue',
+      OTHER: 'supportChats.categoryOther',
+    };
+    const fallbackMap: Record<string, string> = {
+      TECHNICAL_ISSUE: 'Technical Issue',
+      BILLING_PAYMENT: 'Billing / Payment',
+      SERVICE_QUALITY: 'Service Quality',
+      PROVIDER_ISSUE: 'Provider Issue',
+      FEATURE_REQUEST: 'Feature Request',
+      ACCOUNT_ISSUE: 'Account Issue',
+      OTHER: 'Other',
+    };
+    return t(keyMap[category] ?? '', fallbackMap[category] ?? category);
+  };
+  const getStatusLabel = (status: string): string => {
+    const statusMap: Record<string, string> = {
+      PENDING: t('admin.supportChats.statusOpen', 'Open'),
+      COMPLETED: t('admin.supportChats.statusCompleted', 'Completed'),
+    };
+    return statusMap[status] || status;
   };
 
-  const getStatusColor = (item: SupportTicketItem) => {
-    if (item.cancelRequestStatus === 'PENDING') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
-    if (item.isFlaggedForSupport) return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300';
-    if (['CANCELLED', 'REJECTED'].includes(item.status)) return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
-    if (item.status === 'COMPLETED') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
-    return 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300';
+  const handleViewTicket = (ticketId: string) => {
+    navigate(`/admin/support-chats/${ticketId}`);
   };
-
-  const handleToggleFlag = (item: SupportTicketItem) => {
-    flagMutation.mutate({
-      id: item.id,
-      is_flagged_for_support: !item.isFlaggedForSupport,
-      admin_note: item.adminNote,
-    });
-  };
-
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-            {t('supportTickets.title')}
+            {t('supportTickets.title', 'Support Tickets')}
           </h1>
           <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">
-            {t('supportTickets.description')}
+            {t('supportTickets.description', 'Manage customer support tickets and conversations')}
           </p>
         </div>
         <Button
@@ -79,7 +81,7 @@ export const SupportTicketsPage = () => {
           className="shrink-0 rounded-xl gap-2"
         >
           <RefreshCw className="h-4 w-4" />
-          {t('supportTickets.refresh')}
+          {t('supportTickets.refresh', 'Refresh')}
         </Button>
       </div>
 
@@ -88,7 +90,7 @@ export const SupportTicketsPage = () => {
           {error && (
             <div className="p-6 text-center">
               <p className="font-medium text-red-600 dark:text-red-400">
-                {t('supportTickets.loadingError')}
+                {t('supportTickets.loadingError', 'Error loading support tickets')}
               </p>
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                 {(error as { response?: { data?: { error?: string } } })?.response?.data?.error ?? (error as Error)?.message}
@@ -100,93 +102,84 @@ export const SupportTicketsPage = () => {
               <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
             </div>
           )}
-          {!isLoading && !error && list.length === 0 && (
+          {!isLoading && !error && tickets.length === 0 && (
             <div className="flex flex-col items-center justify-center p-12 text-center">
               <Ticket className="h-12 w-12 text-gray-300 dark:text-gray-600" />
               <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">
-                {t('supportTickets.noTickets')}
+                {t('supportTickets.noTickets', 'No support tickets')}
               </p>
               <p className="mt-2 text-gray-500 dark:text-gray-400">
-                {t('supportTickets.noTicketsDesc')}
+                {t('supportTickets.noTicketsDesc', 'There are no support tickets at the moment')}
               </p>
             </div>
           )}
-          {!isLoading && !error && list.length > 0 && (
+          {!isLoading && !error && tickets.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-100/50 dark:bg-gray-700/40">
                   <tr>
                     <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                      {t('supportTickets.customer')}
+                      {t('supportTickets.ticketId', 'Ticket ID')}
                     </th>
                     <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                      {t('supportTickets.service')}
+                      {t('supportTickets.customerEmail', 'Customer email')}
                     </th>
                     <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                      {t('common.status')}
+                      {t('supportTickets.subject', 'Subject')}
                     </th>
                     <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                      {t('supportTickets.date')}
+                      {t('supportTickets.category', 'Category')}
                     </th>
                     <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                      {t('supportTickets.total')}
+                      {t('common.status', 'Status')}
                     </th>
                     <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                      {t('common.actions')}
+                      {t('supportTickets.date', 'Date')}
+                    </th>
+                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      {t('common.actions', 'Actions')}
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {list.map((item: SupportTicketItem) => (
-                    <tr key={item.id} className="transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
+                  {tickets.map((ticket) => (
+                    <tr key={ticket.id} className="transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-300">
-                            <User className="h-4 w-4" />
+                            <Ticket className="h-4 w-4" />
                           </div>
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            {getName(item.customer?.name) || '—'}
+                          <span className="text-sm font-medium text-gray-900 dark:text-white font-mono">
+                            {ticket.ticketId}
                           </span>
                         </div>
                       </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300 max-w-[14rem] truncate">
+                        {ticket.client?.email || '—'}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300 max-w-xs truncate">
+                        {ticket.subject || '—'}
+                      </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                        {getName(item.service?.name) || '—'}
+                        {getCategoryLabel(ticket.category)}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(item)}`}>
-                          {getStatusLabel(item)}
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(ticket.status)}`}>
+                          {getStatusLabel(ticket.status)}
                         </span>
-                        {item.adminNote && (
-                          <p className="mt-1 max-w-[180px] truncate text-xs text-gray-500 dark:text-gray-400" title={item.adminNote}>
-                            {item.adminNote}
-                          </p>
-                        )}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                        {item.createdAt ? format(new Date(item.createdAt), isArabic ? 'dd/MM/yyyy' : 'MMM dd, yyyy') : '—'}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                        {item.finalPrice != null ? `${Number(item.finalPrice).toFixed(2)} SAR` : '—'}
+                        {ticket.created_at ? format(new Date(ticket.created_at), isArabic ? 'dd/MM/yyyy HH:mm' : 'MMM dd, yyyy HH:mm') : '—'}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <Button
                           variant="ghost"
                           size="sm"
                           className="gap-1.5"
-                          onClick={() => handleToggleFlag(item)}
-                          disabled={flagMutation.isPending}
+                          onClick={() => handleViewTicket(ticket.id)}
                         >
-                          {item.isFlaggedForSupport ? (
-                            <>
-                              <FlagOff className="h-4 w-4" />
-                              {t('supportTickets.unflag')}
-                            </>
-                          ) : (
-                            <>
-                              <Flag className="h-4 w-4" />
-                              {t('supportTickets.flag')}
-                            </>
-                          )}
+                          <MessageSquare className="h-4 w-4" />
+                          {t('supportTickets.view', 'View')}
                         </Button>
                       </td>
                     </tr>
@@ -195,10 +188,10 @@ export const SupportTicketsPage = () => {
               </table>
             </div>
           )}
-          {pagination && pagination.totalPages > 1 && (
+          {pagination && pagination.total > limit && (
             <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3 dark:border-gray-700">
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {t('common.total')} {pagination.total} • {pagination.page} / {pagination.totalPages}
+                {t('common.total', 'Total')}: {pagination.total} • {t('common.page', 'Page')} {pagination.page || page} / {Math.ceil((pagination.total || 0) / limit)}
               </p>
               <div className="flex gap-2">
                 <Button
@@ -207,15 +200,15 @@ export const SupportTicketsPage = () => {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
-                  {t('common.previous')}
+                  {t('common.previous', 'Previous')}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={page >= pagination.totalPages}
+                  disabled={page >= Math.ceil((pagination.total || 0) / limit)}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  {t('common.next')}
+                  {t('common.next', 'Next')}
                 </Button>
               </div>
             </div>

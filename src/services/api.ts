@@ -22,16 +22,23 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+function isAuthLoginRequest(config: { url?: string; baseURL?: string } | undefined): boolean {
+  if (!config) return false;
+  const path = (config.url ?? '').split('?')[0];
+  return (
+    path.includes('/auth/login') ||
+    path.includes('/auth/admin/login') ||
+    path.includes('/auth/app/login')
+  );
+}
+
 // Response interceptor - handle 401 unauthorized
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Don't redirect if the failed request was the login itself (so user sees error message)
-      const isLoginRequest =
-        error.config?.url === '/auth/login' ||
-        (typeof error.config?.url === 'string' && error.config.url.includes('/auth/login'));
-      if (!isLoginRequest) {
+      // Don't redirect if the failed request was a login attempt (show error on form instead)
+      if (!isAuthLoginRequest(error.config)) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
