@@ -88,7 +88,7 @@ export function VoiceMessageBar({
 
   const pct = duration > 0 ? Math.min(100, (current / duration) * 100) : 0;
 
-  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+  const seek = (e: React.MouseEvent<HTMLButtonElement>) => {
     const a = audioRef.current;
     if (!a || !duration) return;
     const rect = e.currentTarget.getBoundingClientRect();

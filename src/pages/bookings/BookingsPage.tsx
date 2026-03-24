@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -9,19 +10,22 @@ import { BookingStatus } from '../../types';
 import { bookingService } from '../../services/booking.service';
 import { format } from 'date-fns';
 import { BookingDetailsModal } from './BookingDetailsModal';
+import { useTranslation } from 'react-i18next';
 
 type ViewMode = 'cards' | 'table';
 
-const statusTabs = [
-  { value: 'all', label: 'All' },
-  { value: BookingStatus.PENDING, label: 'Pending' },
-  { value: BookingStatus.CONFIRMED, label: 'Confirmed' },
-  { value: BookingStatus.IN_PROGRESS, label: 'In Progress' },
-  { value: BookingStatus.COMPLETED, label: 'Completed' },
-  { value: BookingStatus.CANCELLED, label: 'Cancelled' },
-];
-
 export const BookingsPage = () => {
+  const { t } = useTranslation();
+
+  const statusTabs = [
+    { value: 'all', label: t('common.all') },
+    { value: BookingStatus.PENDING, label: t('common.pending') },
+    { value: BookingStatus.CONFIRMED, label: t('bookings.statusConfirmed') },
+    { value: BookingStatus.IN_PROGRESS, label: t('bookings.statusInProgress') },
+    { value: BookingStatus.COMPLETED, label: t('common.completed') },
+    { value: BookingStatus.CANCELLED, label: t('common.cancelled') },
+  ];
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
@@ -34,6 +38,13 @@ export const BookingsPage = () => {
   React.useEffect(() => {
     setPage(1);
   }, [searchTerm, activeTab]);
+
+  React.useEffect(() => {
+    const serviceRequestId = searchParams.get('serviceRequestId');
+    if (serviceRequestId) {
+      setSelectedBookingId(serviceRequestId);
+    }
+  }, [searchParams]);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['bookings', { status: activeTab, search: searchTerm, page }],
@@ -77,10 +88,10 @@ export const BookingsPage = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-            Bookings
+            {t('common.bookings')}
           </h1>
           <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">
-            View and manage all platform bookings.
+            {t('bookings.subtitle')}
           </p>
         </div>
         <Button 
@@ -90,7 +101,7 @@ export const BookingsPage = () => {
           className="shrink-0 rounded-xl gap-2 hover:bg-white/50 hover:text-teal-600 dark:hover:bg-gray-800/50 dark:hover:text-teal-400"
         >
           <RefreshCw className="h-4 w-4" />
-          Refresh
+          {t('common.refresh')}
         </Button>
       </div>
 
@@ -99,7 +110,7 @@ export const BookingsPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Bookings</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('bookings.totalBookings')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{total}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400">
@@ -111,7 +122,7 @@ export const BookingsPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('common.pending')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{statPending}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400">
@@ -123,7 +134,7 @@ export const BookingsPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('common.completed')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{statCompleted}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-100 text-teal-600 dark:bg-teal-900/40 dark:text-teal-400">
@@ -135,7 +146,7 @@ export const BookingsPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cancelled</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('common.cancelled')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{statCancelled}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400">
@@ -151,7 +162,7 @@ export const BookingsPage = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <Input
-                placeholder="Search by customer, provider, or service..."
+                placeholder={t('bookings.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="rounded-xl border-gray-200 bg-white/50 pl-10 focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-900/50"
@@ -199,10 +210,10 @@ export const BookingsPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <Calendar className="h-5 w-5 text-teal-500" />
-            Booking List
+            {t('bookings.bookingList')}
           </CardTitle>
           <CardDescription>
-            {data ? `${total} bookings found` : 'View and manage booking transactions'}
+            {data ? `${total} ${t('bookings.found')}` : t('bookings.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -213,7 +224,7 @@ export const BookingsPage = () => {
           )}
           {error && (
             <div className="rounded-xl border border-red-200 bg-red-50 py-8 text-center text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-              <p>Error loading bookings. Please try again.</p>
+              <p>{t('bookings.loadError')}</p>
             </div>
           )}
           {list.length === 0 && !isLoading && (
@@ -221,8 +232,8 @@ export const BookingsPage = () => {
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-teal-50 dark:bg-teal-900/20">
                 <Calendar className="h-12 w-12 text-teal-300 dark:text-teal-600" />
               </div>
-              <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">No bookings found</p>
-              <p className="mt-2 max-w-md text-center text-gray-500 dark:text-gray-400">Try adjusting your search or status filter.</p>
+              <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">{t('bookings.noBookings')}</p>
+              <p className="mt-2 max-w-md text-center text-gray-500 dark:text-gray-400">{t('bookings.noBookingsDesc')}</p>
             </div>
           )}
 
@@ -235,7 +246,7 @@ export const BookingsPage = () => {
                 >
                   <div className="absolute right-3 top-3">
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(booking.status)}`}>
-                      {booking.status}
+                      {t(`bookings.status.${booking.status}`, booking.status)}
                     </span>
                   </div>
                   
@@ -244,17 +255,17 @@ export const BookingsPage = () => {
                   </div>
 
                   <h3 className="mb-1 font-semibold text-gray-900 dark:text-white line-clamp-1">
-                    {getName(booking.service?.name) || 'Booking'}
+                    {getName(booking.service?.name) || t('bookings.booking')}
                   </h3>
                   
                   <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
                      <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        <span className="truncate">{getName(booking.customer?.name || booking.owner?.name) || 'Unknown User'}</span>
+                        <span className="truncate">{getName(booking.customer?.name || booking.owner?.name) || t('bookings.unknownUser')}</span>
                      </div>
                      <div className="flex items-center gap-2">
                         <Briefcase className="h-4 w-4" />
-                        <span className="truncate">{getName(booking.provider?.user?.name || booking.provider?.name) || getName(booking.provider?.businessName) || 'Unknown Provider'}</span>
+                        <span className="truncate">{getName(booking.provider?.user?.name || booking.provider?.name) || getName(booking.provider?.businessName) || t('bookings.unknownProvider')}</span>
                      </div>
                      <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
@@ -264,7 +275,7 @@ export const BookingsPage = () => {
 
                   <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-700">
                      <div className="flex flex-col">
-                       <span className="text-xs text-gray-500">Total</span>
+                       <span className="text-xs text-gray-500">{t('bookings.total')}</span>
                        <span className="text-lg font-bold text-gray-900 dark:text-white">
                          {(booking.final_agreed_price ?? booking.finalPrice) != null ? `${Number(booking.final_agreed_price ?? booking.finalPrice).toFixed(2)}` : '0.00'} <span className="text-xs font-normal text-gray-500">SAR</span>
                        </span>
@@ -275,7 +286,7 @@ export const BookingsPage = () => {
                        onClick={() => setSelectedBookingId(booking.id)} 
                        className="h-8 gap-1.5 rounded-lg border-teal-200 text-teal-700 hover:bg-teal-50 hover:text-teal-800 dark:border-teal-800 dark:text-teal-400 dark:hover:bg-teal-900/30"
                      >
-                       <Eye className="h-3.5 w-3.5" /> View
+                       <Eye className="h-3.5 w-3.5" /> {t('common.view')}
                      </Button>
                   </div>
                 </div>
@@ -288,13 +299,13 @@ export const BookingsPage = () => {
               <table className="w-full">
                 <thead className="bg-gray-100/50 dark:bg-gray-700/40">
                   <tr>
-                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Customer</th>
-                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Service</th>
-                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Provider</th>
-                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Date</th>
-                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Total</th>
-                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
-                    <th className="px-6 py-4 text-end text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
+                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('bookings.customer')}</th>
+                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.service')}</th>
+                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.provider')}</th>
+                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('bookings.date')}</th>
+                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('bookings.total')}</th>
+                    <th className="px-6 py-4 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.status')}</th>
+                    <th className="px-6 py-4 text-end text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -305,14 +316,14 @@ export const BookingsPage = () => {
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                                 <User className="h-4 w-4" />
                             </div>
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">{getName(booking.customer?.name || booking.owner?.name) || 'N/A'}</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">{getName(booking.customer?.name || booking.owner?.name) || t('common.notFound')}</span>
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                         {getName(booking.service?.name) || 'N/A'}
+                         {getName(booking.service?.name) || t('common.notFound')}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                         {getName(booking.provider?.user?.name || booking.provider?.name) || getName(booking.provider?.businessName) || 'N/A'}
+                         {getName(booking.provider?.user?.name || booking.provider?.name) || getName(booking.provider?.businessName) || t('common.notFound')}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                         {(booking.created_at || booking.createdAt) ? format(new Date(booking.created_at || booking.createdAt), 'MMM dd, yyyy') : '—'}
@@ -322,7 +333,7 @@ export const BookingsPage = () => {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(booking.status)}`}>
-                          {booking.status}
+                          {t(`bookings.status.${booking.status}`, booking.status)}
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-end">
@@ -345,7 +356,7 @@ export const BookingsPage = () => {
           {totalPages > 1 && list.length > 0 && (
             <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-4 dark:border-gray-700">
               <span className="text-sm text-gray-500">
-                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total} bookings
+                {t('bookings.pagination', { start: ((page - 1) * limit) + 1, end: Math.min(page * limit, total), total })}
               </span>
               <div className="flex gap-2">
                 <Button 
@@ -357,7 +368,7 @@ export const BookingsPage = () => {
                   Previous
                 </Button>
                 <div className="flex items-center justify-center px-4 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Page {page} of {totalPages}
+                  {t('bookings.pageOf', { page, totalPages })}
                 </div>
                 <Button 
                   variant="outline" 
@@ -373,7 +384,17 @@ export const BookingsPage = () => {
         </CardContent>
       </Card>
       
-      <BookingDetailsModal bookingId={selectedBookingId} onClose={() => setSelectedBookingId(null)} />
+      <BookingDetailsModal
+        bookingId={selectedBookingId}
+        onClose={() => {
+          setSelectedBookingId(null);
+          if (searchParams.has('serviceRequestId')) {
+            const next = new URLSearchParams(searchParams);
+            next.delete('serviceRequestId');
+            setSearchParams(next, { replace: true });
+          }
+        }}
+      />
     </div>
   );
 };

@@ -7,8 +7,10 @@ import { Label } from '../../components/ui/label';
 import { loyaltyService, type LoyaltyConfig, type LoyaltyAccountWithUser } from '../../services/loyalty.service';
 import { userService } from '../../services/user.service';
 import { Gift, Users, TrendingUp, Plus, Pencil, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 export const LoyaltyPage = () => {
+  const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const [showConfigForm, setShowConfigForm] = useState(false);
   const [showAdjustForm, setShowAdjustForm] = useState(false);
@@ -20,6 +22,8 @@ export const LoyaltyPage = () => {
     is_active: true,
   });
   const [formAdjust, setFormAdjust] = useState({ user_id: '', amount: '0', description: '' });
+  const canCreateLoyalty = can('LOYALTY', 'CREATE');
+  const canUpdateLoyalty = can('LOYALTY', 'UPDATE');
 
   const { data: configData, isLoading: configLoading, error: configError } = useQuery({
     queryKey: ['loyalty-configs'],
@@ -68,6 +72,8 @@ export const LoyaltyPage = () => {
 
   const handleSubmitConfig = (e: React.FormEvent) => {
     e.preventDefault();
+    if (editingConfigId && !canUpdateLoyalty) return;
+    if (!editingConfigId && !canCreateLoyalty) return;
     if (editingConfigId) {
       updateConfigMutation.mutate({
         id: editingConfigId,
@@ -89,6 +95,7 @@ export const LoyaltyPage = () => {
   };
   const handleSubmitAdjust = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canUpdateLoyalty) return;
     const userId = parseInt(formAdjust.user_id, 10);
     const amount = parseInt(formAdjust.amount, 10);
     if (Number.isNaN(userId) || Number.isNaN(amount)) return;
@@ -132,15 +139,15 @@ export const LoyaltyPage = () => {
             <RefreshCw className="h-4 w-4" />
             تحديث
           </Button>
-          <Button 
+          {canCreateLoyalty && <Button 
             size="sm" 
             className="rounded-xl bg-amber-600 gap-2 hover:bg-amber-700 shadow-lg shadow-amber-600/20" 
             onClick={() => { setShowConfigForm(true); setEditingConfigId(null); setFormConfig({ points_per_currency: '1', cashback_per_point: '0.01', min_points_redemption: '100', is_active: true }); }}
           >
             <Plus className="h-4 w-4" />
             إضافة إعداد
-          </Button>
-          <Button 
+          </Button>}
+          {canUpdateLoyalty && <Button 
             size="sm" 
             variant="secondary" 
             className="rounded-xl gap-2 bg-white/80 hover:bg-white text-gray-700 dark:bg-gray-800/80 dark:hover:bg-gray-800 dark:text-gray-200" 
@@ -148,7 +155,7 @@ export const LoyaltyPage = () => {
           >
             <Users className="h-4 w-4" />
             تعديل نقاط
-          </Button>
+          </Button>}
         </div>
       </div>
 
@@ -206,6 +213,7 @@ export const LoyaltyPage = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmitConfig} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+              <fieldset disabled={(editingConfigId ? !canUpdateLoyalty : !canCreateLoyalty) || createConfigMutation.isPending || updateConfigMutation.isPending} className="contents">
               <div className="space-y-2">
                 <Label>نقاط لكل وحدة عملة</Label>
                 <Input type="number" step="0.0001" min="0" value={formConfig.points_per_currency} onChange={(e) => setFormConfig((p) => ({ ...p, points_per_currency: e.target.value }))} className="bg-white dark:bg-gray-800" required />
@@ -225,13 +233,14 @@ export const LoyaltyPage = () => {
                 </label>
               </div>
               <div className="flex items-end gap-2">
-                <Button type="submit" size="sm" className="w-full rounded-xl bg-amber-600 hover:bg-amber-700" disabled={createConfigMutation.isPending || updateConfigMutation.isPending}>
+                <Button type="submit" size="sm" className="w-full rounded-xl bg-amber-600 hover:bg-amber-700" disabled={(editingConfigId ? !canUpdateLoyalty : !canCreateLoyalty) || createConfigMutation.isPending || updateConfigMutation.isPending}>
                   {editingConfigId ? 'حفظ' : 'إضافة'}
                 </Button>
                 <Button type="button" variant="outline" size="sm" className="w-full rounded-xl" onClick={() => { setShowConfigForm(false); setEditingConfigId(null); }}>
                   إلغاء
                 </Button>
               </div>
+              </fieldset>
             </form>
           </CardContent>
         </Card>
@@ -245,6 +254,7 @@ export const LoyaltyPage = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmitAdjust} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <fieldset disabled={!canUpdateLoyalty || adjustPointsMutation.isPending} className="contents">
               <div className="space-y-2">
                 <Label>المستخدم</Label>
                 <select
@@ -275,6 +285,7 @@ export const LoyaltyPage = () => {
                   إلغاء
                 </Button>
               </div>
+              </fieldset>
             </form>
           </CardContent>
         </Card>
@@ -334,9 +345,9 @@ export const LoyaltyPage = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-end">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20 dark:hover:text-amber-400" onClick={() => startEditConfig(c)}>
+                          {canUpdateLoyalty && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20 dark:hover:text-amber-400" onClick={() => startEditConfig(c)}>
                             <Pencil className="h-4 w-4" />
-                          </Button>
+                          </Button>}
                         </td>
                       </tr>
                     ))}

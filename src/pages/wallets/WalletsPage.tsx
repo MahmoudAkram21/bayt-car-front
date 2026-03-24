@@ -2,8 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { dashboardService, type WalletWithUser } from '../../services/dashboard.service';
 import { Wallet, User, Building2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const WalletsPage = () => {
+  const { t } = useTranslation();
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin-wallets'],
     queryFn: () => dashboardService.getAllWallets(),
@@ -19,10 +21,10 @@ export const WalletsPage = () => {
     <div className="animate-fade-in">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-          Wallets Management
+          {t('wallets.title')}
         </h1>
         <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">
-          View all client and provider wallets. Balances and frozen amounts.
+          {t('wallets.subtitle')}
         </p>
       </div>
 
@@ -31,7 +33,7 @@ export const WalletsPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Wallets</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('wallets.totalWallets')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{wallets.length}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400">
@@ -42,7 +44,7 @@ export const WalletsPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Balance</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('wallets.totalBalance')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{totalBalance.toFixed(2)} <span className="text-sm font-normal text-gray-500">SAR</span></p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
@@ -53,7 +55,7 @@ export const WalletsPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Frozen</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('wallets.frozen')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{totalFrozen.toFixed(2)} <span className="text-sm font-normal text-gray-500">SAR</span></p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400">
@@ -67,10 +69,10 @@ export const WalletsPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <Wallet className="h-5 w-5 text-violet-500" />
-            All Wallets
+            {t('wallets.allWallets')}
           </CardTitle>
           <CardDescription>
-            {wallets.length} wallets — {customerWallets.length} clients, {providerWallets.length} providers
+            {t('wallets.walletsInfo', { total: wallets.length, customers: customerWallets.length, providers: providerWallets.length })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -81,22 +83,22 @@ export const WalletsPage = () => {
           )}
           {error && (
             <div className="rounded-xl border border-red-200 bg-red-50 py-8 text-center text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-              Failed to load wallets.
+              {t('wallets.loadError')}
             </div>
           )}
           {!isLoading && !error && wallets.length === 0 && (
-            <div className="py-12 text-center text-gray-500 dark:text-gray-400">No wallets yet.</div>
+            <div className="py-12 text-center text-gray-500 dark:text-gray-400">{t('wallets.noWallets')}</div>
           )}
           {!isLoading && wallets.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-100 dark:bg-gray-700/70">
                   <tr>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">ID</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">User</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Balance</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Frozen</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('wallets.id')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('wallets.user')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('wallets.type')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('wallets.balance')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('wallets.frozen')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -110,11 +112,11 @@ export const WalletsPage = () => {
                       <td className="whitespace-nowrap px-6 py-4">
                         {w.user?.is_provider ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-                            <Building2 className="h-3.5 w-3.5" /> Provider
+                            <Building2 className="h-3.5 w-3.5" /> {t('wallets.provider')}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                            <User className="h-3.5 w-3.5" /> Client
+                            <User className="h-3.5 w-3.5" /> {t('wallets.client')}
                           </span>
                         )}
                       </td>

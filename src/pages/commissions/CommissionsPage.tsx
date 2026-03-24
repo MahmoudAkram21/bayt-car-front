@@ -7,10 +7,12 @@ import { Search, DollarSign, AlertTriangle, LayoutGrid, List, Eye } from 'lucide
 import { commissionService } from '../../services/commission.service';
 import { format } from 'date-fns';
 import { CommissionDetailsModal } from './CommissionDetailsModal';
+import { useTranslation } from 'react-i18next';
 
 type ViewMode = 'cards' | 'table';
 
 export const CommissionsPage = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
@@ -38,10 +40,10 @@ export const CommissionsPage = () => {
     <div className="animate-fade-in">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-          Commissions
+          {t('commissions.title')}
         </h1>
         <p className="mt-2 max-w-2xl text-base text-gray-600 dark:text-gray-400">
-          Track and manage platform commissions
+          {t('commissions.subtitle')}
         </p>
       </div>
 
@@ -50,7 +52,7 @@ export const CommissionsPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Unpaid</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('commissions.totalUnpaid')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
                 ${stats?.totalUnpaid?.toFixed ? Number(stats?.totalUnpaid || 0).toFixed(2) : '0.00'}
               </p>
@@ -64,7 +66,7 @@ export const CommissionsPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Paid</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('commissions.totalPaid')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
                 ${stats?.totalPaid?.toFixed ? Number(stats?.totalPaid || 0).toFixed(2) : '0.00'}
               </p>
@@ -78,7 +80,7 @@ export const CommissionsPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Suspended Providers</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('commissions.suspendedProviders')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
                 {stats?.suspendedProviders || 0}
               </p>
@@ -96,7 +98,7 @@ export const CommissionsPage = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <Input
-                placeholder="Search by provider or booking..."
+                placeholder={t('commissions.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="rounded-lg border-gray-300 pl-10 focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700"
@@ -107,16 +109,16 @@ export const CommissionsPage = () => {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
-              <option value="all">All Status</option>
-              <option value="unpaid">Unpaid</option>
-              <option value="paid">Paid</option>
+              <option value="all">{t('commissions.allStatus')}</option>
+              <option value="unpaid">{t('commissions.unpaid')}</option>
+              <option value="paid">{t('commissions.paid')}</option>
             </select>
             <div className="flex rounded-lg border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 overflow-hidden">
               <button type="button" onClick={() => setViewMode('cards')} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${viewMode === 'cards' ? 'bg-teal-500 text-white dark:bg-teal-600' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600'}`}>
-                <LayoutGrid className="h-4 w-4" /> Cards
+                <LayoutGrid className="h-4 w-4" /> {t('commissions.cards')}
               </button>
               <button type="button" onClick={() => setViewMode('table')} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${viewMode === 'table' ? 'bg-teal-500 text-white dark:bg-teal-600' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600'}`}>
-                <List className="h-4 w-4" /> List
+                <List className="h-4 w-4" /> {t('commissions.list')}
               </button>
             </div>
           </div>
@@ -127,10 +129,10 @@ export const CommissionsPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <DollarSign className="h-5 w-5 text-teal-500" />
-            All Commissions
+            {t('commissions.allCommissions')}
           </CardTitle>
           <CardDescription>
-            {data ? `${(data as any).total ?? (data as any).data?.length ?? 0} commissions found` : 'View and manage commission payments'}
+            {data ? t('commissions.commissionsFound', { count: (data as any).total ?? (data as any).data?.length ?? 0 }) : t('commissions.viewManageCommissions')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -142,7 +144,7 @@ export const CommissionsPage = () => {
 
           {error && (
             <div className="rounded-xl border border-red-200 bg-red-50 py-8 text-center text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-              <p>Error loading commissions. Please try again.</p>
+              <p>{t('commissions.loadError')}</p>
             </div>
           )}
 
@@ -151,9 +153,9 @@ export const CommissionsPage = () => {
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-900/30">
                 <DollarSign className="h-12 w-12 text-teal-600 dark:text-teal-400" />
               </div>
-              <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">No commissions found</p>
+              <p className="mt-4 text-xl font-bold text-gray-900 dark:text-white">{t('commissions.noCommissions')}</p>
               <p className="mt-2 max-w-md text-center text-gray-500 dark:text-gray-400">
-                Try adjusting your search or status filter
+                {t('commissions.noCommissionsDesc')}
               </p>
             </div>
           )}
@@ -167,7 +169,7 @@ export const CommissionsPage = () => {
                   </div>
                   <div className="p-4">
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${commission.isPaid ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'}`}>
-                      {commission.isPaid ? 'Paid' : 'Unpaid'}
+                      {commission.isPaid ? t('commissions.paidStatus') : t('commissions.unpaidStatus')}
                     </span>
                     <h3 className="mt-2 font-semibold text-gray-900 dark:text-white">{commission.provider?.user?.name || commission.provider?.businessName && getName(commission.provider.businessName) || '—'}</h3>
                     <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">${Number(commission.amount || 0).toFixed(2)}</p>
@@ -175,7 +177,7 @@ export const CommissionsPage = () => {
                   </div>
                   <div className="border-t border-gray-100 px-4 py-3 dark:border-gray-700">
                     <Button variant="ghost" size="sm" className="w-full gap-1.5 text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900/20" onClick={() => setSelectedCommission(commission)}>
-                      <Eye className="h-4 w-4" /> View Details
+                      <Eye className="h-4 w-4" /> {t('commissions.viewDetails')}
                     </Button>
                   </div>
                 </div>
@@ -188,31 +190,31 @@ export const CommissionsPage = () => {
               <table className="w-full">
                 <thead className="bg-gray-100 dark:bg-gray-700/70">
                   <tr>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Provider</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Booking</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Amount</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Due Date</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Paid Date</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('commissions.provider')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('commissions.booking')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('commissions.amount')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('commissions.dueDate')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('commissions.status')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('commissions.paidDate')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('commissions.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {(data as any).data.map((commission: any) => (
                     <tr key={commission.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                        {commission.provider?.user?.name || getName(commission.provider?.businessName) || 'N/A'}
+                        {commission.provider?.user?.name || getName(commission.provider?.businessName) || t('commissions.na')}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                         {commission.serviceRequest?.service?.name
                           ? (typeof commission.serviceRequest.service.name === 'string'
                             ? commission.serviceRequest.service.name
                             : commission.serviceRequest.service.name?.en || commission.serviceRequest.service.name?.ar)
-                          : getName(commission.booking?.service?.name) || 'N/A'}
+                          : getName(commission.booking?.service?.name) || t('commissions.na')}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">${Number(commission.amount || 0).toFixed(2)}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                        {commission.dueDate ? format(new Date(commission.dueDate), 'MMM dd, yyyy') : 'N/A'}
+                        {commission.dueDate ? format(new Date(commission.dueDate), 'MMM dd, yyyy') : t('commissions.na')}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -220,7 +222,7 @@ export const CommissionsPage = () => {
                             ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300'
                             : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
                         }`}>
-                          {commission.isPaid ? 'Paid' : 'Unpaid'}
+                          {commission.isPaid ? t('commissions.paidStatus') : t('commissions.unpaidStatus')}
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
@@ -228,7 +230,7 @@ export const CommissionsPage = () => {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <Button variant="ghost" size="sm" className="h-8 gap-1.5 rounded-lg text-teal-600 hover:bg-teal-50 dark:text-teal-400" onClick={() => setSelectedCommission(commission)}>
-                          <Eye className="h-4 w-4" /> View
+                          <Eye className="h-4 w-4" /> {t('commissions.view')}
                         </Button>
                       </td>
                     </tr>

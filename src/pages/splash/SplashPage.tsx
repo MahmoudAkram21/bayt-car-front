@@ -7,6 +7,7 @@ import { Label } from '../../components/ui/label';
 import { splashService, type SplashScreen, type SplashPlatform } from '../../services/splash.service';
 import { Image, Monitor, Plus, Pencil, Trash2, RefreshCw, Smartphone, CheckCircle2, LayoutTemplate } from 'lucide-react';
 import { format } from 'date-fns';
+import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 const PLATFORM_OPTIONS: { value: SplashPlatform; label: string; icon: any }[] = [
   { value: 'ALL', label: 'الكل', icon: LayoutTemplate },
@@ -26,10 +27,14 @@ const emptyForm = () => ({
 });
 
 export const SplashPage = () => {
+  const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm());
+  const canCreateSplash = can('SPLASH', 'CREATE');
+  const canUpdateSplash = can('SPLASH', 'UPDATE');
+  const canDeleteSplash = can('SPLASH', 'DELETE');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['splash'],
@@ -71,6 +76,8 @@ export const SplashPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (editingId && !canUpdateSplash) return;
+    if (!editingId && !canCreateSplash) return;
     if (!form.image_url.trim()) return;
     const payload = toPayload() as Partial<SplashScreen> & { image_url: string };
     if (editingId) {
@@ -123,14 +130,14 @@ export const SplashPage = () => {
             <RefreshCw className="h-4 w-4" />
             تحديث
           </Button>
-          <Button 
+          {canCreateSplash && <Button 
             size="sm" 
             className="rounded-xl bg-cyan-600 gap-2 hover:bg-cyan-700 shadow-lg shadow-cyan-600/20" 
             onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm()); }}
           >
             <Plus className="h-4 w-4" />
             إضافة سبلاش
-          </Button>
+          </Button>}
         </div>
       </div>
 
@@ -141,6 +148,7 @@ export const SplashPage = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <fieldset disabled={(editingId ? !canUpdateSplash : !canCreateSplash) || createMutation.isPending || updateMutation.isPending} className="contents">
               <div className="sm:col-span-2">
                 <Label>رابط الصورة (مطلوب)</Label>
                 <div className="flex gap-4">
@@ -188,10 +196,11 @@ export const SplashPage = () => {
                 <Button type="button" variant="outline" size="sm" className="w-full rounded-xl" onClick={() => { setShowForm(false); setEditingId(null); setForm(emptyForm()); }}>
                   إلغاء
                 </Button>
-                <Button type="submit" size="sm" className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-700" disabled={createMutation.isPending || updateMutation.isPending}>
+                <Button type="submit" size="sm" className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-700" disabled={(editingId ? !canUpdateSplash : !canCreateSplash) || createMutation.isPending || updateMutation.isPending}>
                   {editingId ? 'حفظ' : 'إضافة'}
                 </Button>
               </div>
+              </fieldset>
             </form>
           </CardContent>
         </Card>
@@ -293,12 +302,12 @@ export const SplashPage = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-cyan-50 hover:text-cyan-600 dark:hover:bg-cyan-900/20 dark:hover:text-cyan-400" onClick={() => startEdit(s)} title="تعديل">
+                          {canUpdateSplash && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-cyan-50 hover:text-cyan-600 dark:hover:bg-cyan-900/20 dark:hover:text-cyan-400" onClick={() => startEdit(s)} title="تعديل">
                             <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleDelete(s.id)} title="حذف">
+                          </Button>}
+                          {canDeleteSplash && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleDelete(s.id)} title="حذف">
                             <Trash2 className="h-4 w-4" />
-                          </Button>
+                          </Button>}
                         </div>
                       </td>
                     </tr>
