@@ -7,7 +7,6 @@ import { Label } from '../../components/ui/label';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { providerService } from '../../services/provider.service';
-import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 const getName = (name: string | { en?: string; ar?: string } | undefined) => {
   if (typeof name === 'string') return name;
@@ -21,8 +20,6 @@ export const ProviderEditPage = () => {
   const [bio, setBio] = useState('');
   const [isVerified, setIsVerified] = useState(false);
   const [isSuspended, setIsSuspended] = useState(false);
-  const { can } = useRolePermissions();
-  const canUpdateProvider = can('PROVIDERS', 'UPDATE');
 
   const { data: provider, isLoading, error } = useQuery({
     queryKey: ['provider-detail', id],
@@ -50,7 +47,6 @@ export const ProviderEditPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canUpdateProvider) return;
     updateMutation.mutate({ bio: bio || undefined, is_verified: isVerified, is_suspended: isSuspended });
   };
 
@@ -95,7 +91,6 @@ export const ProviderEditPage = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <fieldset disabled={!canUpdateProvider || updateMutation.isPending} className="space-y-6">
             <div>
               <Label htmlFor="bio" className="text-gray-700 dark:text-gray-300">Bio</Label>
               <textarea
@@ -128,7 +123,7 @@ export const ProviderEditPage = () => {
               </label>
             </div>
             <div className="flex gap-3">
-              <Button type="submit" className="rounded-xl gap-2 bg-orange-600 hover:bg-orange-700" disabled={!canUpdateProvider || updateMutation.isPending}>
+              <Button type="submit" className="rounded-xl gap-2 bg-orange-600 hover:bg-orange-700" disabled={updateMutation.isPending}>
                 <Save className="h-4 w-4" />
                 {updateMutation.isPending ? 'Saving…' : 'Save'}
               </Button>
@@ -136,7 +131,6 @@ export const ProviderEditPage = () => {
                 Cancel
               </Button>
             </div>
-            </fieldset>
           </form>
         </CardContent>
       </Card>

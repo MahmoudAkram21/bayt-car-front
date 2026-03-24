@@ -1,8 +1,6 @@
 // Enums
 export enum UserRole {
-  CUSTOMER = 'CUSTOMER',
-  // Backward compatibility alias for old frontend role naming.
-  OWNER = 'CUSTOMER',
+  OWNER = 'OWNER',
   PROVIDER = 'PROVIDER',
   ADMIN = 'ADMIN',
   SUPER_ADMIN = 'SUPER_ADMIN',

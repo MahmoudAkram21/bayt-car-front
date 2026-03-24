@@ -10,7 +10,6 @@ import { promoService, type PromoOffer, type OfferType, type OfferScope } from '
 import { serviceService } from '../../services/service.service';
 import { Tag, Percent, Plus, Pencil, Trash2, RefreshCw, CheckCircle2, Ticket, Calendar, Wrench, Eye } from 'lucide-react';
 import { format } from 'date-fns';
-import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 const emptyForm = () => ({
   code: '',
@@ -29,7 +28,6 @@ const emptyForm = () => ({
 
 export const PromoPage = () => {
   const { t } = useTranslation();
-  const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,9 +36,6 @@ export const PromoPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm());
-  const canCreatePromo = can('PROMOS', 'CREATE');
-  const canUpdatePromo = can('PROMOS', 'UPDATE');
-  const canDeletePromo = can('PROMOS', 'DELETE');
 
   const TYPE_OPTIONS: { value: OfferType; label: string }[] = [
     { value: 'PERCENTAGE', label: t('common.promoTypePercentage') },
@@ -133,8 +128,6 @@ export const PromoPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId && !canUpdatePromo) return;
-    if (!editingId && !canCreatePromo) return;
     if (form.scope === 'SERVICES' && form.entity_ids.length === 0) {
       return;
     }
@@ -205,14 +198,14 @@ export const PromoPage = () => {
             <RefreshCw className="h-4 w-4" />
             {t('common.refresh')}
           </Button>
-          {(canCreatePromo || canUpdatePromo) && <Button 
+          <Button 
             size="sm" 
             className="rounded-xl bg-rose-600 gap-2 hover:bg-rose-700 shadow-lg shadow-rose-600/20" 
             onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm()); }}
           >
             <Plus className="h-4 w-4" />
             {t('common.promoAddOffer')}
-          </Button>}
+          </Button>
         </div>
       </div>
 
@@ -223,7 +216,6 @@ export const PromoPage = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <fieldset disabled={(editingId ? !canUpdatePromo : !canCreatePromo) || createMutation.isPending || updateMutation.isPending} className="contents">
               <div className="space-y-2">
                 <Label>{t('common.promoCode')}</Label>
                 <div className="relative">
@@ -317,14 +309,13 @@ export const PromoPage = () => {
                 </label>
               </div>
               <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-1">
-                <Button type="submit" size="sm" className="w-full rounded-xl bg-rose-600 hover:bg-rose-700" disabled={(editingId ? !canUpdatePromo : !canCreatePromo) || createMutation.isPending || updateMutation.isPending}>
+                <Button type="submit" size="sm" className="w-full rounded-xl bg-rose-600 hover:bg-rose-700" disabled={createMutation.isPending || updateMutation.isPending}>
                   {editingId ? t('common.save') : t('common.promoAddOffer')}
                 </Button>
                 <Button type="button" variant="outline" size="sm" className="w-full rounded-xl" onClick={() => { setShowForm(false); setEditingId(null); setForm(emptyForm()); }}>
                   {t('common.cancel')}
                 </Button>
               </div>
-              </fieldset>
             </form>
           </CardContent>
         </Card>
@@ -496,12 +487,12 @@ export const PromoPage = () => {
                           <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/20 dark:hover:text-rose-400" onClick={() => navigate(`/promo/${o.id}`)} title={t('common.view')}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          {canUpdatePromo && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/20 dark:hover:text-rose-400" onClick={() => startEdit(o)} title={t('common.edit')}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/20 dark:hover:text-rose-400" onClick={() => startEdit(o)} title={t('common.edit')}>
                             <Pencil className="h-4 w-4" />
-                          </Button>}
-                          {canDeletePromo && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleDelete(o.id)} title={t('common.delete')}>
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleDelete(o.id)} title={t('common.delete')}>
                             <Trash2 className="h-4 w-4" />
-                          </Button>}
+                          </Button>
                         </div>
                       </td>
                     </tr>

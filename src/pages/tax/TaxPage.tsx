@@ -7,16 +7,12 @@ import { Label } from '../../components/ui/label';
 import { taxService, type TaxSettings } from '../../services/tax.service';
 import { Receipt, Plus, Pencil, RefreshCw, CheckCircle2, XCircle, Percent } from 'lucide-react';
 import { format } from 'date-fns';
-import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 export const TaxPage = () => {
-  const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState({ is_enabled: true, tax_percent: '15' });
-  const canCreateTax = can('TAX', 'CREATE');
-  const canUpdateTax = can('TAX', 'UPDATE');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['tax-settings'],
@@ -43,8 +39,6 @@ export const TaxPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId && !canUpdateTax) return;
-    if (!editingId && !canCreateTax) return;
     const payload = { is_enabled: form.is_enabled, tax_percent: parseFloat(form.tax_percent) };
     if (editingId) {
       updateMutation.mutate({ id: editingId, data: payload });
@@ -84,14 +78,14 @@ export const TaxPage = () => {
             <RefreshCw className="h-4 w-4" />
             تحديث
           </Button>
-          {canCreateTax && <Button 
+          <Button 
             size="sm" 
             className="rounded-xl bg-slate-600 gap-2 hover:bg-slate-700 shadow-lg shadow-slate-600/20" 
             onClick={() => { setShowForm(true); setEditingId(null); setForm({ is_enabled: true, tax_percent: '15' }); }}
           >
             <Plus className="h-4 w-4" />
             إضافة إعداد ضريبة
-          </Button>}
+          </Button>
         </div>
       </div>
 
@@ -102,7 +96,6 @@ export const TaxPage = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="flex flex-col gap-6 sm:flex-row sm:items-end">
-              <fieldset disabled={(editingId ? !canUpdateTax : !canCreateTax) || createMutation.isPending || updateMutation.isPending} className="contents">
               <div className="relative">
                 <Label>نسبة الضريبة %</Label>
                 <div className="relative mt-1">
@@ -122,11 +115,10 @@ export const TaxPage = () => {
                 <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={() => { setShowForm(false); setEditingId(null); }}>
                   إلغاء
                 </Button>
-                <Button type="submit" size="sm" className="rounded-xl bg-slate-600 hover:bg-slate-700" disabled={(editingId ? !canUpdateTax : !canCreateTax) || createMutation.isPending || updateMutation.isPending}>
+                <Button type="submit" size="sm" className="rounded-xl bg-slate-600 hover:bg-slate-700" disabled={createMutation.isPending || updateMutation.isPending}>
                   {editingId ? 'حفظ التغييرات' : 'إضافة'}
                 </Button>
               </div>
-              </fieldset>
             </form>
           </CardContent>
         </Card>
@@ -222,9 +214,9 @@ export const TaxPage = () => {
                         {t.updated_at ? format(new Date(t.updated_at), 'PP p') : '—'}
                       </td>
                       <td className="px-6 py-4">
-                        {canUpdateTax && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800/50 dark:hover:text-slate-300" onClick={() => startEdit(t)} title="تعديل">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800/50 dark:hover:text-slate-300" onClick={() => startEdit(t)} title="تعديل">
                           <Pencil className="h-4 w-4" />
-                        </Button>}
+                        </Button>
                       </td>
                     </tr>
                   ))}

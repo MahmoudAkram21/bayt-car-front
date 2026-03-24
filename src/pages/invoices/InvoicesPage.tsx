@@ -8,14 +8,11 @@ import { invoiceService, type Invoice } from '../../services/invoice.service';
 import api from '../../services/api';
 import { FileText, Download, QrCode, RefreshCw, Plus, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
-import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 export const InvoicesPage = () => {
-  const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [serviceRequestId, setServiceRequestId] = useState('');
-  const canCreateInvoices = can('INVOICES', 'CREATE');
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['invoices'],
@@ -37,7 +34,6 @@ export const InvoicesPage = () => {
 
   const handleCreateInvoice = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canCreateInvoices) return;
     const id = parseInt(serviceRequestId, 10);
     if (Number.isNaN(id)) return;
     createMutation.mutate(id);
@@ -87,10 +83,10 @@ export const InvoicesPage = () => {
             <RefreshCw className="h-4 w-4" />
             تحديث
           </Button>
-          {canCreateInvoices && <Button size="sm" className="rounded-xl bg-slate-600 gap-2 hover:bg-slate-700" onClick={() => setShowCreateForm(true)}>
+          <Button size="sm" className="rounded-xl bg-slate-600 gap-2 hover:bg-slate-700" onClick={() => setShowCreateForm(true)}>
             <Plus className="h-4 w-4" />
             إنشاء فاتورة لطلب خدمة
-          </Button>}
+          </Button>
         </div>
       </div>
 
@@ -102,20 +98,18 @@ export const InvoicesPage = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreateInvoice} className="flex flex-wrap items-end gap-4">
-              <fieldset disabled={!canCreateInvoices || createMutation.isPending} className="contents">
               <div>
                 <Label>رقم طلب الخدمة</Label>
                 <Input type="number" min="1" value={serviceRequestId} onChange={(e) => setServiceRequestId(e.target.value)} placeholder="مثال: 1" className="mt-1 w-40 rounded-lg" required />
               </div>
               <div className="flex gap-2">
-                <Button type="submit" size="sm" className="rounded-lg" disabled={!canCreateInvoices || createMutation.isPending}>
+                <Button type="submit" size="sm" className="rounded-lg" disabled={createMutation.isPending}>
                   إنشاء الفاتورة
                 </Button>
                 <Button type="button" variant="outline" size="sm" className="rounded-lg" onClick={() => { setShowCreateForm(false); setServiceRequestId(''); }}>
                   إلغاء
                 </Button>
               </div>
-              </fieldset>
             </form>
           </CardContent>
         </Card>

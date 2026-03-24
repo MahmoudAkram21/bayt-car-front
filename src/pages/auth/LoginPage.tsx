@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { authService } from '../../services/auth.service';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { UserRole } from '../../types';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -21,6 +22,12 @@ export const LoginPage = () => {
 
     try {
       const response = await authService.login({ email, password });
+
+      if (response.user.role !== UserRole.ADMIN && response.user.role !== UserRole.SUPER_ADMIN) {
+        setError('Access denied. This portal is for administrators only.');
+        setLoading(false);
+        return;
+      }
 
       login(response.user, response.accessToken);
       navigate('/');

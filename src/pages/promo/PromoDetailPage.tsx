@@ -15,7 +15,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/button';
 import { promoService, type PromoOffer } from '../../services/promo.service';
 import { format } from 'date-fns';
-import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 type OfferWithUsages = PromoOffer & {
   usages?: { id: string; discount_amount: number; used_at: string; service_request_id?: string }[];
@@ -29,10 +28,8 @@ const SCOPE_KEYS: Record<string, string> = {
 
 export const PromoDetailPage = () => {
   const { t } = useTranslation();
-  const { can } = useRolePermissions();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const canUpdatePromo = can('PROMOS', 'UPDATE');
 
   const { data: offer, isLoading, error } = useQuery({
     queryKey: ['promo-offer-detail', id],
@@ -103,14 +100,14 @@ export const PromoDetailPage = () => {
               </div>
             </div>
           </div>
-          {canUpdatePromo && <Button
+          <Button
             variant="secondary"
             size="sm"
             className="rounded-xl bg-white/20 text-white hover:bg-white/30 backdrop-blur shrink-0"
             onClick={() => navigate('/promo', { state: { editId: o.id } })}
           >
             {t('common.promoEditOfferBtn')}
-          </Button>}
+          </Button>
         </div>
       </div>
 

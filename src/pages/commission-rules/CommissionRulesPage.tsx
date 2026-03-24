@@ -6,7 +6,6 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { commissionRulesService, type CommissionRule, type CommissionRuleScope } from '../../services/commissionRules.service';
 import { Percent, Plus, Pencil, Trash2, RefreshCw, Layers, ShieldCheck, Globe, Briefcase, User } from 'lucide-react';
-import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 const SCOPE_OPTIONS: { value: CommissionRuleScope; label: string; icon: any }[] = [
   { value: 'GLOBAL', label: 'عالمي', icon: Globe },
@@ -15,7 +14,6 @@ const SCOPE_OPTIONS: { value: CommissionRuleScope; label: string; icon: any }[] 
 ];
 
 export const CommissionRulesPage = () => {
-  const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -26,9 +24,6 @@ export const CommissionRulesPage = () => {
     provider_commission_pct: '0',
     is_active: true,
   });
-  const canCreateRules = can('COMMISSION_RULES', 'CREATE');
-  const canUpdateRules = can('COMMISSION_RULES', 'UPDATE');
-  const canDeleteRules = can('COMMISSION_RULES', 'DELETE');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['commission-rules'],
@@ -66,8 +61,6 @@ export const CommissionRulesPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId && !canUpdateRules) return;
-    if (!editingId && !canCreateRules) return;
     const payload = {
       scope: form.scope,
       entity_id: form.entity_id.trim() ? parseInt(form.entity_id, 10) : null,
@@ -122,14 +115,14 @@ export const CommissionRulesPage = () => {
             <RefreshCw className="h-4 w-4" />
             تحديث
           </Button>
-          {canCreateRules && <Button 
+          <Button 
             size="sm" 
             className="rounded-xl bg-amber-600 gap-2 hover:bg-amber-700 shadow-lg shadow-amber-600/20" 
             onClick={() => { setShowForm(true); setEditingId(null); resetForm(); }}
           >
             <Plus className="h-4 w-4" />
             إضافة قاعدة
-          </Button>}
+          </Button>
         </div>
       </div>
 
@@ -140,7 +133,6 @@ export const CommissionRulesPage = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-6">
-              <fieldset disabled={(editingId ? !canUpdateRules : !canCreateRules) || createMutation.isPending || updateMutation.isPending} className="contents">
               <div className="lg:col-span-2">
                 <Label>النطاق</Label>
                 <div className="relative mt-1">
@@ -188,11 +180,10 @@ export const CommissionRulesPage = () => {
                 <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={() => { setShowForm(false); setEditingId(null); resetForm(); }}>
                   إلغاء
                 </Button>
-                <Button type="submit" size="sm" className="rounded-xl bg-amber-600 hover:bg-amber-700" disabled={(editingId ? !canUpdateRules : !canCreateRules) || createMutation.isPending || updateMutation.isPending}>
+                <Button type="submit" size="sm" className="rounded-xl bg-amber-600 hover:bg-amber-700" disabled={createMutation.isPending || updateMutation.isPending}>
                   {editingId ? 'حفظ التغييرات' : 'إضافة القاعدة'}
                 </Button>
               </div>
-              </fieldset>
             </form>
           </CardContent>
         </Card>
@@ -322,12 +313,12 @@ export const CommissionRulesPage = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1">
-                          {canUpdateRules && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20 dark:hover:text-amber-400" onClick={() => startEdit(r)} title="تعديل">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20 dark:hover:text-amber-400" onClick={() => startEdit(r)} title="تعديل">
                             <Pencil className="h-4 w-4" />
-                          </Button>}
-                          {canDeleteRules && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleDelete(r.id)} title="حذف">
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleDelete(r.id)} title="حذف">
                             <Trash2 className="h-4 w-4" />
-                          </Button>}
+                          </Button>
                         </div>
                       </td>
                     </tr>
