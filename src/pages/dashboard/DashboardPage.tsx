@@ -44,6 +44,7 @@ import { dashboardService } from '../../services/dashboard.service';
 import { systemSettingsService } from '../../services/systemSettings.service';
 import { promoService } from '../../services/promo.service';
 import { Button } from '../../components/ui/button';
+import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 const COLORS = ['#f97316', '#10b981', '#0ea5e9', '#8b5cf6', '#f59e0b'];
 
@@ -54,6 +55,19 @@ const formatPercent = (value: number) => `${Math.round(value)}%`;
 export const DashboardPage = () => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
+  const { can } = useRolePermissions();
+  const canReadReports = can('REPORTS', 'READ');
+  const canReadProviders = can('PROVIDERS', 'READ');
+  const canReadUsers = can('USERS', 'READ');
+  const canReadServiceRequests = can('SERVICE_REQUESTS', 'READ');
+  const canReadWallets = can('WALLETS', 'READ');
+  const canReadSettings = can('SETTINGS', 'READ');
+  const canReadPromos = can('PROMOS', 'READ');
+  const canReadCommissions = can('COMMISSIONS', 'READ');
+  const canReadTax = can('TAX', 'READ');
+  const canReadInvoices = can('INVOICES', 'READ');
+  const canReadLoyalty = can('LOYALTY', 'READ');
+  const canReadSupportTickets = can('SUPPORT_TICKETS', 'READ');
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboard-stats'],
@@ -63,11 +77,13 @@ export const DashboardPage = () => {
   const { data: settings } = useQuery({
     queryKey: ['system-settings'],
     queryFn: systemSettingsService.getSettings,
+    enabled: canReadSettings,
   });
 
   const { data: providerPromosData } = useQuery({
     queryKey: ['promo-provider-promos'],
     queryFn: () => promoService.listProviderPromos(),
+    enabled: canReadPromos,
   });
   const providerPromos = providerPromosData?.data ?? [];
 
@@ -123,6 +139,7 @@ export const DashboardPage = () => {
       shell: 'from-orange-500/15 via-orange-500/5 to-transparent',
       iconShell: 'bg-orange-500/15 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300',
       chip: 'bg-orange-500/12 text-orange-700 dark:text-orange-200',
+      visible: canReadWallets,
     },
     {
       label: t('common.totalBookings'),
@@ -134,6 +151,7 @@ export const DashboardPage = () => {
       shell: 'from-sky-500/15 via-sky-500/5 to-transparent',
       iconShell: 'bg-sky-500/15 text-sky-600 dark:bg-sky-500/20 dark:text-sky-300',
       chip: 'bg-sky-500/12 text-sky-700 dark:text-sky-200',
+      visible: canReadServiceRequests,
     },
     {
       label: t('common.activeProviders'),
@@ -145,6 +163,7 @@ export const DashboardPage = () => {
       shell: 'from-emerald-500/15 via-emerald-500/5 to-transparent',
       iconShell: 'bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300',
       chip: 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-200',
+      visible: canReadProviders,
     },
     {
       label: t('common.totalUsers'),
@@ -156,11 +175,12 @@ export const DashboardPage = () => {
       shell: 'from-violet-500/15 via-violet-500/5 to-transparent',
       iconShell: 'bg-violet-500/15 text-violet-600 dark:bg-violet-500/20 dark:text-violet-300',
       chip: 'bg-violet-500/12 text-violet-700 dark:text-violet-200',
+      visible: canReadUsers,
     },
-  ];
+  ].filter((card) => card.visible);
 
   const insights = [
-    {
+    canReadServiceRequests && {
       title: text('معدل إتمام الدفع', 'Payment completion'),
       value: isLoading ? '—' : formatPercent(percent(completedAfterPayment, totalPaidRequests || 1)),
       note: text(
@@ -170,7 +190,7 @@ export const DashboardPage = () => {
       icon: CheckCircle2,
       iconShell: 'bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300',
     },
-    {
+    canReadServiceRequests && {
       title: text('معدل الإلغاء', 'Cancellation rate'),
       value: isLoading ? '—' : formatPercent(percent(totalCancelled, totalRequests || 1)),
       note: text(
@@ -180,7 +200,7 @@ export const DashboardPage = () => {
       icon: XCircle,
       iconShell: 'bg-rose-500/15 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300',
     },
-    {
+    canReadUsers && {
       title: text('نشاط المستخدمين', 'Active user pulse'),
       value: isLoading ? '—' : formatPercent(percent(activeUsers, totalUsers || 1)),
       note: text(
@@ -190,7 +210,7 @@ export const DashboardPage = () => {
       icon: Sparkles,
       iconShell: 'bg-sky-500/15 text-sky-600 dark:bg-sky-500/20 dark:text-sky-300',
     },
-  ];
+  ].filter(Boolean) as Array<{ title: string; value: string; note: string; icon: typeof CheckCircle2; iconShell: string }>;
 
   const healthBars = [
     { label: t('dashboard.completed'), value: completedRequests, color: 'bg-emerald-500' },
@@ -223,18 +243,18 @@ export const DashboardPage = () => {
   const providerData = (stats?.providersByService ?? []).slice(0, 5);
 
   const quickActions = [
-    { name: t('common.addProvider'), href: '/providers', icon: Plus, iconShell: 'bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300' },
-    { name: t('common.newInvoice'), href: '/invoices', icon: FileText, iconShell: 'bg-sky-500/15 text-sky-600 dark:bg-sky-500/20 dark:text-sky-300' },
-    { name: t('common.walletAdjustment'), href: '/wallets', icon: Wallet, iconShell: 'bg-violet-500/15 text-violet-600 dark:bg-violet-500/20 dark:text-violet-300' },
-    { name: t('common.systemSettings'), href: '/settings', icon: Wrench, iconShell: 'bg-orange-500/15 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300' },
-  ];
+    { name: t('common.addProvider'), href: '/providers', icon: Plus, iconShell: 'bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300', visible: canReadProviders },
+    { name: t('common.newInvoice'), href: '/invoices', icon: FileText, iconShell: 'bg-sky-500/15 text-sky-600 dark:bg-sky-500/20 dark:text-sky-300', visible: canReadInvoices },
+    { name: t('common.walletAdjustment'), href: '/wallets', icon: Wallet, iconShell: 'bg-violet-500/15 text-violet-600 dark:bg-violet-500/20 dark:text-violet-300', visible: canReadWallets },
+    { name: t('common.systemSettings'), href: '/settings', icon: Wrench, iconShell: 'bg-orange-500/15 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300', visible: canReadSettings },
+  ].filter((action) => action.visible);
 
   const compactStats = [
-    { label: t('dashboard.platformCommission'), value: isLoading ? '—' : formatCurrency(stats?.totalPlatformCommission ?? 0), hint: text('حصة المنصة من العائد', 'Platform share'), icon: Percent, iconShell: 'bg-violet-500/15 text-violet-600 dark:bg-violet-500/20 dark:text-violet-300' },
-    { label: t('dashboard.taxCollected'), value: isLoading ? '—' : formatCurrency(stats?.totalTaxCollected ?? 0), hint: text('إجمالي الضرائب المحصلة', 'Collected tax total'), icon: Receipt, iconShell: 'bg-sky-500/15 text-sky-600 dark:bg-sky-500/20 dark:text-sky-300' },
-    { label: t('common.invoices'), value: isLoading ? '—' : formatNumber(stats?.totalTransactions ?? 0), hint: text('عدد العمليات والفواتير', 'Transaction volume'), icon: CreditCard, iconShell: 'bg-orange-500/15 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300' },
-    { label: t('dashboard.loyaltyPoints'), value: isLoading ? '—' : formatNumber(stats?.loyaltyPointsBalance ?? 0), hint: text('إجمالي نقاط الولاء', 'Loyalty balance'), icon: Gift, iconShell: 'bg-rose-500/15 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300' },
-  ];
+    { label: t('dashboard.platformCommission'), value: isLoading ? '—' : formatCurrency(stats?.totalPlatformCommission ?? 0), hint: text('حصة المنصة من العائد', 'Platform share'), icon: Percent, iconShell: 'bg-violet-500/15 text-violet-600 dark:bg-violet-500/20 dark:text-violet-300', visible: canReadCommissions },
+    { label: t('dashboard.taxCollected'), value: isLoading ? '—' : formatCurrency(stats?.totalTaxCollected ?? 0), hint: text('إجمالي الضرائب المحصلة', 'Collected tax total'), icon: Receipt, iconShell: 'bg-sky-500/15 text-sky-600 dark:bg-sky-500/20 dark:text-sky-300', visible: canReadTax },
+    { label: t('common.invoices'), value: isLoading ? '—' : formatNumber(stats?.totalTransactions ?? 0), hint: text('عدد العمليات والفواتير', 'Transaction volume'), icon: CreditCard, iconShell: 'bg-orange-500/15 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300', visible: canReadInvoices },
+    { label: t('dashboard.loyaltyPoints'), value: isLoading ? '—' : formatNumber(stats?.loyaltyPointsBalance ?? 0), hint: text('إجمالي نقاط الولاء', 'Loyalty balance'), icon: Gift, iconShell: 'bg-rose-500/15 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300', visible: canReadLoyalty },
+  ].filter((item) => item.visible);
 
   const tooltipStyle = {
     borderRadius: '18px',
@@ -264,20 +284,26 @@ export const DashboardPage = () => {
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Link to="/reports">
-                <Button className="rounded-full bg-gray-950 px-5 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100">
-                  {t('common.reports')}
+              {canReadReports && (
+                <Link to="/reports">
+                  <Button className="rounded-full bg-gray-950 px-5 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100">
+                    {t('common.reports')}
+                  </Button>
+                </Link>
+              )}
+              {canReadProviders && (
+                <Link to="/providers">
+                  <Button variant="outline" className="rounded-full border-white/70 bg-white/70 px-5 backdrop-blur-sm dark:border-white/10 dark:bg-white/5">
+                    <ArrowUpRight className="me-2 h-4 w-4" />
+                    {t('common.addProvider')}
+                  </Button>
+                </Link>
+              )}
+              {canReadSupportTickets && (
+                <Button variant="outline" size="icon" className="rounded-full border-white/70 bg-white/70 backdrop-blur-sm dark:border-white/10 dark:bg-white/5">
+                  <Bell className="h-4.5 w-4.5" />
                 </Button>
-              </Link>
-              <Link to="/providers">
-                <Button variant="outline" className="rounded-full border-white/70 bg-white/70 px-5 backdrop-blur-sm dark:border-white/10 dark:bg-white/5">
-                  <ArrowUpRight className="me-2 h-4 w-4" />
-                  {t('common.addProvider')}
-                </Button>
-              </Link>
-              <Button variant="outline" size="icon" className="rounded-full border-white/70 bg-white/70 backdrop-blur-sm dark:border-white/10 dark:bg-white/5">
-                <Bell className="h-4.5 w-4.5" />
-              </Button>
+              )}
             </div>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
@@ -313,6 +339,7 @@ export const DashboardPage = () => {
             </div>
           </div>
 
+          {insights.length > 0 && (
           <div className="animate-scale-in rounded-[28px] border border-white/60 bg-white/72 p-5 shadow-[0_28px_70px_-36px_rgba(15,23,42,0.35)] backdrop-blur-md dark:border-white/10 dark:bg-white/6">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -341,6 +368,7 @@ export const DashboardPage = () => {
               ))}
             </div>
 
+            {canReadServiceRequests && (
             <div className="mt-5 rounded-[24px] border border-gray-200/70 bg-gray-50/80 p-4 dark:border-white/10 dark:bg-white/5">
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -368,11 +396,15 @@ export const DashboardPage = () => {
                 })}
               </div>
             </div>
+            )}
           </div>
+          )}
         </div>
       </section>
 
+      {(canReadServiceRequests || canReadWallets || canReadCommissions || canReadTax || canReadPromos || canReadLoyalty) && (
       <section className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
+        {canReadServiceRequests && (
         <div className="rounded-[30px] border border-gray-200/70 bg-white/88 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-white/10 dark:bg-gray-950/70">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
@@ -401,8 +433,10 @@ export const DashboardPage = () => {
             </ResponsiveContainer>
           </div>
         </div>
+        )}
 
         <div className="space-y-6">
+          {(canReadWallets || canReadCommissions || canReadTax || canReadPromos || canReadLoyalty) && (
           <div className="rounded-[30px] border border-gray-200/70 bg-white/88 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-white/10 dark:bg-gray-950/70">
             <div className="mb-5 flex items-center justify-between">
               <div>
@@ -425,7 +459,9 @@ export const DashboardPage = () => {
               </ResponsiveContainer>
             </div>
           </div>
+          )}
 
+          {quickActions.length > 0 && (
           <div className="rounded-[30px] border border-gray-200/70 bg-white/88 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-white/10 dark:bg-gray-950/70">
             <div className="mb-4 flex items-center justify-between">
               <div>
@@ -448,9 +484,12 @@ export const DashboardPage = () => {
               ))}
             </div>
           </div>
+          )}
         </div>
       </section>
+      )}
 
+      {canReadPromos && (
       <section className="rounded-[30px] border border-gray-200/70 bg-white/88 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-white/10 dark:bg-gray-950/70">
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
@@ -515,7 +554,9 @@ export const DashboardPage = () => {
           </div>
         )}
       </section>
+      )}
 
+      {(canReadCommissions || canReadTax || canReadInvoices || canReadLoyalty) && (
       <section className="grid gap-6 lg:grid-cols-4">
         {compactStats.map((item) => (
           <div key={item.label} className="rounded-[22px] border border-gray-200/70 bg-white/80 p-4 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-white/8 dark:bg-white/5">
@@ -532,8 +573,11 @@ export const DashboardPage = () => {
           </div>
         ))}
       </section>
+      )}
 
+      {(canReadReports || canReadWallets || canReadServiceRequests) && (
       <section className="grid gap-6 xl:grid-cols-3">
+        {canReadReports && (
         <div className="rounded-[30px] border border-gray-200/70 bg-white/88 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-white/10 dark:bg-gray-950/70 xl:col-span-2">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
@@ -560,8 +604,10 @@ export const DashboardPage = () => {
             </ResponsiveContainer>
           </div>
         </div>
+        )}
 
         <div className="space-y-6">
+          {canReadServiceRequests && (
           <div className="rounded-[30px] border border-gray-200/70 bg-white/88 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-white/10 dark:bg-gray-950/70">
             <div className="mb-5 flex items-center justify-between">
               <div>
@@ -585,7 +631,9 @@ export const DashboardPage = () => {
               </div>
             </div>
           </div>
+          )}
 
+          {canReadWallets && (
           <div className="rounded-[30px] border border-gray-200/70 bg-white/88 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-white/10 dark:bg-gray-950/70">
             <div className="mb-5 flex items-center justify-between">
               <div>
@@ -621,10 +669,14 @@ export const DashboardPage = () => {
               </div>
             </div>
           </div>
+          )}
         </div>
       </section>
+      )}
 
+      {(canReadCommissions || canReadProviders) && (
       <section className="grid gap-6 xl:grid-cols-2">
+        {canReadCommissions && (
         <div className="rounded-[30px] border border-gray-200/70 bg-white/88 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-white/10 dark:bg-gray-950/70">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
@@ -659,7 +711,9 @@ export const DashboardPage = () => {
             )}
           </div>
         </div>
+        )}
 
+        {canReadProviders && (
         <div className="rounded-[30px] border border-gray-200/70 bg-white/88 p-6 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-white/10 dark:bg-gray-950/70">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
@@ -697,7 +751,9 @@ export const DashboardPage = () => {
             )}
           </div>
         </div>
+        )}
       </section>
+      )}
     </div>
   );
 };

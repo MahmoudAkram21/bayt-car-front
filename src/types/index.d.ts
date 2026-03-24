@@ -1,5 +1,6 @@
 export declare enum UserRole {
-    OWNER = "OWNER",
+    CUSTOMER = "CUSTOMER",
+    OWNER = "CUSTOMER",
     PROVIDER = "PROVIDER",
     ADMIN = "ADMIN",
     SUPER_ADMIN = "SUPER_ADMIN"

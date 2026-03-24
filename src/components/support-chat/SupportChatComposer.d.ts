@@ -13,6 +13,7 @@ type Props = {
         stop: string;
     };
     pendingAttachmentLabels: PendingFilesLabels;
+    /** Localized tooltips for attachment toolbar buttons */
     attachmentToolLabels: {
         attachImage: string;
         attachFile: string;

@@ -32,12 +32,13 @@ export function SupportChatMessages({ messages, isAdminView }: Props) {
         const isMine = isAdminView
           ? message.sender_role === 'ADMIN'
           : message.sender_role === 'CLIENT';
-        const label = isMine
-          ? isAdminView
-            ? t('admin.supportChats.youAdmin', 'You (Admin)')
-            : t('supportChats.you', 'You')
-          : isAdminView
-            ? t('admin.supportChats.customer', 'Customer')
+        const label = isAdminView
+          ? message.sender_name ||
+            (message.sender_role === 'ADMIN'
+              ? t('admin.supportChats.youAdmin', 'System User')
+              : t('admin.supportChats.customer', 'Customer'))
+          : isMine
+            ? t('supportChats.you', 'You')
             : t('supportChats.admin', 'Support Admin');
 
         return (

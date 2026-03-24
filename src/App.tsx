@@ -5,6 +5,7 @@ import "./lib/i18n";
 import { Routes, Route } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { PermissionRoute } from "./components/PermissionRoute";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { ThemeProvider } from "./components/theme-provider";
 import { LoginPage } from "./pages/auth/LoginPage";
@@ -70,32 +71,32 @@ function App() {
               <AdminLayout>
                 <Routes>
                   <Route path="/" element={<DashboardPage />} />
-                  <Route path="/users" element={<UsersPage />} />
-                  <Route path="/users/:id" element={<UserDetailPage />} />
-                  <Route path="/admins" element={<AdminsPage />} />
-                  <Route path="/providers" element={<ProvidersPage />} />
-                  <Route path="/providers/:id/edit" element={<ProviderEditPage />} />
-                  <Route path="/providers/:id" element={<ProviderDetailPage />} />
-                  <Route path="/services" element={<ServicesPage />} />
-                  <Route path="/services/:id" element={<ServiceDetailPage />} />
-                  <Route path="/delivery" element={<DeliveryPage />} />
-                  <Route path="/furniture-delivery" element={<FurnitureDeliveryPage />} />
-                  <Route path="/bookings" element={<BookingsPage />} />
-                  <Route path="/commissions" element={<CommissionsPage />} />
-                  <Route path="/wallets" element={<WalletsPage />} />
-                  <Route path="/loyalty" element={<LoyaltyPage />} />
-                  <Route path="/commission-rules" element={<CommissionRulesPage />} />
-                  <Route path="/tax" element={<TaxPage />} />
-                  <Route path="/promo" element={<PromoPage />} />
-                  <Route path="/promo/:id" element={<PromoDetailPage />} />
-                  <Route path="/banners" element={<BannersPage />} />
-                  <Route path="/splash" element={<SplashPage />} />
-                  <Route path="/invoices" element={<InvoicesPage />} />
-                  <Route path="/reports" element={<ReportsPage />} />
-                  <Route path="/support-tickets" element={<SupportTicketsPage />} />
-                  <Route path="/admin/support-chats" element={<AdminSupportChatsPage />} />
-                  <Route path="/admin/support-chats/:ticketId" element={<AdminSupportChatDetailPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/users" element={<PermissionRoute module="USERS"><UsersPage /></PermissionRoute>} />
+                  <Route path="/users/:id" element={<PermissionRoute module="USERS"><UserDetailPage /></PermissionRoute>} />
+                  <Route path="/admins" element={<PermissionRoute module="SYSTEM_USERS"><AdminsPage /></PermissionRoute>} />
+                  <Route path="/providers" element={<PermissionRoute module="PROVIDERS"><ProvidersPage /></PermissionRoute>} />
+                  <Route path="/providers/:id/edit" element={<PermissionRoute module="PROVIDERS"><ProviderEditPage /></PermissionRoute>} />
+                  <Route path="/providers/:id" element={<PermissionRoute module="PROVIDERS"><ProviderDetailPage /></PermissionRoute>} />
+                  <Route path="/services" element={<PermissionRoute module="SERVICES"><ServicesPage /></PermissionRoute>} />
+                  <Route path="/services/:id" element={<PermissionRoute module="SERVICES"><ServiceDetailPage /></PermissionRoute>} />
+                  <Route path="/delivery" element={<PermissionRoute module="ORDERS"><DeliveryPage /></PermissionRoute>} />
+                  <Route path="/furniture-delivery" element={<PermissionRoute module="ORDERS"><FurnitureDeliveryPage /></PermissionRoute>} />
+                  <Route path="/bookings" element={<PermissionRoute module="SERVICE_REQUESTS"><BookingsPage /></PermissionRoute>} />
+                  <Route path="/commissions" element={<PermissionRoute module="COMMISSIONS"><CommissionsPage /></PermissionRoute>} />
+                  <Route path="/wallets" element={<PermissionRoute module="WALLETS"><WalletsPage /></PermissionRoute>} />
+                  <Route path="/loyalty" element={<PermissionRoute module="LOYALTY"><LoyaltyPage /></PermissionRoute>} />
+                  <Route path="/commission-rules" element={<PermissionRoute module="COMMISSION_RULES"><CommissionRulesPage /></PermissionRoute>} />
+                  <Route path="/tax" element={<PermissionRoute module="TAX"><TaxPage /></PermissionRoute>} />
+                  <Route path="/promo" element={<PermissionRoute module="PROMOS"><PromoPage /></PermissionRoute>} />
+                  <Route path="/promo/:id" element={<PermissionRoute module="PROMOS"><PromoDetailPage /></PermissionRoute>} />
+                  <Route path="/banners" element={<PermissionRoute module="BANNERS"><BannersPage /></PermissionRoute>} />
+                  <Route path="/splash" element={<PermissionRoute module="SPLASH"><SplashPage /></PermissionRoute>} />
+                  <Route path="/invoices" element={<PermissionRoute module="INVOICES"><InvoicesPage /></PermissionRoute>} />
+                  <Route path="/reports" element={<PermissionRoute module="REPORTS"><ReportsPage /></PermissionRoute>} />
+                  <Route path="/support-tickets" element={<PermissionRoute module="SUPPORT_TICKETS"><SupportTicketsPage /></PermissionRoute>} />
+                  <Route path="/admin/support-chats" element={<PermissionRoute module="SUPPORT_TICKETS"><AdminSupportChatsPage /></PermissionRoute>} />
+                  <Route path="/admin/support-chats/:ticketId" element={<PermissionRoute module="SUPPORT_TICKETS"><AdminSupportChatDetailPage /></PermissionRoute>} />
+                  <Route path="/settings" element={<PermissionRoute module="SETTINGS"><SettingsPage /></PermissionRoute>} />
                 </Routes>
               </AdminLayout>
             </ProtectedRoute>

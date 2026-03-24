@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { MultilingualText } from '../../types';
+import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 const emptyForm = () => ({
   type: 'AD' as BannerType,
@@ -29,12 +30,16 @@ const emptyForm = () => ({
 
 export const BannersPage = () => {
   const { t, i18n } = useTranslation();
+  const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm());
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const canCreateBanners = can('BANNERS', 'CREATE');
+  const canUpdateBanners = can('BANNERS', 'UPDATE');
+  const canDeleteBanners = can('BANNERS', 'DELETE');
 
   const { data: bannersData, isLoading: bannersLoading } = useQuery({
     queryKey: ['banners'],
@@ -107,6 +112,8 @@ export const BannersPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (editingId && !canUpdateBanners) return;
+    if (!editingId && !canCreateBanners) return;
     const sanitizedForm = { ...form };
     if (sanitizedForm.type === 'AD' && sanitizedForm.link) {
       // Remove leading slashes from links if they were entered incorrectly
@@ -206,14 +213,14 @@ export const BannersPage = () => {
             <RefreshCw className="h-4 w-4" />
             {t('common.refresh')}
           </Button>
-          <Button 
+          {(canCreateBanners || canUpdateBanners) && <Button 
             size="sm" 
             className="rounded-xl bg-indigo-600 gap-2 hover:bg-indigo-700 shadow-lg shadow-indigo-600/20" 
             onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm()); setPreviewUrl(null); setSelectedFile(null); }}
           >
             <Plus className="h-4 w-4" />
             {t('common.addBanner')}
-          </Button>
+          </Button>}
         </div>
       </div>
 
@@ -250,6 +257,7 @@ export const BannersPage = () => {
           </CardHeader>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="grid gap-8 md:grid-cols-2">
+              <fieldset disabled={(editingId ? !canUpdateBanners : !canCreateBanners) || createMutation.isPending || updateMutation.isPending} className="contents">
               {/* Image Column */}
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -387,7 +395,7 @@ export const BannersPage = () => {
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t mt-6">
-                  <Button type="submit" className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 h-10 shadow-lg shadow-indigo-600/20" disabled={createMutation.isPending || updateMutation.isPending}>
+                  <Button type="submit" className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 h-10 shadow-lg shadow-indigo-600/20" disabled={(editingId ? !canUpdateBanners : !canCreateBanners) || createMutation.isPending || updateMutation.isPending}>
                     {editingId ? t('common.save') : t('common.addBanner')}
                   </Button>
                   <Button type="button" variant="outline" className="flex-1 rounded-xl h-10" onClick={resetForm}>
@@ -395,6 +403,7 @@ export const BannersPage = () => {
                   </Button>
                 </div>
               </div>
+              </fieldset>
             </form>
           </CardContent>
         </Card>
@@ -418,7 +427,7 @@ export const BannersPage = () => {
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">لا توجد إعلانات نشطة</h3>
             <p className="text-gray-500 max-w-xs mx-auto mt-2">قم بإضافة عروض ترويجية لتظهر للمستخدمين في الصفحة الرئيسية للتطبيق</p>
-            <Button className="mt-6 rounded-xl bg-indigo-600" onClick={() => setShowForm(true)}>إضافة بانر جديد</Button>
+            {canCreateBanners && <Button className="mt-6 rounded-xl bg-indigo-600" onClick={() => setShowForm(true)}>إضافة بانر جديد</Button>}
           </div>
         ) : (
           banners.map((b) => (
@@ -429,12 +438,12 @@ export const BannersPage = () => {
                 
                 {/* Actions Overlay */}
                 <div className="absolute top-3 right-3 flex gap-2 translate-y-[-10px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100">
-                  <Button size="icon" variant="secondary" className="h-9 w-9 rounded-xl bg-white/90 hover:bg-white shadow-xl backdrop-blur" onClick={() => startEdit(b)}>
+                  {canUpdateBanners && <Button size="icon" variant="secondary" className="h-9 w-9 rounded-xl bg-white/90 hover:bg-white shadow-xl backdrop-blur" onClick={() => startEdit(b)}>
                     <Pencil className="h-4 w-4 text-indigo-600" />
-                  </Button>
-                  <Button size="icon" variant="destructive" className="h-9 w-9 rounded-xl shadow-xl hover:bg-red-600" onClick={() => handleDelete(b.id)}>
+                  </Button>}
+                  {canDeleteBanners && <Button size="icon" variant="destructive" className="h-9 w-9 rounded-xl shadow-xl hover:bg-red-600" onClick={() => handleDelete(b.id)}>
                     <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </Button>}
                 </div>
 
                 {/* Platform & Sort Badge */}

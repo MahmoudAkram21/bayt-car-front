@@ -30,6 +30,8 @@ import {
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
 import { useTheme } from '../theme-provider';
+import { useRolePermissions } from '../../hooks/useRolePermissions';
+import type { PermissionModuleKey } from '../../lib/rbac';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -39,6 +41,29 @@ interface SidebarProps {
 export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const { can } = useRolePermissions();
+  const routePermissions: Record<string, PermissionModuleKey> = {
+    '/': 'DASHBOARD',
+    '/users': 'USERS',
+    '/admins': 'SYSTEM_USERS',
+    '/providers': 'PROVIDERS',
+    '/services': 'SERVICES',
+    '/delivery': 'ORDERS',
+    '/bookings': 'SERVICE_REQUESTS',
+    '/support-tickets': 'SUPPORT_TICKETS',
+    '/commissions': 'COMMISSIONS',
+    '/wallets': 'WALLETS',
+    '/invoices': 'INVOICES',
+    '/reports': 'REPORTS',
+    '/loyalty': 'LOYALTY',
+    '/promo': 'PROMOS',
+    '/commission-rules': 'COMMISSION_RULES',
+    '/tax': 'TAX',
+    '/banners': 'BANNERS',
+    '/splash': 'SPLASH',
+    '/settings': 'SETTINGS',
+  };
+
   
   const isRTL = i18n.dir() === 'rtl';
 
@@ -98,7 +123,14 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         { name: t('common.settings'), href: '/settings', icon: Settings },
       ]
     }
-  ];
+  ].map((group) => ({
+    ...group,
+    items: group.items.filter((item) => {
+      if (item.href === '/') return true;
+      const module = routePermissions[item.href];
+      return module ? can(module, 'READ') : true;
+    }),
+  })).filter((group) => group.items.length > 0);
 
   const footerActions = [
     {
