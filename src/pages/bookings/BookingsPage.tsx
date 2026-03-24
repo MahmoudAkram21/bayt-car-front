@@ -31,7 +31,6 @@ import { BookingDetailsModal } from "./BookingDetailsModal";
 import { useTranslation } from "react-i18next";
 
 type ViewMode = "cards" | "table";
-//
 export const BookingsPage = () => {
   const { t } = useTranslation();
 
