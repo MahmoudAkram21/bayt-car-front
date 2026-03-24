@@ -520,7 +520,7 @@ export const DashboardPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {providerPromos.slice(0, 10).map((o: { id: string; code: string; type: string; value: number; provider?: { user?: { name: string } }; offer_services?: { service: { name: string } }[]; usage_count: number; usage_limit: number | null; is_active: boolean }) => (
+                {providerPromos.slice(0, 10).map((o) => (
                   <tr key={o.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30">
                     <td className="py-3 pr-4">
                       <span className="inline-flex rounded-md bg-rose-100 px-2 py-0.5 font-mono text-sm font-semibold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">

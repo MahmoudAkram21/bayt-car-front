@@ -102,7 +102,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         <Route path="*" element={<Err404Page />} />
       </Routes>
     </ThemeProvider>
@@ -110,4 +110,3 @@ function App() {
 }
 
 export default App;
-
