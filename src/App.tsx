@@ -72,17 +72,29 @@ function App() {
                   <Route path="/users/:id" element={<UserDetailPage />} />
                   <Route path="/admins" element={<AdminsPage />} />
                   <Route path="/providers" element={<ProvidersPage />} />
-                  <Route path="/providers/:id/edit" element={<ProviderEditPage />} />
-                  <Route path="/providers/:id" element={<ProviderDetailPage />} />
+                  <Route
+                    path="/providers/:id/edit"
+                    element={<ProviderEditPage />}
+                  />
+                  <Route
+                    path="/providers/:id"
+                    element={<ProviderDetailPage />}
+                  />
                   <Route path="/services" element={<ServicesPage />} />
                   <Route path="/services/:id" element={<ServiceDetailPage />} />
                   <Route path="/delivery" element={<DeliveryPage />} />
-                  <Route path="/furniture-delivery" element={<FurnitureDeliveryPage />} />
+                  <Route
+                    path="/furniture-delivery"
+                    element={<FurnitureDeliveryPage />}
+                  />
                   <Route path="/bookings" element={<BookingsPage />} />
                   <Route path="/commissions" element={<CommissionsPage />} />
                   <Route path="/wallets" element={<WalletsPage />} />
                   <Route path="/loyalty" element={<LoyaltyPage />} />
-                  <Route path="/commission-rules" element={<CommissionRulesPage />} />
+                  <Route
+                    path="/commission-rules"
+                    element={<CommissionRulesPage />}
+                  />
                   <Route path="/tax" element={<TaxPage />} />
                   <Route path="/promo" element={<PromoPage />} />
                   <Route path="/promo/:id" element={<PromoDetailPage />} />
@@ -90,14 +102,17 @@ function App() {
                   <Route path="/splash" element={<SplashPage />} />
                   <Route path="/invoices" element={<InvoicesPage />} />
                   <Route path="/reports" element={<ReportsPage />} />
-                  <Route path="/support-tickets" element={<SupportTicketsPage />} />
+                  <Route
+                    path="/support-tickets"
+                    element={<SupportTicketsPage />}
+                  />
                   <Route path="/settings" element={<SettingsPage />} />
                 </Routes>
               </AdminLayout>
             </ProtectedRoute>
           }
         />
-        
+
         <Route path="*" element={<Err404Page />} />
       </Routes>
     </ThemeProvider>
@@ -105,4 +120,3 @@ function App() {
 }
 
 export default App;
-
