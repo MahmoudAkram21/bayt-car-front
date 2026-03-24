@@ -72,32 +72,214 @@ function App() {
               <AdminLayout>
                 <Routes>
                   <Route path="/" element={<DashboardPage />} />
-                  <Route path="/users" element={<PermissionRoute module="USERS"><UsersPage /></PermissionRoute>} />
-                  <Route path="/users/:id" element={<PermissionRoute module="USERS"><UserDetailPage /></PermissionRoute>} />
-                  <Route path="/admins" element={<PermissionRoute module="SYSTEM_USERS"><AdminsPage /></PermissionRoute>} />
-                  <Route path="/providers" element={<PermissionRoute module="PROVIDERS"><ProvidersPage /></PermissionRoute>} />
-                  <Route path="/providers/:id/edit" element={<PermissionRoute module="PROVIDERS"><ProviderEditPage /></PermissionRoute>} />
-                  <Route path="/providers/:id" element={<PermissionRoute module="PROVIDERS"><ProviderDetailPage /></PermissionRoute>} />
-                  <Route path="/services" element={<PermissionRoute module="SERVICES"><ServicesPage /></PermissionRoute>} />
-                  <Route path="/services/:id" element={<PermissionRoute module="SERVICES"><ServiceDetailPage /></PermissionRoute>} />
-                  <Route path="/delivery" element={<PermissionRoute module="ORDERS"><DeliveryPage /></PermissionRoute>} />
-                  <Route path="/furniture-delivery" element={<PermissionRoute module="ORDERS"><FurnitureDeliveryPage /></PermissionRoute>} />
-                  <Route path="/bookings" element={<PermissionRoute module="SERVICE_REQUESTS"><BookingsPage /></PermissionRoute>} />
-                  <Route path="/commissions" element={<PermissionRoute module="COMMISSIONS"><CommissionsPage /></PermissionRoute>} />
-                  <Route path="/wallets" element={<PermissionRoute module="WALLETS"><WalletsPage /></PermissionRoute>} />
-                  <Route path="/loyalty" element={<PermissionRoute module="LOYALTY"><LoyaltyPage /></PermissionRoute>} />
-                  <Route path="/commission-rules" element={<PermissionRoute module="COMMISSION_RULES"><CommissionRulesPage /></PermissionRoute>} />
-                  <Route path="/tax" element={<PermissionRoute module="TAX"><TaxPage /></PermissionRoute>} />
-                  <Route path="/promo" element={<PermissionRoute module="PROMOS"><PromoPage /></PermissionRoute>} />
-                  <Route path="/promo/:id" element={<PermissionRoute module="PROMOS"><PromoDetailPage /></PermissionRoute>} />
-                  <Route path="/banners" element={<PermissionRoute module="BANNERS"><BannersPage /></PermissionRoute>} />
-                  <Route path="/splash" element={<PermissionRoute module="SPLASH"><SplashPage /></PermissionRoute>} />
-                  <Route path="/invoices" element={<PermissionRoute module="INVOICES"><InvoicesPage /></PermissionRoute>} />
-                  <Route path="/reports" element={<PermissionRoute module="REPORTS"><ReportsPage /></PermissionRoute>} />
-                  <Route path="/support-tickets" element={<PermissionRoute module="SUPPORT_TICKETS"><SupportTicketsPage /></PermissionRoute>} />
-                  <Route path="/admin/support-chats" element={<PermissionRoute module="SUPPORT_TICKETS"><AdminSupportChatsPage /></PermissionRoute>} />
-                  <Route path="/admin/support-chats/:ticketId" element={<PermissionRoute module="SUPPORT_TICKETS"><AdminSupportChatDetailPage /></PermissionRoute>} />
-                  <Route path="/settings" element={<PermissionRoute module="SETTINGS"><SettingsPage /></PermissionRoute>} />
+                  <Route
+                    path="/users"
+                    element={
+                      <PermissionRoute module="USERS">
+                        <UsersPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/users/:id"
+                    element={
+                      <PermissionRoute module="USERS">
+                        <UserDetailPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/admins"
+                    element={
+                      <PermissionRoute module="SYSTEM_USERS">
+                        <AdminsPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/providers"
+                    element={
+                      <PermissionRoute module="PROVIDERS">
+                        <ProvidersPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/providers/:id/edit"
+                    element={
+                      <PermissionRoute module="PROVIDERS">
+                        <ProviderEditPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/providers/:id"
+                    element={
+                      <PermissionRoute module="PROVIDERS">
+                        <ProviderDetailPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/services"
+                    element={
+                      <PermissionRoute module="SERVICES">
+                        <ServicesPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/services/:id"
+                    element={
+                      <PermissionRoute module="SERVICES">
+                        <ServiceDetailPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/delivery"
+                    element={
+                      <PermissionRoute module="ORDERS">
+                        <DeliveryPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/furniture-delivery"
+                    element={
+                      <PermissionRoute module="ORDERS">
+                        <FurnitureDeliveryPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/bookings"
+                    element={
+                      <PermissionRoute module="SERVICE_REQUESTS">
+                        <BookingsPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/commissions"
+                    element={
+                      <PermissionRoute module="COMMISSIONS">
+                        <CommissionsPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/wallets"
+                    element={
+                      <PermissionRoute module="WALLETS">
+                        <WalletsPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/loyalty"
+                    element={
+                      <PermissionRoute module="LOYALTY">
+                        <LoyaltyPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/commission-rules"
+                    element={
+                      <PermissionRoute module="COMMISSION_RULES">
+                        <CommissionRulesPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/tax"
+                    element={
+                      <PermissionRoute module="TAX">
+                        <TaxPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/promo"
+                    element={
+                      <PermissionRoute module="PROMOS">
+                        <PromoPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/promo/:id"
+                    element={
+                      <PermissionRoute module="PROMOS">
+                        <PromoDetailPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/banners"
+                    element={
+                      <PermissionRoute module="BANNERS">
+                        <BannersPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/splash"
+                    element={
+                      <PermissionRoute module="SPLASH">
+                        <SplashPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/invoices"
+                    element={
+                      <PermissionRoute module="INVOICES">
+                        <InvoicesPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/reports"
+                    element={
+                      <PermissionRoute module="REPORTS">
+                        <ReportsPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/support-tickets"
+                    element={
+                      <PermissionRoute module="SUPPORT_TICKETS">
+                        <SupportTicketsPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/support-chats"
+                    element={
+                      <PermissionRoute module="SUPPORT_TICKETS">
+                        <AdminSupportChatsPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/support-chats/:ticketId"
+                    element={
+                      <PermissionRoute module="SUPPORT_TICKETS">
+                        <AdminSupportChatDetailPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <PermissionRoute module="SETTINGS">
+                        <SettingsPage />
+                      </PermissionRoute>
+                    }
+                  />
                 </Routes>
               </AdminLayout>
             </ProtectedRoute>
