@@ -47,7 +47,7 @@ export const Header = ({ isSidebarOpen, setIsSidebarOpen }: HeaderProps) => {
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="lg:hidden h-9 w-9 rounded-lg"
           >
-            {isSidebarOpen ? (
+            {!isSidebarOpen ? (
               <X className="h-5 w-5 text-gray-600 dark:text-gray-300" />
             ) : (
               <Menu className="h-5 w-5 text-gray-600 dark:text-gray-300" />

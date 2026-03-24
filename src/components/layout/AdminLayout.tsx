@@ -20,6 +20,14 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             <div className="absolute -bottom-8 left-20 w-96 h-96 bg-pink-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
         </div>
 
+      {/* Mobile Backdrop */}
+      {!isCollapsed && (
+        <div 
+          className="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm lg:hidden transition-opacity"
+          onClick={() => setIsCollapsed(true)}
+        />
+      )}
+
       {/* Sidebar — Design System: w-72, white/dark:gray-800, RTL support via dir */}
       <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 

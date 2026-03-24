@@ -129,9 +129,8 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
     <aside 
       className={cn(
         "flex flex-col border-r border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(249,250,251,0.94))] backdrop-blur-2xl shadow-[0_24px_80px_-24px_rgba(15,23,42,0.28)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(17,24,39,0.96),rgba(10,14,22,0.98))] transition-all duration-300",
-        isCollapsed ? "w-20" : "w-72",
-        "start-0 lg:fixed lg:inset-y-0 lg:z-30",
-        "h-full"
+        isCollapsed ? "-translate-x-full lg:translate-x-0 w-72 lg:w-20" : "translate-x-0 w-72",
+        "fixed inset-y-0 start-0 z-50 lg:z-30 h-full"
       )}
     >
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
