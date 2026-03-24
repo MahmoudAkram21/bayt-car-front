@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { supportChatsService } from '../../../services/supportChats.service';
-import { supportTicketsService } from '../../../services/supportTickets.service';
 import {
   connectSocket,
   joinSupportTicket,
@@ -16,15 +15,13 @@ import {
 } from '../../../lib/socket';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
-import { ArrowLeft, Check, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { SupportChatMessages } from '../../../components/support-chat/SupportChatMessages';
 import { SupportChatComposer } from '../../../components/support-chat/SupportChatComposer';
-import { useRolePermissions } from '../../../hooks/useRolePermissions';
 
 export const AdminSupportChatDetailPage = () => {
   const { t } = useTranslation();
-  const { can } = useRolePermissions();
   const { ticketId } = useParams<{ ticketId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -37,11 +34,6 @@ export const AdminSupportChatDetailPage = () => {
     queryKey: ['admin-support-chat', ticketId],
     queryFn: () => supportChatsService.getTicketAdmin(ticketId!),
     enabled: !!ticketId,
-  });
-  const { data: serviceRequestData } = useQuery({
-    queryKey: ['support-ticket-service-request', ticket?.service_request_id],
-    queryFn: () => supportTicketsService.getServiceRequestById(ticket!.service_request_id),
-    enabled: Boolean(ticket?.service_request_id),
   });
 
   const apiErrorMessage =
@@ -144,9 +136,6 @@ export const AdminSupportChatDetailPage = () => {
     }
   };
 
-  const canReplyToTicket = can('SUPPORT_TICKETS', 'REPLY');
-  const canManageTicket = can('SUPPORT_TICKETS', 'UPDATE');
-
   if (isLoading) {
     return <div className="p-6 text-center">{t('common.loading', 'Loading...')}</div>;
   }
@@ -222,11 +211,6 @@ export const AdminSupportChatDetailPage = () => {
     if (!value) return '—';
     return t(keyMap[value] ?? '', fallbackMap[value] ?? value);
   };
-  const serviceRequestNameRaw = (serviceRequestData?.serviceRequest as any)?.service?.name;
-  const serviceRequestName =
-    typeof serviceRequestNameRaw === 'string'
-      ? serviceRequestNameRaw
-      : serviceRequestNameRaw?.en || serviceRequestNameRaw?.ar || '—';
 
   return (
     <div className="p-4 md:p-6 max-w-[1700px] mx-auto">
@@ -268,7 +252,7 @@ export const AdminSupportChatDetailPage = () => {
               <SupportChatMessages messages={ticket.messages ?? []} isAdminView />
             </div>
 
-            {ticket.status !== 'COMPLETED' && canReplyToTicket && (
+            {ticket.status !== 'COMPLETED' && (
               <SupportChatComposer
                 messageContent={messageContent}
                 onMessageChange={setMessageContent}
@@ -292,19 +276,11 @@ export const AdminSupportChatDetailPage = () => {
                 }}
               />
             )}
-            {ticket.status !== 'COMPLETED' && canReplyToTicket && sendMessageMutation.isError && sendMessageErrorText && (
+            {ticket.status !== 'COMPLETED' && sendMessageMutation.isError && sendMessageErrorText && (
               <div className="px-4 pb-3">
                 <p className="text-sm text-red-600 dark:text-red-400" role="alert">
                   {sendMessageErrorText}
                 </p>
-              </div>
-            )}
-            {ticket.status !== 'COMPLETED' && !canReplyToTicket && (
-              <div className="border-t border-gray-200 bg-gray-50 px-4 py-3 text-center text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-400">
-                {t(
-                  'admin.supportChats.replyPermissionRequired',
-                  'You do not have permission to reply to this ticket.',
-                )}
               </div>
             )}
             {ticket.status === 'COMPLETED' && (
@@ -326,8 +302,8 @@ export const AdminSupportChatDetailPage = () => {
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="p-0 overflow-y-auto lg:max-h-[calc(100vh-13rem)]">
-              <div className="space-y-4 px-6 py-4 text-base">
+            <CardContent className="p-0">
+              <div className="space-y-4 px-6 py-4 text-base overflow-y-auto max-h-[42vh] lg:max-h-[46vh]">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     {t('admin.supportChats.customer', 'Customer')}
@@ -378,29 +354,11 @@ export const AdminSupportChatDetailPage = () => {
 
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                    {t('admin.supportChats.serviceRequest', 'Service Request')}
+                    {t('admin.supportChats.internalId', 'Internal ID')}
                   </p>
-                  {ticket.service_request_id ? (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigate(
-                          `/bookings?serviceRequestId=${encodeURIComponent(ticket.service_request_id)}`
-                        )
-                      }
-                      className="mt-1 flex w-full items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800/70"
-                    >
-                      <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {serviceRequestName}
-                      </span>
-                      <span className="ms-2 inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400">
-                        {t('admin.supportChats.viewServiceRequest', 'View details')}
-                        <ExternalLink size={14} />
-                      </span>
-                    </button>
-                  ) : (
-                    <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">—</p>
-                  )}
+                  <p className="mt-1 break-all font-mono text-xs text-gray-700 dark:text-gray-300">
+                    {ticket.id}
+                  </p>
                 </div>
 
                 {ticket.description ? (
@@ -413,14 +371,13 @@ export const AdminSupportChatDetailPage = () => {
                 ) : null}
               </div>
 
-              {canManageTicket && (
-                <div className="border-t border-gray-100 dark:border-gray-800">
+              <div className="border-t border-gray-100 dark:border-gray-800">
                 <div className="px-6 pt-3 pb-2">
                   <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                     {t('admin.supportChats.manageTicket', 'Manage ticket')}
                   </h3>
                 </div>
-                <div className="space-y-4 px-6 pb-4">
+                <div className="space-y-4 px-6 pb-4 overflow-y-auto max-h-[32vh] lg:max-h-[28vh]">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">
                       {t('admin.supportChats.status', 'Status')}
@@ -481,7 +438,6 @@ export const AdminSupportChatDetailPage = () => {
                   </div>
                 </div>
               </div>
-              )}
             </CardContent>
           </Card>
         </aside>

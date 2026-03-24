@@ -7,11 +7,9 @@ import { Button } from '../../../components/ui/button';
 import { TicketIcon, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
-import { useRolePermissions } from '../../../hooks/useRolePermissions';
 
 export const AdminSupportChatsPage = () => {
   const { t, i18n } = useTranslation();
-  const { can } = useRolePermissions();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
   const [priority, setPriority] = useState<string>('');
@@ -93,8 +91,6 @@ export const AdminSupportChatsPage = () => {
     };
     return t(keyMap[priority] ?? '', fallbackMap[priority] ?? priority);
   };
-  const canReadTickets = can('SUPPORT_TICKETS', 'READ');
-  const canReplyToTickets = can('SUPPORT_TICKETS', 'REPLY');
 
   return (
     <div className="space-y-6 p-6">
@@ -288,8 +284,8 @@ export const AdminSupportChatsPage = () => {
                       </td>
                       <td className="py-3 px-4">
                         <Link to={`/admin/support-chats/${ticket.id}`}>
-                          <Button variant="outline" size="sm" disabled={!canReadTickets}>
-                            {canReplyToTickets ? t('admin.supportChats.reply', 'Reply') : t('admin.supportChats.view', 'View')}
+                          <Button variant="outline" size="sm">
+                            {t('admin.supportChats.view', 'View')}
                           </Button>
                         </Link>
                       </td>

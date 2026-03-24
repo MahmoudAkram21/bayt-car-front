@@ -12,14 +12,12 @@ import { notificationService } from '../../services/notification.service';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
-import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 import { useNavigate } from 'react-router-dom';
 
 type ViewMode = 'cards' | 'table';
 type UserTypeFilter = 'all' | 'app' | 'system';
 type AddUserType = 'app' | 'admin';
-const isCustomerRole = (role?: string) => role === UserRole.CUSTOMER || role === 'OWNER';
 
 /** Unified row for list: either app user or system admin */
 type UserRow =
@@ -28,7 +26,6 @@ type UserRow =
 
 export const UsersPage = () => {
   const { t } = useTranslation();
-  const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,15 +41,12 @@ export const UsersPage = () => {
   const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
   const [notifyTargetUser, setNotifyTargetUser] = useState<User | null>(null);
   const [notifyForm, setNotifyForm] = useState({ titleEn: '', titleAr: '', bodyEn: '', bodyAr: '' });
-  const canCreateUsers = can('USERS', 'CREATE');
-  const canUpdateUsers = can('USERS', 'UPDATE');
-  const canDeleteUsers = can('USERS', 'DELETE');
 
   const { data, isLoading, error } = useQuery<PaginatedResponse<User>>({
     queryKey: ['users', { role: filterRole !== 'all' ? filterRole : undefined, search: searchTerm }],
     queryFn: () => userService.getAllUsers({
       role: filterUserType === 'app' && filterRole !== 'all'
-        ? (isCustomerRole(filterRole) ? UserRole.CUSTOMER : filterRole === UserRole.PROVIDER ? UserRole.PROVIDER : undefined)
+        ? (filterRole === UserRole.OWNER ? 'CUSTOMER' : filterRole === UserRole.PROVIDER ? 'PROVIDER' : undefined)
         : undefined,
       search: searchTerm || undefined,
     }),
@@ -62,13 +56,7 @@ export const UsersPage = () => {
   const { data: adminUsers = [], isLoading: isLoadingAdmins } = useQuery({
     queryKey: ['admin-users'],
     queryFn: () => adminUsersService.getAll(),
-    enabled: true,
-  });
-
-  const { data: appUsersStats } = useQuery<PaginatedResponse<User>>({
-    queryKey: ['users', { role: undefined, search: undefined }],
-    queryFn: () => userService.getAllUsers(),
-    enabled: true,
+    enabled: filterUserType === 'all' || filterUserType === 'system',
   });
 
   const { data: adminRoles = [] } = useQuery({
@@ -90,7 +78,7 @@ export const UsersPage = () => {
     return combinedList.filter((row) => {
       if (row.type === 'app') {
         const r = row.user.role;
-        if (isCustomerRole(filterRole)) return isCustomerRole(r);
+        if (filterRole === UserRole.OWNER) return r === UserRole.OWNER;
         return r === filterRole;
       }
       return row.admin.role === filterRole;
@@ -101,8 +89,6 @@ export const UsersPage = () => {
     setFilterUserType(type);
     setFilterRole(role);
   };
-
-  const isStatActive = (type: UserTypeFilter, role: string) => filterUserType === type && filterRole === role;
 
   const createMutation = useMutation({
     mutationFn: (data: { name: { en: string; ar?: string }; email: string; phone?: string; role: string }) => userService.createUser(data),
@@ -207,6 +193,7 @@ export const UsersPage = () => {
   const getRoleBadge = (role: string) => {
     const colors: Record<string, string> = {
       [UserRole.OWNER]: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
+      CUSTOMER: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
       [UserRole.PROVIDER]: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
       [UserRole.ADMIN]: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
       [UserRole.SUPER_ADMIN]: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
@@ -239,45 +226,28 @@ export const UsersPage = () => {
   const getRowRole = (row: UserRow) => row.type === 'app' ? row.user.role : row.admin.role;
   const getRowEmail = (row: UserRow) => row.type === 'app' ? row.user.email : row.admin.email;
 
-  const appUsers = appUsersStats?.data ?? [];
-  const statCustomers = appUsers.filter((u: User) => isCustomerRole(u.role)).length;
+  const appUsers = data?.data ?? [];
+  const statCustomers = appUsers.filter((u: User) => u.role === UserRole.OWNER).length;
   const statProviders = appUsers.filter((u: User) => u.role === UserRole.PROVIDER).length;
   const statAdmins = adminUsers.length;
-  const statTotalUsers = statCustomers + statProviders + statAdmins;
 
   const handleDelete = (id: string, name: string) => {
-    if (!canDeleteUsers) {
-      toast.error(t('common.noPermission', 'You do not have permission for this action'));
-      return;
-    }
     if (window.confirm(t('common.confirmDelete', { name }))) deleteMutation.mutate(id);
   };
 
   const handleDeleteAdmin = (id: string, name: string) => {
-    if (!canDeleteUsers) {
-      toast.error(t('common.noPermission', 'You do not have permission for this action'));
-      return;
-    }
     if (window.confirm(t('common.confirmDeleteAdmin', { name }) || `Delete admin "${name}"? This cannot be undone.`)) {
       deleteAdminMutation.mutate(id);
     }
   };
 
   const handleSuspend = (id: string, name: string) => {
-    if (!canUpdateUsers) {
-      toast.error(t('common.noPermission', 'You do not have permission for this action'));
-      return;
-    }
     if (window.confirm(t('common.confirmSuspend', { name }))) {
       suspendMutation.mutate(id);
     }
   };
 
   const handleAddUser = () => {
-    if (!canCreateUsers) {
-      toast.error(t('common.noPermission', 'You do not have permission for this action'));
-      return;
-    }
     setFormData({ nameEn: '', nameAr: '', email: '', phone: '', role: UserRole.OWNER });
     setIsAddUserOpen(true);
   };
@@ -311,10 +281,6 @@ export const UsersPage = () => {
   const notifyFormHasTitle = (notifyForm.titleEn?.trim() || notifyForm.titleAr?.trim()) ?? false;
 
   const handleEditUser = (user: User) => {
-    if (!canUpdateUsers) {
-      toast.error(t('common.noPermission', 'You do not have permission for this action'));
-      return;
-    }
     setEditingUser(user);
     const userName = typeof user.name === 'string' ? user.name : user.name.en;
     const userNameAr = typeof user.name === 'string' ? user.name : user.name.ar;
@@ -330,10 +296,6 @@ export const UsersPage = () => {
 
   const handleSubmitAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canCreateUsers) {
-      toast.error(t('common.noPermission', 'You do not have permission for this action'));
-      return;
-    }
     const nameEn = formData.nameEn.trim();
     const email = formData.email.trim();
     if (!nameEn) {
@@ -354,10 +316,6 @@ export const UsersPage = () => {
 
   const handleSubmitAddAdmin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canCreateUsers) {
-      toast.error(t('common.noPermission', 'You do not have permission for this action'));
-      return;
-    }
     const name = adminFormData.name.trim();
     const email = adminFormData.email.trim();
     if (!name || !email || !adminFormData.password) {
@@ -378,10 +336,6 @@ export const UsersPage = () => {
 
   const handleSubmitEdit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canUpdateUsers) {
-      toast.error(t('common.noPermission', 'You do not have permission for this action'));
-      return;
-    }
     if (!editingUser) return;
     const payload = {
       name: { en: formData.nameEn, ar: formData.nameAr || formData.nameEn },
@@ -413,22 +367,20 @@ export const UsersPage = () => {
             <RefreshCw className="h-4 w-4" />
             {t('common.refresh')}
           </Button>
-          {canCreateUsers && (
           <Button size="sm" className="rounded-xl bg-teal-600 shadow-lg gap-2 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500" onClick={() => { setAddUserType('app'); setAdminFormData({ name: '', email: '', password: '', roleName: 'ADMIN' }); handleAddUser(); }}>
             <UserPlus className="h-4 w-4" />
             {t('common.addUser')}
           </Button>
-          )}
         </div>
       </div>
 
       {/* Modern Stats Grid - clickable to apply filter */}
       <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: t('common.totalUsers'), value: statTotalUsers, icon: Users, color: 'text-blue-600', bg: 'bg-blue-100', active: isStatActive('all', 'all'), onClick: () => applyStatFilter('all', 'all') },
-          { label: t('common.customers'), value: statCustomers, icon: UserCheck, color: 'text-teal-600', bg: 'bg-teal-100', active: isStatActive('app', UserRole.OWNER), onClick: () => applyStatFilter('app', UserRole.OWNER) },
-          { label: t('common.providers'), value: statProviders, icon: Building2, color: 'text-emerald-600', bg: 'bg-emerald-100', active: isStatActive('app', UserRole.PROVIDER), onClick: () => applyStatFilter('app', UserRole.PROVIDER) },
-          { label: t('common.admins'), value: statAdmins, icon: Shield, color: 'text-amber-600', bg: 'bg-amber-100', active: isStatActive('system', 'all'), onClick: () => applyStatFilter('system', 'all') },
+          { label: t('common.totalUsers'), value: filteredList.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-100', onClick: () => applyStatFilter('all', 'all') },
+          { label: t('common.customers'), value: statCustomers, icon: UserCheck, color: 'text-teal-600', bg: 'bg-teal-100', onClick: () => applyStatFilter('app', UserRole.OWNER) },
+          { label: t('common.providers'), value: statProviders, icon: Building2, color: 'text-emerald-600', bg: 'bg-emerald-100', onClick: () => applyStatFilter('app', UserRole.PROVIDER) },
+          { label: t('common.admins'), value: statAdmins, icon: Shield, color: 'text-amber-600', bg: 'bg-amber-100', onClick: () => applyStatFilter('system', 'all') },
         ].map((stat, i) => (
           <div
             key={i}
@@ -436,11 +388,7 @@ export const UsersPage = () => {
             tabIndex={0}
             onClick={stat.onClick}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); stat.onClick(); } }}
-            className={`group relative cursor-pointer overflow-hidden rounded-2xl border bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:bg-gray-800/60 ${
-              stat.active
-                ? 'border-teal-400 ring-2 ring-teal-400/30 shadow-lg dark:border-teal-500'
-                : 'border-gray-100 dark:border-gray-700'
-            }`}
+            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60"
             style={{ animationDelay: `${i * 100}ms` }}
           >
             <div className="flex items-center justify-between">
@@ -601,26 +549,21 @@ export const UsersPage = () => {
                           <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleOpenNotifyModal(row.user, e); }} title={t('common.sendNotification')}>
                             <Bell className="h-3.5 w-3.5" />
                           </Button>
-                          {canUpdateUsers && (
                           <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleEditUser(row.user); }}>
                             <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
                           </Button>
-                          )}
-                          {canUpdateUsers && row.user.isActive && (
+                          {row.user.isActive ? (
                             <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-amber-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleSuspend(row.user.id, getName(row.user.name)); }}>
                               <Ban className="h-3.5 w-3.5" /> {t('common.suspend')}
                             </Button>
-                          )}
-                          {canUpdateUsers && !row.user.isActive && (
+                          ) : (
                             <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-emerald-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); if (window.confirm(t('common.confirmActivate', { name: getName(row.user.name) }))) activateMutation.mutate(row.user.id); }}>
                               <CheckCircle className="h-3.5 w-3.5" /> {t('common.activate')}
                             </Button>
                           )}
-                          {canDeleteUsers && (
                           <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-red-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleDelete(row.user.id, getName(row.user.name)); }}>
                             <Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}
                           </Button>
-                          )}
                         </>
                       )}
                       {row.type === 'system' && (
@@ -628,11 +571,9 @@ export const UsersPage = () => {
                           <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs" onClick={(e) => { e.stopPropagation(); navigate('/admins'); }}>
                             <Shield className="h-3.5 w-3.5" /> {t('common.view')}
                           </Button>
-                          {canDeleteUsers && (
                           <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-red-600 focus:ring-2 focus:ring-teal-500" onClick={(e) => { e.stopPropagation(); handleDeleteAdmin(row.admin.id, row.admin.name); }}>
                             <Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}
                           </Button>
-                          )}
                         </>
                       )}
                     </div>
@@ -686,20 +627,19 @@ export const UsersPage = () => {
                           {row.type === 'app' && (
                             <>
                               <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs" onClick={(e) => { e.stopPropagation(); handleOpenNotifyModal(row.user, e); }}><Bell className="h-3.5 w-3.5" /></Button>
-                              {canUpdateUsers && <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs" onClick={(e) => { e.stopPropagation(); handleEditUser(row.user); }}><Pencil className="h-3.5 w-3.5" /> {t('common.edit')}</Button>}
-                              {canUpdateUsers && row.user.isActive && (
+                              <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs" onClick={(e) => { e.stopPropagation(); handleEditUser(row.user); }}><Pencil className="h-3.5 w-3.5" /> {t('common.edit')}</Button>
+                              {row.user.isActive ? (
                                 <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-amber-600" onClick={(e) => { e.stopPropagation(); handleSuspend(row.user.id, getName(row.user.name)); }}><Ban className="h-3.5 w-3.5" /> {t('common.suspend')}</Button>
-                              )}
-                              {canUpdateUsers && !row.user.isActive && (
+                              ) : (
                                 <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-emerald-600" onClick={(e) => { e.stopPropagation(); if (window.confirm(t('common.confirmActivate', { name: getName(row.user.name) }))) activateMutation.mutate(row.user.id); }}><CheckCircle className="h-3.5 w-3.5" /> {t('common.activate')}</Button>
                               )}
-                              {canDeleteUsers && <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-red-600" onClick={(e) => { e.stopPropagation(); handleDelete(row.user.id, getName(row.user.name)); }}><Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}</Button>}
+                              <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-red-600" onClick={(e) => { e.stopPropagation(); handleDelete(row.user.id, getName(row.user.name)); }}><Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}</Button>
                             </>
                           )}
                           {row.type === 'system' && (
                             <>
                               <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs" onClick={(e) => { e.stopPropagation(); navigate('/admins'); }}><Shield className="h-3.5 w-3.5" /> {t('common.view')}</Button>
-                              {canDeleteUsers && <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-red-600" onClick={(e) => { e.stopPropagation(); handleDeleteAdmin(row.admin.id, row.admin.name); }}><Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}</Button>}
+                              <Button variant="outline" size="sm" className="h-8 rounded-lg gap-1 text-xs text-red-600" onClick={(e) => { e.stopPropagation(); handleDeleteAdmin(row.admin.id, row.admin.name); }}><Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}</Button>
                             </>
                           )}
                         </div>

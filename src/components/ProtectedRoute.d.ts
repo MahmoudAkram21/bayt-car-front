@@ -1,4 +1,4 @@
-import type { UserRole } from '../types';
+import { UserRole } from '../types';
 interface ProtectedRouteProps {
     children: React.ReactNode;
     allowedRoles?: UserRole[];

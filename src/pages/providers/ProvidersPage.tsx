@@ -10,21 +10,17 @@ import { format } from 'date-fns';
 import { type ServiceProvider, type PaginatedResponse, type MultilingualText } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { ProviderDetailsModal } from './ProviderDetailsModal';
-import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 const tabs = ['all', 'pending', 'verified', 'suspended'];
 
 export const ProvidersPage = () => {
   const { t } = useTranslation();
-  const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
-  const canUpdateProviders = can('PROVIDERS', 'UPDATE');
-  const canDeleteProviders = can('PROVIDERS', 'DELETE');
 
   const { data, isLoading, error } = useQuery<PaginatedResponse<ServiceProvider>>({
     queryKey: ['providers', { verified: activeTab === 'verified', search: searchTerm }],
@@ -231,14 +227,14 @@ export const ProvidersPage = () => {
                     <Button variant="ghost" size="sm" className="flex-1 rounded-lg gap-1.5 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20" onClick={() => setSelectedProviderId(String(provider.id))}>
                       <Eye className="h-4 w-4" /> {t('common.view')}
                     </Button>
-                    {canUpdateProviders && <Button variant="ghost" size="sm" className="flex-1 rounded-lg gap-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700" asChild>
+                    <Button variant="ghost" size="sm" className="flex-1 rounded-lg gap-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700" asChild>
                       <Link to={`/providers/${provider.id}/edit`}>
                         <Pencil className="h-4 w-4" /> {t('common.edit')}
                       </Link>
-                    </Button>}
-                    {canDeleteProviders && <Button variant="ghost" size="sm" className="rounded-lg gap-1.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => setDeleteTarget({ id: String(provider.id), name: getName(provider.businessName) })}>
+                    </Button>
+                    <Button variant="ghost" size="sm" className="rounded-lg gap-1.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => setDeleteTarget({ id: String(provider.id), name: getName(provider.businessName) })}>
                       <Trash2 className="h-4 w-4" />
-                    </Button>}
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -287,12 +283,12 @@ export const ProvidersPage = () => {
                           <Button variant="ghost" size="sm" className="h-8 rounded-lg text-orange-600 hover:bg-orange-50 dark:text-orange-400" onClick={() => setSelectedProviderId(String(provider.id))}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          {canUpdateProviders && <Button variant="ghost" size="sm" className="h-8 rounded-lg text-gray-600 dark:text-gray-400" asChild>
+                          <Button variant="ghost" size="sm" className="h-8 rounded-lg text-gray-600 dark:text-gray-400" asChild>
                             <Link to={`/providers/${provider.id}/edit`}><Pencil className="h-4 w-4" /></Link>
-                          </Button>}
-                          {canDeleteProviders && <Button variant="ghost" size="sm" className="h-8 rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400" onClick={() => setDeleteTarget({ id: String(provider.id), name: getName(provider.businessName) })}>
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400" onClick={() => setDeleteTarget({ id: String(provider.id), name: getName(provider.businessName) })}>
                             <Trash2 className="h-4 w-4" />
-                          </Button>}
+                          </Button>
                         </div>
                       </td>
                     </tr>
