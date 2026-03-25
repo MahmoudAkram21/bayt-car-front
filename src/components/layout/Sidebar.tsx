@@ -159,7 +159,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
               {t('sidebar.adminPanel')}
             </div>
             <h1 className="mt-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">
-              Bayt Car
+              {t('common.bioutcar')}
             </h1>
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
               {t('common.dashboard')}

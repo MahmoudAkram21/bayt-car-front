@@ -379,7 +379,8 @@
       "CHAT": "Chat",
       "BANNERS": "Banners",
       "DASHBOARD": "Dashboard"
-    }
+    },
+    "bioutcar": "Bioutcar"
   },
   "settingsPage": {
     "pageTitle": "System Settings",
