@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -10,6 +11,7 @@ import { Gift, Users, TrendingUp, Plus, Pencil, RefreshCw, CheckCircle2, XCircle
 import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 export const LoyaltyPage = () => {
+  const { t } = useTranslation();
   const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const [showConfigForm, setShowConfigForm] = useState(false);
@@ -99,7 +101,7 @@ export const LoyaltyPage = () => {
     const userId = parseInt(formAdjust.user_id, 10);
     const amount = parseInt(formAdjust.amount, 10);
     if (Number.isNaN(userId) || Number.isNaN(amount)) return;
-    adjustPointsMutation.mutate({ userId, amount, description: formAdjust.description || 'تعديل من الإدارة' });
+    adjustPointsMutation.mutate({ userId, amount, description: formAdjust.description || t('loyaltyPage.manualAdjustment') });
   };
   const startEditConfig = (c: LoyaltyConfig) => {
     setEditingConfigId(c.id);
@@ -121,10 +123,10 @@ export const LoyaltyPage = () => {
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-              الولاء والكاش باك
+              {t('loyaltyPage.title')}
             </h1>
             <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-              إدارة برامج الولاء والنقاط والكاش باك
+              {t('loyaltyPage.description')}
             </p>
           </div>
         </div>
@@ -137,7 +139,7 @@ export const LoyaltyPage = () => {
             onClick={() => queryClient.invalidateQueries({ queryKey: ['loyalty-configs', 'loyalty-accounts'] })}
           >
             <RefreshCw className="h-4 w-4" />
-            تحديث
+            {t('loyaltyPage.refresh')}
           </Button>
           {canCreateLoyalty && <Button 
             size="sm" 
@@ -145,7 +147,7 @@ export const LoyaltyPage = () => {
             onClick={() => { setShowConfigForm(true); setEditingConfigId(null); setFormConfig({ points_per_currency: '1', cashback_per_point: '0.01', min_points_redemption: '100', is_active: true }); }}
           >
             <Plus className="h-4 w-4" />
-            إضافة إعداد
+            {t('loyaltyPage.addSetting')}
           </Button>}
           {canUpdateLoyalty && <Button 
             size="sm" 
@@ -154,7 +156,7 @@ export const LoyaltyPage = () => {
             onClick={() => setShowAdjustForm(true)}
           >
             <Users className="h-4 w-4" />
-            تعديل نقاط
+            {t('loyaltyPage.editPoints')}
           </Button>}
         </div>
       </div>
@@ -164,9 +166,9 @@ export const LoyaltyPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">إعداد نشط</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('loyaltyPage.activeSetting')}</p>
               <div className="mt-2 flex items-center gap-2">
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{activeConfig ? 'نعم' : 'لا'}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{activeConfig ? t('loyaltyPage.yes') : t('loyaltyPage.no')}</p>
                 {activeConfig ? (
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                 ) : (
@@ -183,7 +185,7 @@ export const LoyaltyPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">حسابات الولاء</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('loyaltyPage.loyaltyAccounts')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{accounts.length}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
@@ -195,7 +197,7 @@ export const LoyaltyPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي النقاط الموزعة</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('loyaltyPage.totalPointsDistributed')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{totalPoints.toLocaleString()}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400">
@@ -209,35 +211,35 @@ export const LoyaltyPage = () => {
       {(showConfigForm || editingConfigId) && (
         <Card className="border-amber-100 bg-amber-50/50 backdrop-blur-sm dark:border-amber-900/50 dark:bg-amber-900/10">
           <CardHeader>
-            <CardTitle className="text-lg text-gray-900 dark:text-white">{editingConfigId ? 'تعديل إعداد الولاء' : 'إضافة إعداد ولاء جديد'}</CardTitle>
+            <CardTitle className="text-lg text-gray-900 dark:text-white">{editingConfigId ? t('loyaltyPage.editLoyaltySetting') : t('loyaltyPage.addLoyaltySetting')}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmitConfig} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
               <fieldset disabled={(editingConfigId ? !canUpdateLoyalty : !canCreateLoyalty) || createConfigMutation.isPending || updateConfigMutation.isPending} className="contents">
               <div className="space-y-2">
-                <Label>نقاط لكل وحدة عملة</Label>
+                <Label>{t('loyaltyPage.pointsPerUnit')}</Label>
                 <Input type="number" step="0.0001" min="0" value={formConfig.points_per_currency} onChange={(e) => setFormConfig((p) => ({ ...p, points_per_currency: e.target.value }))} className="bg-white dark:bg-gray-800" required />
               </div>
               <div className="space-y-2">
-                <Label>كاش باك لكل نقطة (ر.س)</Label>
+                <Label>{t('loyaltyPage.cashbackPerPoint')}</Label>
                 <Input type="number" step="0.000001" min="0" value={formConfig.cashback_per_point} onChange={(e) => setFormConfig((p) => ({ ...p, cashback_per_point: e.target.value }))} className="bg-white dark:bg-gray-800" required />
               </div>
               <div className="space-y-2">
-                <Label>الحد الأدنى للاسترداد (نقاط)</Label>
+                <Label>{t('loyaltyPage.minRedeemAmount')}</Label>
                 <Input type="number" min="0" value={formConfig.min_points_redemption} onChange={(e) => setFormConfig((p) => ({ ...p, min_points_redemption: e.target.value }))} className="bg-white dark:bg-gray-800" required />
               </div>
               <div className="flex items-center pb-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={formConfig.is_active} onChange={(e) => setFormConfig((p) => ({ ...p, is_active: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500" />
-                  مفعّل ونشط
+                  {t('loyaltyPage.isActive')}
                 </label>
               </div>
               <div className="flex items-end gap-2">
                 <Button type="submit" size="sm" className="w-full rounded-xl bg-amber-600 hover:bg-amber-700" disabled={(editingConfigId ? !canUpdateLoyalty : !canCreateLoyalty) || createConfigMutation.isPending || updateConfigMutation.isPending}>
-                  {editingConfigId ? 'حفظ' : 'إضافة'}
+                  {editingConfigId ? t('loyaltyPage.save') : t('loyaltyPage.add')}
                 </Button>
                 <Button type="button" variant="outline" size="sm" className="w-full rounded-xl" onClick={() => { setShowConfigForm(false); setEditingConfigId(null); }}>
-                  إلغاء
+                  {t('loyaltyPage.cancel')}
                 </Button>
               </div>
               </fieldset>
@@ -249,40 +251,40 @@ export const LoyaltyPage = () => {
       {showAdjustForm && (
         <Card className="border-emerald-100 bg-emerald-50/50 backdrop-blur-sm dark:border-emerald-900/50 dark:bg-emerald-900/10">
           <CardHeader>
-            <CardTitle className="text-lg text-gray-900 dark:text-white">تعديل نقاط عميل</CardTitle>
-            <CardDescription>إضافة أو خصم نقاط يدوياً. سيتم إنشاء حساب ولاء تلقائياً إن لم يوجد.</CardDescription>
+            <CardTitle className="text-lg text-gray-900 dark:text-white">{t('loyaltyPage.editCustomerPoints')}</CardTitle>
+            <CardDescription>{t('loyaltyPage.editCustomerPointsDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmitAdjust} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <fieldset disabled={!canUpdateLoyalty || adjustPointsMutation.isPending} className="contents">
               <div className="space-y-2">
-                <Label>المستخدم</Label>
+                <Label>{t('loyaltyPage.user')}</Label>
                 <select
                   value={formAdjust.user_id}
                   onChange={(e) => setFormAdjust((p) => ({ ...p, user_id: e.target.value }))}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                   required
                 >
-                  <option value="">-- اختر مستخدم --</option>
+                  <option value="">{t('loyaltyPage.selectUser')}</option>
                   {users.map((u: any) => (
                     <option key={u.id} value={u.id}>{typeof u.name === 'object' ? (u.name?.ar || u.name?.en) : u.name} (ID: {u.id})</option>
                   ))}
                 </select>
               </div>
               <div className="space-y-2">
-                <Label>المبلغ (نقاط)</Label>
-                <Input type="number" value={formAdjust.amount} onChange={(e) => setFormAdjust((p) => ({ ...p, amount: e.target.value }))} className="bg-white dark:bg-gray-800" placeholder="مثال: 100 أو -50" required />
+                <Label>{t('loyaltyPage.amountPoints')}</Label>
+                <Input type="number" value={formAdjust.amount} onChange={(e) => setFormAdjust((p) => ({ ...p, amount: e.target.value }))} className="bg-white dark:bg-gray-800" placeholder={t('loyaltyPage.amountPlaceholder')} required />
               </div>
               <div className="space-y-2">
-                <Label>الوصف</Label>
-                <Input value={formAdjust.description} onChange={(e) => setFormAdjust((p) => ({ ...p, description: e.target.value }))} placeholder="سبب التعديل..." className="bg-white dark:bg-gray-800" />
+                <Label>{t('loyaltyPage.descriptionLabel')}</Label>
+                <Input value={formAdjust.description} onChange={(e) => setFormAdjust((p) => ({ ...p, description: e.target.value }))} placeholder={t('loyaltyPage.descriptionPlaceholder')} className="bg-white dark:bg-gray-800" />
               </div>
               <div className="flex items-end gap-2">
                 <Button type="submit" size="sm" className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700" disabled={adjustPointsMutation.isPending}>
-                  تطبيق
+                  {t('loyaltyPage.apply')}
                 </Button>
                 <Button type="button" variant="outline" size="sm" className="w-full rounded-xl" onClick={() => setShowAdjustForm(false)}>
-                  إلغاء
+                  {t('loyaltyPage.cancel')}
                 </Button>
               </div>
               </fieldset>
@@ -297,9 +299,9 @@ export const LoyaltyPage = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
               <Gift className="h-5 w-5 text-amber-500" />
-              إعدادات الولاء
+              {t('loyaltyPage.loyaltySettings')}
             </CardTitle>
-            <CardDescription>قواعد احتساب النقاط والكاش باك</CardDescription>
+            <CardDescription>{t('loyaltyPage.loyaltySettingsDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             {configLoading && (
@@ -309,7 +311,7 @@ export const LoyaltyPage = () => {
             )}
             {configError && (
               <div className="py-8 text-center text-red-600 dark:text-red-400">
-                فشل تحميل الإعدادات
+                {t('loyaltyPage.loadSettingsError')}
               </div>
             )}
             {!configLoading && !configError && configs.length === 0 && (
@@ -317,7 +319,7 @@ export const LoyaltyPage = () => {
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-900/20">
                   <Gift className="h-8 w-8 text-amber-300 dark:text-amber-600" />
                 </div>
-                <p className="mt-4 text-gray-500 dark:text-gray-400">لا توجد إعدادات مضافة.</p>
+                <p className="mt-4 text-gray-500 dark:text-gray-400">{t('loyaltyPage.noSettings')}</p>
               </div>
             )}
             {!configLoading && configs.length > 0 && (
@@ -325,10 +327,10 @@ export const LoyaltyPage = () => {
                 <table className="w-full">
                   <thead className="bg-gray-100/50 dark:bg-gray-700/40">
                     <tr>
-                      <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">نقاط/وحدة</th>
-                      <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">كاش باك/نقطة</th>
-                      <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">حد استرداد</th>
-                      <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الحالة</th>
+                      <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('loyaltyPage.pointsPerUnitShort')}</th>
+                      <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('loyaltyPage.cashbackPerPointShort')}</th>
+                      <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('loyaltyPage.minRedeemShort')}</th>
+                      <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('loyaltyPage.statusLabel')}</th>
                       <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"></th>
                     </tr>
                   </thead>
@@ -341,7 +343,7 @@ export const LoyaltyPage = () => {
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${c.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
                              {c.is_active && <CheckCircle2 className="h-3 w-3" />}
-                             {c.is_active ? 'نشط' : 'غير نشط'}
+                             {c.is_active ? t('loyaltyPage.active') : t('loyaltyPage.inactive')}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-end">
@@ -363,9 +365,9 @@ export const LoyaltyPage = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
               <Users className="h-5 w-5 text-emerald-500" />
-              حسابات الولاء
+              {t('loyaltyPage.loyaltyAccounts')}
             </CardTitle>
-            <CardDescription>أرصدة المستخدمين الحالية</CardDescription>
+            <CardDescription>{t('loyaltyPage.currentBalances')}</CardDescription>
           </CardHeader>
           <CardContent>
             {accountsLoading && (
@@ -375,7 +377,7 @@ export const LoyaltyPage = () => {
             )}
             {accountsError && (
               <div className="py-8 text-center text-red-600 dark:text-red-400">
-                فشل تحميل الحسابات
+                {t('loyaltyPage.loadAccountsError')}
               </div>
             )}
             {!accountsLoading && !accountsError && accounts.length === 0 && (
@@ -383,7 +385,7 @@ export const LoyaltyPage = () => {
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/20">
                   <Users className="h-8 w-8 text-emerald-300 dark:text-emerald-600" />
                 </div>
-                <p className="mt-4 text-gray-500 dark:text-gray-400">لا توجد حسابات نشطة.</p>
+                <p className="mt-4 text-gray-500 dark:text-gray-400">{t('loyaltyPage.noActiveAccounts')}</p>
               </div>
             )}
             {!accountsLoading && accounts.length > 0 && (
@@ -391,8 +393,8 @@ export const LoyaltyPage = () => {
                 <table className="w-full">
                   <thead className="bg-gray-100/50 dark:bg-gray-700/40 sticky top-0 backdrop-blur-md">
                     <tr>
-                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">المستخدم</th>
-                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">النقاط</th>
+                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('loyaltyPage.user')}</th>
+                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('loyaltyPage.points')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -412,7 +414,7 @@ export const LoyaltyPage = () => {
                         <td className="px-6 py-4">
                            <div className="flex items-center gap-1.5">
                               <span className="font-bold text-gray-900 dark:text-white tabular-nums">{a.balance.toLocaleString()}</span>
-                              <span className="text-xs text-gray-500">نقطة</span>
+                              <span className="text-xs text-gray-500">{t('loyaltyPage.points')}</span>
                            </div>
                         </td>
                       </tr>

@@ -30,7 +30,6 @@ import { PromoDetailPage } from "./pages/promo/PromoDetailPage";
 import { BannersPage } from "./pages/banners/BannersPage";
 import { SplashPage } from "./pages/splash/SplashPage";
 import { InvoicesPage } from "./pages/invoices/InvoicesPage";
-import { DeliveryPage } from "./pages/delivery/DeliveryPage";
 import { FurnitureDeliveryPage } from "./pages/furniture-delivery/FurnitureDeliveryPage";
 import { ReportsPage } from "./pages/reports/ReportsPage";
 import { SupportTicketsPage } from "./pages/support-tickets/SupportTicketsPage";
@@ -133,14 +132,6 @@ function App() {
                     element={
                       <PermissionRoute module="SERVICES">
                         <ServiceDetailPage />
-                      </PermissionRoute>
-                    }
-                  />
-                  <Route
-                    path="/delivery"
-                    element={
-                      <PermissionRoute module="ORDERS">
-                        <DeliveryPage />
                       </PermissionRoute>
                     }
                   />

@@ -42,7 +42,6 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
     '/admins': 'SYSTEM_USERS',
     '/providers': 'PROVIDERS',
     '/services': 'SERVICES',
-    '/delivery': 'ORDERS',
     '/bookings': 'SERVICE_REQUESTS',
     '/support-tickets': 'SUPPORT_TICKETS',
     '/commissions': 'COMMISSIONS',
@@ -80,7 +79,6 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         { name: t('common.admins'), href: '/admins', icon: Shield },
         { name: t('common.providers'), href: '/providers', icon: Building2 },
         { name: t('common.services'), href: '/services', icon: Wrench },
-        { name: t('common.deliveries'), href: '/delivery', icon: Package },
         { name: t('common.bookings'), href: '/bookings', icon: Calendar },
         { name: t('common.supportTickets'), href: '/support-tickets', icon: Ticket },
       ]

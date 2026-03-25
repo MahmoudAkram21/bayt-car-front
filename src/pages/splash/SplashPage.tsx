@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -9,10 +10,10 @@ import { Image, Monitor, Plus, Pencil, Trash2, RefreshCw, Smartphone, CheckCircl
 import { format } from 'date-fns';
 import { useRolePermissions } from '../../hooks/useRolePermissions';
 
-const PLATFORM_OPTIONS: { value: SplashPlatform; label: string; icon: any }[] = [
-  { value: 'ALL', label: 'الكل', icon: LayoutTemplate },
-  { value: 'ANDROID', label: 'أندرويد', icon: Smartphone },
-  { value: 'IOS', label: 'آيفون', icon: Smartphone },
+const PLATFORM_OPTIONS: { value: SplashPlatform; labelKey: string; icon: any }[] = [
+  { value: 'ALL', labelKey: 'platformAll', icon: LayoutTemplate },
+  { value: 'ANDROID', labelKey: 'platformAndroid', icon: Smartphone },
+  { value: 'IOS', labelKey: 'platformIos', icon: Smartphone },
 ];
 
 const emptyForm = () => ({
@@ -27,6 +28,7 @@ const emptyForm = () => ({
 });
 
 export const SplashPage = () => {
+  const { t } = useTranslation();
   const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
@@ -101,7 +103,7 @@ export const SplashPage = () => {
     setShowForm(true);
   };
   const handleDelete = (id: number) => {
-    if (window.confirm('هل تريد حذف شاشة السبلاش؟')) deleteMutation.mutate(id);
+    if (window.confirm(t('splashPage.deleteConfirm'))) deleteMutation.mutate(id);
   };
 
   return (
@@ -113,10 +115,10 @@ export const SplashPage = () => {
            </div>
            <div>
              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-               شاشات السبلاش
+               {t('splashPage.title')}
              </h1>
              <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-               إدارة صور وعروض شاشة البداية للتطبيق
+               {t('splashPage.description')}
              </p>
            </div>
         </div>
@@ -128,7 +130,7 @@ export const SplashPage = () => {
             onClick={() => queryClient.invalidateQueries({ queryKey: ['splash'] })}
           >
             <RefreshCw className="h-4 w-4" />
-            تحديث
+            {t('splashPage.refresh')}
           </Button>
           {canCreateSplash && <Button 
             size="sm" 
@@ -136,7 +138,7 @@ export const SplashPage = () => {
             onClick={() => { setShowForm(true); setEditingId(null); setForm(emptyForm()); }}
           >
             <Plus className="h-4 w-4" />
-            إضافة سبلاش
+            {t('splashPage.addSplash')}
           </Button>}
         </div>
       </div>
@@ -144,15 +146,15 @@ export const SplashPage = () => {
       {showForm && (
         <Card className="border-cyan-100 bg-cyan-50/50 backdrop-blur-sm dark:border-cyan-900/50 dark:bg-cyan-900/10">
           <CardHeader>
-            <CardTitle className="text-lg text-gray-900 dark:text-white">{editingId ? 'تعديل شاشة السبلاش' : 'إضافة شاشة سبلاش جديدة'}</CardTitle>
+            <CardTitle className="text-lg text-gray-900 dark:text-white">{editingId ? t('splashPage.editSplash') : t('splashPage.addSplashNew')}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <fieldset disabled={(editingId ? !canUpdateSplash : !canCreateSplash) || createMutation.isPending || updateMutation.isPending} className="contents">
               <div className="sm:col-span-2">
-                <Label>رابط الصورة (مطلوب)</Label>
+                <Label>{t('splashPage.imageUrl')}</Label>
                 <div className="flex gap-4">
-                   <Input value={form.image_url} onChange={(e) => setForm((p) => ({ ...p, image_url: e.target.value }))} placeholder="https://..." className="mt-1 flex-1 bg-white dark:bg-gray-800" required />
+                   <Input value={form.image_url} onChange={(e) => setForm((p) => ({ ...p, image_url: e.target.value }))} placeholder={t('splashPage.imageUrlPlaceholder')} className="mt-1 flex-1 bg-white dark:bg-gray-800" required />
                    {form.image_url && (
                       <div className="h-10 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white">
                         <img src={form.image_url} alt="Preview" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
@@ -161,43 +163,43 @@ export const SplashPage = () => {
                 </div>
               </div>
               <div>
-                <Label>العنوان</Label>
+                <Label>{t('splashPage.titleLabel')}</Label>
                 <Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} className="mt-1 bg-white dark:bg-gray-800" />
               </div>
               <div>
-                <Label>المنصة</Label>
+                <Label>{t('splashPage.platform')}</Label>
                 <select value={form.platform} onChange={(e) => setForm((p) => ({ ...p, platform: e.target.value as SplashPlatform }))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                  {PLATFORM_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  {PLATFORM_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t(`splashPage.${o.labelKey}`)}</option>)}
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <Label>الوصف</Label>
+                <Label>{t('splashPage.descriptionLabel')}</Label>
                 <Input value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className="mt-1 bg-white dark:bg-gray-800" />
               </div>
               <div className="sm:col-span-2">
-                <Label>رابط الإجراء</Label>
-                <Input value={form.action_url} onChange={(e) => setForm((p) => ({ ...p, action_url: e.target.value }))} placeholder="https://..." className="mt-1 bg-white dark:bg-gray-800" />
+                <Label>{t('splashPage.actionUrl')}</Label>
+                <Input value={form.action_url} onChange={(e) => setForm((p) => ({ ...p, action_url: e.target.value }))} placeholder={t('splashPage.actionUrlPlaceholder')} className="mt-1 bg-white dark:bg-gray-800" />
               </div>
               <div>
-                <Label>صالح من</Label>
+                <Label>{t('splashPage.validFrom')}</Label>
                 <Input type="datetime-local" value={form.valid_from} onChange={(e) => setForm((p) => ({ ...p, valid_from: e.target.value }))} className="mt-1 bg-white dark:bg-gray-800" />
               </div>
               <div>
-                <Label>صالح حتى</Label>
+                <Label>{t('splashPage.validTo')}</Label>
                 <Input type="datetime-local" value={form.valid_to} onChange={(e) => setForm((p) => ({ ...p, valid_to: e.target.value }))} className="mt-1 bg-white dark:bg-gray-800" />
               </div>
               <div className="flex items-center pt-6">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500" />
-                  مفعّل ونشط
+                  {t('splashPage.isActive')}
                 </label>
               </div>
               <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-1 justify-end">
                 <Button type="button" variant="outline" size="sm" className="w-full rounded-xl" onClick={() => { setShowForm(false); setEditingId(null); setForm(emptyForm()); }}>
-                  إلغاء
+                  {t('splashPage.cancel')}
                 </Button>
                 <Button type="submit" size="sm" className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-700" disabled={(editingId ? !canUpdateSplash : !canCreateSplash) || createMutation.isPending || updateMutation.isPending}>
-                  {editingId ? 'حفظ' : 'إضافة'}
+                  {editingId ? t('splashPage.save') : t('splashPage.add')}
                 </Button>
               </div>
               </fieldset>
@@ -211,7 +213,7 @@ export const SplashPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">إجمالي شاشات السبلاش</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('splashPage.totalSplashes')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{list.length}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-100 text-cyan-600 dark:bg-cyan-900/40 dark:text-cyan-400">
@@ -222,7 +224,7 @@ export const SplashPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
            <div className="flex items-center justify-between">
              <div>
-               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">الشاشات النشطة</p>
+               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('splashPage.activeSplashes')}</p>
                <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{activeCount}</p>
              </div>
              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
@@ -236,9 +238,9 @@ export const SplashPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <Image className="h-5 w-5 text-cyan-500" />
-            جميع شاشات السبلاش
+            {t('splashPage.allSplashes')}
           </CardTitle>
-          <CardDescription>عرض تفاصيل شاشات الترحيب والبداية</CardDescription>
+          <CardDescription>{t('splashPage.allSplashesDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading && (
@@ -248,7 +250,7 @@ export const SplashPage = () => {
           )}
           {error && (
             <div className="py-8 text-center text-red-600 dark:text-red-400">
-              فشل تحميل شاشات السبلاش.
+              {t('splashPage.loadError')}
             </div>
           )}
           {!isLoading && !error && list.length === 0 && (
@@ -256,7 +258,7 @@ export const SplashPage = () => {
                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cyan-50 dark:bg-cyan-900/20">
                  <Image className="h-8 w-8 text-cyan-300 dark:text-cyan-600" />
                </div>
-               <p className="mt-4 text-gray-500 dark:text-gray-400">لا توجد شاشات سبلاش بعد.</p>
+               <p className="mt-4 text-gray-500 dark:text-gray-400">{t('splashPage.noSplashes')}</p>
             </div>
           )}
           {!isLoading && list.length > 0 && (
@@ -264,12 +266,12 @@ export const SplashPage = () => {
               <table className="w-full">
                 <thead className="bg-gray-100/50 dark:bg-gray-700/40">
                   <tr>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">معاينة</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">العنوان</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">المنصة</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الصلاحية</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الحالة</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجراءات</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('splashPage.preview')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('splashPage.titleLabel')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('splashPage.platform')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('splashPage.validity')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('splashPage.status')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('splashPage.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -286,26 +288,26 @@ export const SplashPage = () => {
                            {s.platform === 'ANDROID' && <Smartphone className="h-4 w-4" />}
                            {s.platform === 'IOS' && <Smartphone className="h-4 w-4" />}
                            {s.platform === 'ALL' && <Monitor className="h-4 w-4" />}
-                           {s.platform}
+                           {t(`splashPage.${s.platform === 'ALL' ? 'platformAll' : s.platform === 'ANDROID' ? 'platformAndroid' : 'platformIos'}`)}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 flex flex-col gap-0.5">
-                        {s.valid_from && <span className="text-xs text-gray-400">من {format(new Date(s.valid_from), 'P')}</span>}
-                        {s.valid_to && <span>إلى {format(new Date(s.valid_to), 'P')}</span>}
+                        {s.valid_from && <span className="text-xs text-gray-400">{t('splashPage.from')} {format(new Date(s.valid_from), 'P')}</span>}
+                        {s.valid_to && <span>{t('splashPage.to')} {format(new Date(s.valid_to), 'P')}</span>}
                         {!s.valid_from && !s.valid_to && <span className="text-gray-400">—</span>}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${s.is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
                            <span className={`h-1.5 w-1.5 rounded-full ${s.is_active ? 'bg-emerald-500' : 'bg-gray-500'}`} />
-                           {s.is_active ? 'نشط' : 'معطل'}
+                           {s.is_active ? t('splashPage.active') : t('splashPage.disabled')}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1">
-                          {canUpdateSplash && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-cyan-50 hover:text-cyan-600 dark:hover:bg-cyan-900/20 dark:hover:text-cyan-400" onClick={() => startEdit(s)} title="تعديل">
+                          {canUpdateSplash && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-cyan-50 hover:text-cyan-600 dark:hover:bg-cyan-900/20 dark:hover:text-cyan-400" onClick={() => startEdit(s)} title={t('splashPage.edit')}>
                             <Pencil className="h-4 w-4" />
                           </Button>}
-                          {canDeleteSplash && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleDelete(s.id)} title="حذف">
+                          {canDeleteSplash && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20" onClick={() => handleDelete(s.id)} title={t('splashPage.delete')}>
                             <Trash2 className="h-4 w-4" />
                           </Button>}
                         </div>

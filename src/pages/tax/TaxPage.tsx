@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -10,6 +11,7 @@ import { format } from 'date-fns';
 import { useRolePermissions } from '../../hooks/useRolePermissions';
 
 export const TaxPage = () => {
+  const { t } = useTranslation();
   const { can } = useRolePermissions();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
@@ -67,10 +69,10 @@ export const TaxPage = () => {
            </div>
            <div>
              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-               إعدادات الضريبة
+               {t('taxPage.title')}
              </h1>
              <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
-               إدارة نسبة الضريبة المضافة وتفعيلها
+               {t('taxPage.description')}
              </p>
            </div>
         </div>
@@ -82,7 +84,7 @@ export const TaxPage = () => {
             onClick={() => queryClient.invalidateQueries({ queryKey: ['tax-settings'] })}
           >
             <RefreshCw className="h-4 w-4" />
-            تحديث
+            {t('taxPage.refresh')}
           </Button>
           {canCreateTax && <Button 
             size="sm" 
@@ -90,7 +92,7 @@ export const TaxPage = () => {
             onClick={() => { setShowForm(true); setEditingId(null); setForm({ is_enabled: true, tax_percent: '15' }); }}
           >
             <Plus className="h-4 w-4" />
-            إضافة إعداد ضريبة
+            {t('taxPage.addTaxSetting')}
           </Button>}
         </div>
       </div>
@@ -98,13 +100,13 @@ export const TaxPage = () => {
       {showForm && (
         <Card className="border-slate-100 bg-slate-50/50 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/10">
           <CardHeader>
-            <CardTitle className="text-lg text-gray-900 dark:text-white">{editingId ? 'تعديل إعداد الضريبة' : 'إضافة إعداد ضريبة جديد'}</CardTitle>
+            <CardTitle className="text-lg text-gray-900 dark:text-white">{editingId ? t('taxPage.editTaxSetting') : t('taxPage.addTaxSettingNew')}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="flex flex-col gap-6 sm:flex-row sm:items-end">
               <fieldset disabled={(editingId ? !canUpdateTax : !canCreateTax) || createMutation.isPending || updateMutation.isPending} className="contents">
               <div className="relative">
-                <Label>نسبة الضريبة %</Label>
+                <Label>{t('taxPage.taxPercent')}</Label>
                 <div className="relative mt-1">
                    <Input type="number" step="0.01" min="0" max="100" value={form.tax_percent} onChange={(e) => setForm((p) => ({ ...p, tax_percent: e.target.value }))} className="w-40 bg-white pr-8 dark:bg-gray-800" required />
                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
@@ -115,15 +117,15 @@ export const TaxPage = () => {
               <div className="pb-3">
                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
                    <input type="checkbox" checked={form.is_enabled} onChange={(e) => setForm((p) => ({ ...p, is_enabled: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-slate-600 focus:ring-slate-500" />
-                   تفعيل الضريبة في النظام
+                   {t('taxPage.enableTax')}
                  </label>
               </div>
               <div className="flex gap-2 mr-auto">
                 <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={() => { setShowForm(false); setEditingId(null); }}>
-                  إلغاء
+                  {t('taxPage.cancel')}
                 </Button>
                 <Button type="submit" size="sm" className="rounded-xl bg-slate-600 hover:bg-slate-700" disabled={(editingId ? !canUpdateTax : !canCreateTax) || createMutation.isPending || updateMutation.isPending}>
-                  {editingId ? 'حفظ التغييرات' : 'إضافة'}
+                  {editingId ? t('taxPage.saveChanges') : t('taxPage.add')}
                 </Button>
               </div>
               </fieldset>
@@ -136,10 +138,10 @@ export const TaxPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">حالة الضريبة</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('taxPage.taxStatus')}</p>
               <div className="mt-2 flex items-center gap-2">
                  <span className={`inline-flex h-2.5 w-2.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{active ? 'مفعّلة' : 'غير مفعّلة'}</p>
+                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{active ? t('taxPage.enabled') : t('taxPage.disabled')}</p>
               </div>
             </div>
             <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-opacity-20 ${active ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
@@ -150,7 +152,7 @@ export const TaxPage = () => {
         <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white/60 p-6 shadow-sm backdrop-blur-xl transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">النسبة المطبقة حالياً</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('taxPage.currentRate')}</p>
               <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
                 {active ? Number(active.tax_percent) : '0'}
                 <span className="text-lg text-gray-400 font-normal">%</span>
@@ -167,9 +169,9 @@ export const TaxPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
             <Receipt className="h-5 w-5 text-slate-500" />
-            سجل إعدادات الضريبة
+            {t('taxPage.historyTitle')}
           </CardTitle>
-          <CardDescription>جميع إعدادات الضريبة السابقة والحالية</CardDescription>
+          <CardDescription>{t('taxPage.historyDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading && (
@@ -179,7 +181,7 @@ export const TaxPage = () => {
           )}
           {error && (
             <div className="py-8 text-center text-red-600 dark:text-red-400">
-              فشل تحميل إعدادات الضريبة.
+              {t('taxPage.loadError')}
             </div>
           )}
           {!isLoading && !error && list.length === 0 && (
@@ -187,7 +189,7 @@ export const TaxPage = () => {
                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-900/20">
                  <Receipt className="h-8 w-8 text-slate-300 dark:text-slate-600" />
                </div>
-               <p className="mt-4 text-gray-500 dark:text-gray-400">لا توجد إعدادات ضريبة بعد.</p>
+               <p className="mt-4 text-gray-500 dark:text-gray-400">{t('taxPage.noSettings')}</p>
             </div>
           )}
           {!isLoading && list.length > 0 && (
@@ -195,34 +197,34 @@ export const TaxPage = () => {
               <table className="w-full">
                 <thead className="bg-gray-100/50 dark:bg-gray-700/40">
                   <tr>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">المعرف</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">الحالة</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">النسبة</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">أخر تحديث</th>
-                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">إجراءات</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('taxPage.id')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('taxPage.status')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('taxPage.rate')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('taxPage.lastUpdated')}</th>
+                    <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('taxPage.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {list.map((t: TaxSettings) => (
-                    <tr key={t.id} className="transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
-                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 font-mono">#{t.id}</td>
+                  {list.map((taxItem: TaxSettings) => (
+                    <tr key={taxItem.id} className="transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
+                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 font-mono">#{taxItem.id}</td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${t.is_enabled ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
-                           <span className={`h-1.5 w-1.5 rounded-full ${t.is_enabled ? 'bg-emerald-500' : 'bg-gray-500'}`} />
-                           {t.is_enabled ? 'مفعّل' : 'معطل'}
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${taxItem.is_enabled ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
+                           <span className={`h-1.5 w-1.5 rounded-full ${taxItem.is_enabled ? 'bg-emerald-500' : 'bg-gray-500'}`} />
+                           {taxItem.is_enabled ? t('taxPage.enabled') : t('taxPage.disabled')}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                          <div className="flex items-center gap-1 text-sm font-bold text-gray-900 dark:text-white">
-                           {Number(t.tax_percent)}
+                           {Number(taxItem.tax_percent)}
                            <span className="text-xs font-normal text-gray-500">%</span>
                          </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                        {t.updated_at ? format(new Date(t.updated_at), 'PP p') : '—'}
+                        {taxItem.updated_at ? format(new Date(taxItem.updated_at), 'PP p') : '—'}
                       </td>
                       <td className="px-6 py-4">
-                        {canUpdateTax && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800/50 dark:hover:text-slate-300" onClick={() => startEdit(t)} title="تعديل">
+                        {canUpdateTax && <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg p-0 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800/50 dark:hover:text-slate-300" onClick={() => startEdit(taxItem)} title={t('taxPage.edit')}>
                           <Pencil className="h-4 w-4" />
                         </Button>}
                       </td>
