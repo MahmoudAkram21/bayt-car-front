@@ -78,9 +78,7 @@ export const bannerService = {
     if (data.sort_order !== undefined) formData.append('sort_order', data.sort_order.toString());
     formData.append('is_active', (data.is_active ?? true).toString());
 
-    const response = await api.post<Banner>('/banners', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post<Banner>('/banners', formData);
     return response.data;
   },
 
@@ -98,9 +96,7 @@ export const bannerService = {
     if (data.sort_order !== undefined) formData.append('sort_order', data.sort_order.toString());
     if (data.is_active !== undefined) formData.append('is_active', data.is_active.toString());
 
-    const response = await api.patch<Banner>(`/banners/${id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.patch<Banner>(`/banners/${id}`, formData);
     return response.data;
   },
 
