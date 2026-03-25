@@ -53,7 +53,7 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 relative">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-100 dark:bg-gray-900 p-4 relative">
       <div className="absolute top-4 end-4 flex items-center gap-2">
         <Button
           variant="ghost"

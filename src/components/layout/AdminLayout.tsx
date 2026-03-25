@@ -12,7 +12,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [isCollapsed, setIsCollapsed] = useState(() => window.innerWidth < 1024);
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden">
+    <div className="flex h-screen bg-slate-100 dark:bg-gray-900 relative overflow-hidden">
         {/* Background Mesh Gradient */}
         <div className="absolute inset-0 z-0 pointer-events-none">
             <div className="absolute top-0 -left-4 w-96 h-96 bg-orange-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob" />

@@ -19,7 +19,7 @@
 
 /* Light mode */
 :root {
-  --background: oklch(0.985 0 0); /* gray-50 */
+  --background: oklch(0.965 0 0); /* slightly softer gray for eye rest */
   --foreground: oklch(0.145 0 0); /* gray-900 */
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
