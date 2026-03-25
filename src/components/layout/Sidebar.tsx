@@ -15,7 +15,6 @@ import {
   Percent,
   Monitor,
   FileCheck,
-  Package,
   Tag,
   Receipt,
   ChevronLeft,
