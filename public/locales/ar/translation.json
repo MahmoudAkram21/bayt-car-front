@@ -867,7 +867,9 @@
     "formulaTextWithDiscountNoCashback": "(السعر الأساسي + العمولة) + الضريبة - الخصم = النهائي",
     "formulaTextWithDiscountAndCashback": "(السعر الأساسي + العمولة) + الضريبة - الخصم - الكاش باك = النهائي",
     "status_paid": "مدفوعة",
-    "status_refunded": "مسترجعة"
+    "status_refunded": "مسترجعة",
+    "pdf": "PDF",
+    "qr": "QR"
   },
   "loyaltyPage": {
     "title": "الولاء والكاش باك",

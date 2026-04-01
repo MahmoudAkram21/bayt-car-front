@@ -867,7 +867,9 @@
     "formulaTextWithDiscountNoCashback": "(Base Price + Commission) + Tax - Discount = Final",
     "formulaTextWithDiscountAndCashback": "(Base Price + Commission) + Tax - Discount - Cashback = Final",
     "status_paid": "Paid",
-    "status_refunded": "Refunded"
+    "status_refunded": "Refunded",
+    "pdf": "PDF",
+    "qr": "QR"
   },
   "loyaltyPage": {
     "title": "Loyalty & Cashback",

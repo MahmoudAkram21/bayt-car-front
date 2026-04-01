@@ -216,11 +216,11 @@ export const InvoicesPage = () => {
                           </Button>
                           <Button variant="outline" size="sm" className="rounded-lg gap-1" onClick={() => handleDownloadPdf(i.id)}>
                             <Download className="h-3.5 w-3.5" />
-                            PDF
+                            {t('invoicesPage.pdf')}
                           </Button>
                           <Button variant="outline" size="sm" className="rounded-lg gap-1" onClick={() => handleShowQr(i.id)}>
                             <QrCode className="h-3.5 w-3.5" />
-                            QR
+                            {t('invoicesPage.qr')}
                           </Button>
                         </div>
                       </td>
@@ -248,33 +248,33 @@ export const InvoicesPage = () => {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">{t('invoicesPage.basePrice')}</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{Number(selectedInvoice.base_price).toFixed(2)} SAR</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{Number(selectedInvoice.base_price).toFixed(2)} {t('dashboard.sar')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">{t('invoicesPage.platformCommission')}</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{Number(selectedInvoice.commission_amount).toFixed(2)} SAR</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{Number(selectedInvoice.commission_amount).toFixed(2)} {t('dashboard.sar')}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">{t('invoicesPage.subtotal')}</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{(Number(selectedInvoice.base_price) + Number(selectedInvoice.commission_amount)).toFixed(2)} SAR</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{(Number(selectedInvoice.base_price) + Number(selectedInvoice.commission_amount)).toFixed(2)} {t('dashboard.sar')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">{t('invoicesPage.tax')}</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{Number(selectedInvoice.tax_amount).toFixed(2)} SAR</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{Number(selectedInvoice.tax_amount).toFixed(2)} {t('dashboard.sar')}</span>
                 </div>
                 <div className="flex justify-between text-red-600">
                   <span>{t('invoicesPage.discount')}</span>
-                  <span>-{Number(selectedInvoice.discount_amount).toFixed(2)} SAR</span>
+                  <span>-{Number(selectedInvoice.discount_amount).toFixed(2)} {t('dashboard.sar')}</span>
                 </div>
                 {selectedInvoice.cashback_used > 0 && (
                   <div className="flex justify-between text-red-600">
                     <span>{t('invoicesPage.cashback')}</span>
-                    <span>-{Number(selectedInvoice.cashback_used).toFixed(2)} SAR</span>
+                    <span>-{Number(selectedInvoice.cashback_used).toFixed(2)} {t('dashboard.sar')}</span>
                   </div>
                 )}
                 <div className="border-t pt-2 flex justify-between text-lg font-bold">
                   <span className="text-gray-900 dark:text-white">{t('invoicesPage.finalAmount')}</span>
-                  <span className="text-emerald-600">{Number(selectedInvoice.final_paid_amount).toFixed(2)} SAR</span>
+                  <span className="text-emerald-600">{Number(selectedInvoice.final_paid_amount).toFixed(2)} {t('dashboard.sar')}</span>
                 </div>
               </div>
 
