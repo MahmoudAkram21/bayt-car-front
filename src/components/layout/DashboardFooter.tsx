@@ -9,7 +9,7 @@ export function DashboardFooter() {
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-3 sm:flex-row sm:px-6 lg:px-8">
         {/* Left: Copyright */}
         <p className="order-2 text-center text-xs font-medium tracking-wide text-gray-500 sm:order-1 sm:text-left dark:text-gray-400">
-          Copyright © 2026 · All Rights Reserved
+          Copyright © {new Date().getFullYear()} · All Rights Reserved
         </p>
 
         {/* Center: Brand pill */}
