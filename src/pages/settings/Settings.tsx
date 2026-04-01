@@ -63,6 +63,7 @@ export const SettingsPage = () => {
     { key: 'search_radius_km', labelKey: 'settingsPage.searchRadiusKm', descriptionKey: 'settingsPage.searchRadiusKmDesc', type: 'number', icon: MapPin },
     { key: 'commission_percent', labelKey: 'settingsPage.commissionPercent', descriptionKey: 'settingsPage.commissionPercentDesc', type: 'number', icon: DollarSign },
     { key: 'loyalty_points_multiplier', labelKey: 'settingsPage.loyaltyPointsMultiplier', descriptionKey: 'settingsPage.loyaltyPointsMultiplierDesc', type: 'number', icon: Gift },
+    { key: 'loyalty_points_expiry_days', labelKey: 'settingsPage.loyaltyPointsExpiryDays', descriptionKey: 'settingsPage.loyaltyPointsExpiryDaysDesc', type: 'number', icon: Clock },
     { key: 'PAYMENT_TIMEOUT_MINUTES', labelKey: 'settingsPage.paymentTimeoutMinutes', descriptionKey: 'settingsPage.paymentTimeoutMinutesDesc', type: 'number', icon: Clock },
     { key: 'cancellation_refund_type', labelKey: 'common.settingsCancellationRefundTypeLabel', descriptionKey: 'common.settingsCancellationRefundTypeDesc', type: 'select', icon: RefreshCw, options: ['FULL_REFUND', 'REFUND_WITH_COMMISSION'] },
     { key: 'discount_mode', labelKey: 'settingsPage.discountMode', descriptionKey: 'settingsPage.discountModeDesc', type: 'select', icon: DollarSign, options: ['DISABLED', 'PROVIDER'] },

@@ -420,7 +420,9 @@
     "discountModeDisabled": "Disabled",
     "discountModeProvider": "Provider can discount",
     "loyaltyPointsMultiplier": "Loyalty points multiplier",
-    "loyaltyPointsMultiplierDesc": "Points = application commission × this factor (e.g. 1 = 1 point per 1 SAR commission). Used when awarding points at order finalization."
+    "loyaltyPointsMultiplierDesc": "Points = application commission × this factor (e.g. 1 = 1 point per 1 SAR commission). Used when awarding points at order finalization.",
+    "loyaltyPointsExpiryDays": "Loyalty Points Expiry (Days)",
+    "loyaltyPointsExpiryDaysDesc": "Number of days before earned points expire (0 = never expires)"
   },
   "dashboard": {
     "title": "Dashboard",

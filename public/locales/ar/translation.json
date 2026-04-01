@@ -420,7 +420,9 @@
     "discountModeDisabled": "معطل",
     "discountModeProvider": "مقدم الخدمة يمكنه الخصم",
     "loyaltyPointsMultiplier": "معامل نقاط الولاء",
-    "loyaltyPointsMultiplierDesc": "النقاط = عمولة التطبيق × هذا المعامل (مثلاً 1 = نقطة واحدة لكل 1 ريال عمولة). يُستخدم عند منح النقاط عند إتمام الطلب."
+    "loyaltyPointsMultiplierDesc": "النقاط = عمولة التطبيق × هذا المعامل (مثلاً 1 = نقطة واحدة لكل 1 ريال عمولة). يُستخدم عند منح النقاط عند إتمام الطلب.",
+    "loyaltyPointsExpiryDays": "فترة صلاحية نقاط الولاء (بالأيام)",
+    "loyaltyPointsExpiryDaysDesc": "تحديد عدد الأيام لصلاحية النقاط المكتسبة، بعد انقضائها ستنتهي القيمة (0 = لا تنتهي أبدًا)"
   },
   "dashboard": {
     "title": "لوحة التحكم",
