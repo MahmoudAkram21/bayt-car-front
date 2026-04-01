@@ -19,7 +19,8 @@ export type PermissionModuleKey =
   | 'BANNERS'
   | 'SPLASH'
   | 'SETTINGS'
-  | 'ORDERS';
+  | 'ORDERS'
+  | 'NOTIFICATIONS';
 
 export type PermissionActionKey = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE' | 'REPLY';
 

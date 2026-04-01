@@ -36,6 +36,7 @@ import { SupportTicketsPage } from "./pages/support-tickets/SupportTicketsPage";
 import { AdminSupportChatsPage } from "./pages/admins/support-chats/AdminSupportChatsPage";
 import { AdminSupportChatDetailPage } from "./pages/admins/support-chats/AdminSupportChatDetailPage";
 import { SettingsPage } from "./pages/settings/Settings";
+import { BroadcastPage } from "./pages/broadcast/BroadcastPage";
 import { Err400Page } from "./pages/errors/Err400Page";
 import { Err403Page } from "./pages/errors/Err403Page";
 import { Err404Page } from "./pages/errors/Err404Page";
@@ -260,6 +261,14 @@ function App() {
                     element={
                       <PermissionRoute module="SUPPORT_TICKETS">
                         <AdminSupportChatDetailPage />
+                      </PermissionRoute>
+                    }
+                  />
+                  <Route
+                    path="/broadcast"
+                    element={
+                      <PermissionRoute module="NOTIFICATIONS">
+                        <BroadcastPage />
                       </PermissionRoute>
                     }
                   />

@@ -20,7 +20,8 @@ import {
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
-  Ticket
+  Ticket,
+  Bell
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -54,6 +55,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
     '/banners': 'BANNERS',
     '/splash': 'SPLASH',
     '/settings': 'SETTINGS',
+    '/broadcast': 'NOTIFICATIONS',
   };
 
   
@@ -100,6 +102,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         { name: t('common.tax'), href: '/tax', icon: Receipt },
         { name: t('common.banners'), href: '/banners', icon: LayoutGrid },
         { name: t('common.splash'), href: '/splash', icon: Monitor },
+        { name: t('common.broadcast'), href: '/broadcast', icon: Bell },
         { name: t('common.settings'), href: '/settings', icon: Settings },
       ]
     }
