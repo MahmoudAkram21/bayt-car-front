@@ -5,9 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { invoiceService, type Invoice } from '../../services/invoice.service';
 import api from '../../services/api';
-import { FileText, Download, QrCode, RefreshCw, Plus, DollarSign } from 'lucide-react';
+import { FileText, Download, QrCode, RefreshCw, Plus, DollarSign, Calculator } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRolePermissions } from '../../hooks/useRolePermissions';
 
@@ -17,6 +18,7 @@ export const InvoicesPage = () => {
   const queryClient = useQueryClient();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [serviceRequestId, setServiceRequestId] = useState('');
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const canCreateInvoices = can('INVOICES', 'CREATE');
 
   const { data, isLoading, error, refetch } = useQuery({
@@ -202,12 +204,16 @@ export const InvoicesPage = () => {
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{Number(i.final_paid_amount).toFixed(2)} {t('dashboard.sar')}</td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${i.status === 'PAID' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'}`}>
-                          {i.status}
+                          {t(`invoicesPage.status_${i.status.toLowerCase()}`)}
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{format(new Date(i.created_at), 'PP')}</td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="rounded-lg gap-1" onClick={() => setSelectedInvoice(i)}>
+                            <Calculator className="h-3.5 w-3.5" />
+                            {t('invoicesPage.details')}
+                          </Button>
                           <Button variant="outline" size="sm" className="rounded-lg gap-1" onClick={() => handleDownloadPdf(i.id)}>
                             <Download className="h-3.5 w-3.5" />
                             PDF
@@ -226,6 +232,67 @@ export const InvoicesPage = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!selectedInvoice} onOpenChange={() => setSelectedInvoice(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('invoicesPage.invoiceDetails')}</DialogTitle>
+          </DialogHeader>
+          {selectedInvoice && (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('invoicesPage.invoiceNumber')}</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">{selectedInvoice.invoice_number}</p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">{t('invoicesPage.basePrice')}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{Number(selectedInvoice.base_price).toFixed(2)} SAR</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">{t('invoicesPage.platformCommission')}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{Number(selectedInvoice.commission_amount).toFixed(2)} SAR</span>
+                </div>
+                <div className="border-t pt-2 flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">{t('invoicesPage.subtotal')}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{(Number(selectedInvoice.base_price) + Number(selectedInvoice.commission_amount)).toFixed(2)} SAR</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">{t('invoicesPage.tax')}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{Number(selectedInvoice.tax_amount).toFixed(2)} SAR</span>
+                </div>
+                <div className="flex justify-between text-red-600">
+                  <span>{t('invoicesPage.discount')}</span>
+                  <span>-{Number(selectedInvoice.discount_amount).toFixed(2)} SAR</span>
+                </div>
+                {selectedInvoice.cashback_used > 0 && (
+                  <div className="flex justify-between text-red-600">
+                    <span>{t('invoicesPage.cashback')}</span>
+                    <span>-{Number(selectedInvoice.cashback_used).toFixed(2)} SAR</span>
+                  </div>
+                )}
+                <div className="border-t pt-2 flex justify-between text-lg font-bold">
+                  <span className="text-gray-900 dark:text-white">{t('invoicesPage.finalAmount')}</span>
+                  <span className="text-emerald-600">{Number(selectedInvoice.final_paid_amount).toFixed(2)} SAR</span>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+                <p className="text-sm text-blue-800 dark:text-blue-300">
+                  <strong>{t('invoicesPage.formula')}:</strong> {
+                    selectedInvoice.cashback_used > 0 
+                      ? t('invoicesPage.formulaTextWithDiscountAndCashback')
+                      : selectedInvoice.discount_amount > 0 
+                        ? t('invoicesPage.formulaTextWithDiscountNoCashback')
+                        : t('invoicesPage.formulaTextNoDiscountNoCashback')
+                  }
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
