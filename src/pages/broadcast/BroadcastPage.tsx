@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { notificationService, type BroadcastLog } from '../../services/notification.service';
+import { notificationService } from '../../services/notification.service';
 import { Bell, Send, Users, UserCheck, UserX, Loader2, History, RefreshCw } from 'lucide-react';
 import { useRolePermissions } from '../../hooks/useRolePermissions';
 import { format } from 'date-fns';
@@ -65,17 +65,6 @@ export const BroadcastPage = () => {
     setBodyEn('');
     setBodyAr('');
     setResult(null);
-  };
-
-  const getTargetIcon = () => {
-    switch (target) {
-      case 'CUSTOMERS':
-        return <UserX className="h-5 w-5" />;
-      case 'PROVIDERS':
-        return <UserCheck className="h-5 w-5" />;
-      default:
-        return <Users className="h-5 w-5" />;
-    }
   };
 
   const getTargetLabel = () => {
