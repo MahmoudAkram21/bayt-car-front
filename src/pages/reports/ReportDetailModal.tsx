@@ -1,9 +1,8 @@
-  import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
-  import type { Report } from "../../services/report.service";
-  import { ScrollArea } from "../../components/ui/scroll-area";
-  import { Wallet, Snowflake, Users, Calendar, Download, FileJson, TrendingUp, Receipt, Percent, Tag, ArrowRightLeft, MapPin, Wrench, BarChart3, Clock, AlertCircle, CheckCircle, UserCheck, UserX, XCircle, Gift, Ticket, Star } from "lucide-react";
-  import { Button } from "../../components/ui/button";
-  import { useTranslation } from "react-i18next";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
+import type { Report } from "../../services/report.service";
+import { Wallet, Snowflake, Users, Calendar, Download, FileJson, TrendingUp, Receipt, Percent, Tag, ArrowRightLeft, MapPin, Wrench, BarChart3, Clock, AlertCircle, CheckCircle, UserCheck, UserX, XCircle, Gift, Ticket, Star } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import { useTranslation } from "react-i18next";
   
   interface ReportDetailModalProps {
     report: Report | null;
@@ -39,7 +38,7 @@
   
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl">
+        <DialogContent className="max-w-4xl max-h-[85vh] min-h-0 flex flex-col p-0 gap-0 overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl">
           <DialogHeader className="p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -92,7 +91,7 @@
             </div>
           </DialogHeader>
   
-          <ScrollArea className="flex-1 p-6">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6">
             {isWalletSummary && summaryData ? (
               <div className="space-y-8 animate-in fade-in-50 duration-500">
                 {/* Summary Cards */}
@@ -1534,7 +1533,7 @@
                 </div>
               </div>
             )}
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     );
