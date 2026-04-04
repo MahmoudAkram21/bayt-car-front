@@ -2,122 +2,67 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
 import { reportService, type Report } from '../../services/report.service';
 import { FileText, Plus, RefreshCw, Clock, Users, XCircle, Ticket, Gift, Receipt, Tag, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ReportDetailModal } from './ReportDetailModal';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 const REPORTS_PAGE_SIZE = 15;
+
+const REPORT_TYPE_OPTIONS = [
+  { value: 'WALLET_SUMMARY', labelKey: 'reports.reportTypes.walletSummary', icon: Plus, className: 'bg-violet-600 hover:bg-violet-700 focus:ring-violet-500' },
+  { value: 'FINANCIAL', labelKey: 'reports.reportTypes.financial', icon: Plus, className: 'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500' },
+  { value: 'SERVICES_BY_REGION', labelKey: 'reports.reportTypes.servicesRegion', icon: Plus, className: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' },
+  { value: 'OPEN_AFTER_PAYMENT', labelKey: 'reports.reportTypes.openAfterPayment', icon: Clock, className: 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-500' },
+  { value: 'USERS_DETAILED', labelKey: 'reports.reportTypes.users', icon: Users, className: 'bg-cyan-600 hover:bg-cyan-700 focus:ring-cyan-500' },
+  { value: 'CANCELLED_REQUESTS', labelKey: 'reports.reportTypes.cancelled', icon: XCircle, className: 'bg-red-600 hover:bg-red-700 focus:ring-red-500' },
+  { value: 'LOYALTY_POINTS', labelKey: 'reports.reportTypes.loyalty', icon: Gift, className: 'bg-pink-600 hover:bg-pink-700 focus:ring-pink-500' },
+  { value: 'SUPPORT_TICKETS', labelKey: 'reports.reportTypes.support', icon: Ticket, className: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500' },
+  { value: 'DISCOUNTS', labelKey: 'reports.reportTypes.discounts', icon: Tag, className: 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-500' },
+  { value: 'INVOICES_BY_SERVICE', labelKey: 'reports.reportTypes.invoices', icon: Receipt, className: 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500' },
+  { value: 'SERVICES_INDICATORS', labelKey: 'reports.reportTypes.serviceIndicators', icon: BarChart3, className: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500' },
+  { value: 'PROVIDERS_BY_SERVICE', labelKey: 'reports.reportTypes.providersByService', icon: Users, className: 'bg-rose-600 hover:bg-rose-700 focus:ring-rose-500' },
+  { value: 'PROVIDERS_BY_RATING', labelKey: 'reports.reportTypes.providersByRating', icon: Users, className: 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-500' },
+] as const;
+
+type ReportTypeValue = typeof REPORT_TYPE_OPTIONS[number]['value'];
 
 export const ReportsPage = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [selectedReportType, setSelectedReportType] = useState<ReportTypeValue>('WALLET_SUMMARY');
+  const [periodFrom, setPeriodFrom] = useState('');
+  const [periodTo, setPeriodTo] = useState('');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['reports', page],
     queryFn: () => reportService.getAll({ page, limit: REPORTS_PAGE_SIZE }),
   });
 
-  const generateMutation = useMutation({
-    mutationFn: () => reportService.generateWalletSummary(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-    },
-  });
+  const generateReportMutation = useMutation({
+    mutationFn: async ({ reportType, from, to }: { reportType: ReportTypeValue; from: string; to: string }) => {
+      const generatorMap: Record<ReportTypeValue, (period_from?: string, period_to?: string) => Promise<Report>> = {
+        WALLET_SUMMARY: reportService.generateWalletSummary,
+        FINANCIAL: reportService.generateFinancialSummary,
+        SERVICES_BY_REGION: reportService.generateServicesByRegion,
+        OPEN_AFTER_PAYMENT: reportService.generateOpenAfterPayment,
+        USERS_DETAILED: reportService.generateUsersDetailed,
+        CANCELLED_REQUESTS: reportService.generateCancelledRequests,
+        LOYALTY_POINTS: reportService.generateLoyaltyPoints,
+        SUPPORT_TICKETS: reportService.generateSupportTickets,
+        DISCOUNTS: reportService.generateDiscounts,
+        INVOICES_BY_SERVICE: reportService.generateInvoicesByService,
+        SERVICES_INDICATORS: reportService.generateServicesIndicators,
+        PROVIDERS_BY_SERVICE: reportService.generateProvidersByService,
+        PROVIDERS_BY_RATING: reportService.generateProvidersByRating,
+      };
 
-  const generateFinancialMutation = useMutation({
-    mutationFn: () => reportService.generateFinancialSummary(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      return generatorMap[reportType](from, to);
     },
-  });
-
-  const generateServicesByRegionMutation = useMutation({
-    mutationFn: () => reportService.generateServicesByRegion(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-    },
-  });
-
-  const generateOpenAfterPaymentMutation = useMutation({
-    mutationFn: () => reportService.generateOpenAfterPayment(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-    },
-  });
-
-  const generateUsersDetailedMutation = useMutation({
-    mutationFn: () => reportService.generateUsersDetailed(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-    },
-  });
-
-  const generateCancelledRequestsMutation = useMutation({
-    mutationFn: () => reportService.generateCancelledRequests(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-    },
-  });
-
-  const generateLoyaltyPointsMutation = useMutation({
-    mutationFn: () => reportService.generateLoyaltyPoints(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-    },
-  });
-
-  const generateSupportTicketsMutation = useMutation({
-    mutationFn: () => reportService.generateSupportTickets(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-    },
-  });
-
-  const generateDiscountsMutation = useMutation({
-    mutationFn: () => reportService.generateDiscounts(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-    },
-  });
-
-  const generateInvoicesByServiceMutation = useMutation({
-    mutationFn: () => reportService.generateInvoicesByService(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-    },
-  });
-
-  const generateServicesIndicatorsMutation = useMutation({
-    mutationFn: () => reportService.generateServicesIndicators(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-    },
-  });
-
-  const generateProvidersByServiceMutation = useMutation({
-    mutationFn: () => reportService.generateProvidersByService(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-    },
-  });
-
-  const generateProvidersByRatingMutation = useMutation({
-    mutationFn: () => reportService.generateProvidersByRating(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
@@ -129,6 +74,8 @@ export const ReportsPage = () => {
   const totalPages = Math.max(1, Math.ceil(total / REPORTS_PAGE_SIZE));
   const hasNext = page < totalPages;
   const hasPrev = page > 1;
+  const activeReportOption = REPORT_TYPE_OPTIONS.find((option) => option.value === selectedReportType) ?? REPORT_TYPE_OPTIONS[0];
+  const ActiveReportIcon = activeReportOption.icon;
 
   const getReportTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
@@ -168,6 +115,29 @@ export const ReportsPage = () => {
     return colors[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
   };
 
+  const handleGenerateReport = () => {
+    if (!selectedReportType) {
+      toast.error(t('reports.form.validation.selectType'));
+      return;
+    }
+
+    if (!periodFrom || !periodTo) {
+      toast.error(t('reports.form.validation.selectDateRange'));
+      return;
+    }
+
+    if (periodFrom > periodTo) {
+      toast.error(t('reports.form.validation.invalidDateRange'));
+      return;
+    }
+
+    generateReportMutation.mutate({
+      reportType: selectedReportType,
+      from: periodFrom,
+      to: periodTo,
+    });
+  };
+
   return (
     <div className="animate-fade-in space-y-8">
       {/* Header */}
@@ -193,177 +163,70 @@ export const ReportsPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-violet-600 shadow-lg gap-2 hover:bg-violet-700 focus:ring-2 focus:ring-violet-500"
-            onClick={() => generateMutation.mutate()}
-            disabled={generateMutation.isPending}
-          >
-            {generateMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.walletSummary')}
-          </Button>
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-emerald-600 shadow-lg gap-2 hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-500"
-            onClick={() => generateFinancialMutation.mutate()}
-            disabled={generateFinancialMutation.isPending}
-          >
-            {generateFinancialMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.financial')}
-          </Button>
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-blue-600 shadow-lg gap-2 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
-            onClick={() => generateServicesByRegionMutation.mutate()}
-            disabled={generateServicesByRegionMutation.isPending}
-          >
-            {generateServicesByRegionMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.servicesRegion')}
-          </Button>
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-amber-600 shadow-lg gap-2 hover:bg-amber-700 focus:ring-2 focus:ring-amber-500"
-            onClick={() => generateOpenAfterPaymentMutation.mutate()}
-            disabled={generateOpenAfterPaymentMutation.isPending}
-          >
-            {generateOpenAfterPaymentMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Clock className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.openAfterPayment')}
-          </Button>
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-cyan-600 shadow-lg gap-2 hover:bg-cyan-700 focus:ring-2 focus:ring-cyan-500"
-            onClick={() => generateUsersDetailedMutation.mutate()}
-            disabled={generateUsersDetailedMutation.isPending}
-          >
-            {generateUsersDetailedMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Users className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.users')}
-          </Button>
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-red-600 shadow-lg gap-2 hover:bg-red-700 focus:ring-2 focus:ring-red-500"
-            onClick={() => generateCancelledRequestsMutation.mutate()}
-            disabled={generateCancelledRequestsMutation.isPending}
-          >
-            {generateCancelledRequestsMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <XCircle className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.cancelled')}
-          </Button>
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-pink-600 shadow-lg gap-2 hover:bg-pink-700 focus:ring-2 focus:ring-pink-500"
-            onClick={() => generateLoyaltyPointsMutation.mutate()}
-            disabled={generateLoyaltyPointsMutation.isPending}
-          >
-            {generateLoyaltyPointsMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Gift className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.loyalty')}
-          </Button>
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-indigo-600 shadow-lg gap-2 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500"
-            onClick={() => generateSupportTicketsMutation.mutate()}
-            disabled={generateSupportTicketsMutation.isPending}
-          >
-            {generateSupportTicketsMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Ticket className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.support')}
-          </Button>
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-orange-600 shadow-lg gap-2 hover:bg-orange-700 focus:ring-2 focus:ring-orange-500"
-            onClick={() => generateDiscountsMutation.mutate()}
-            disabled={generateDiscountsMutation.isPending}
-          >
-            {generateDiscountsMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Tag className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.discounts')}
-          </Button>
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-teal-600 shadow-lg gap-2 hover:bg-teal-700 focus:ring-2 focus:ring-teal-500"
-            onClick={() => generateInvoicesByServiceMutation.mutate()}
-            disabled={generateInvoicesByServiceMutation.isPending}
-          >
-            {generateInvoicesByServiceMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Receipt className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.invoices')}
-          </Button>
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-indigo-600 shadow-lg gap-2 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500"
-            onClick={() => generateServicesIndicatorsMutation.mutate()}
-            disabled={generateServicesIndicatorsMutation.isPending}
-          >
-            {generateServicesIndicatorsMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <BarChart3 className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.serviceIndicators')}
-          </Button>
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-rose-600 shadow-lg gap-2 hover:bg-rose-700 focus:ring-2 focus:ring-rose-500"
-            onClick={() => generateProvidersByServiceMutation.mutate()}
-            disabled={generateProvidersByServiceMutation.isPending}
-          >
-            {generateProvidersByServiceMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Users className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.providersByService')}
-          </Button>
-          <Button
-            size="sm"
-            className="shrink-0 rounded-xl bg-amber-600 shadow-lg gap-2 hover:bg-amber-700 focus:ring-2 focus:ring-amber-500"
-            onClick={() => generateProvidersByRatingMutation.mutate()}
-            disabled={generateProvidersByRatingMutation.isPending}
-          >
-            {generateProvidersByRatingMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Users className="h-4 w-4" />
-            )}
-            {t('reports.reportTypes.providersByRating')}
-          </Button>
-        </div>
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(180px,1fr)_minmax(180px,1fr)_auto]">
+            <div className="space-y-2">
+              <label htmlFor="reportType" className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                {t('reports.form.type')}
+              </label>
+              <select
+                id="reportType"
+                value={selectedReportType}
+                onChange={(e) => setSelectedReportType(e.target.value as ReportTypeValue)}
+                className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              >
+                {REPORT_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(option.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="periodFrom" className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                {t('reports.form.from')}
+              </label>
+              <Input
+                id="periodFrom"
+                type="date"
+                value={periodFrom}
+                onChange={(e) => setPeriodFrom(e.target.value)}
+                max={periodTo || undefined}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="periodTo" className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                {t('reports.form.to')}
+              </label>
+              <Input
+                id="periodTo"
+                type="date"
+                value={periodTo}
+                onChange={(e) => setPeriodTo(e.target.value)}
+                min={periodFrom || undefined}
+              />
+            </div>
+
+            <div className="flex items-end">
+              <Button
+                className={`h-10 w-full rounded-xl shadow-lg gap-2 focus:ring-2 ${activeReportOption.className}`}
+                onClick={handleGenerateReport}
+                disabled={generateReportMutation.isPending}
+              >
+                {generateReportMutation.isPending ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ActiveReportIcon className="h-4 w-4" />
+                )}
+                {t('reports.form.generate')}
+              </Button>
+            </div>
+          </div>
+
+          <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+            {t('reports.form.hint')}
+          </p>
         </CardContent>
       </Card>
 

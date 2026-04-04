@@ -508,6 +508,18 @@
     "actions": "Actions",
     "view": "View",
     "export": "Export",
+    "form": {
+      "type": "Report Type",
+      "from": "From Date",
+      "to": "To Date",
+      "generate": "Generate Report",
+      "hint": "Choose the report type, then select the date range before generating the report.",
+      "validation": {
+        "selectType": "Select a report type first",
+        "selectDateRange": "Select both start and end dates",
+        "invalidDateRange": "The start date must be before or equal to the end date"
+      }
+    },
     "reportTypes": {
       "walletSummary": "Wallet Summary",
       "financial": "Financial Report",
