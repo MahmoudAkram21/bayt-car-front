@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
     onClose: () => void;
   }
   
-  export const ReportDetailModal = ({ report, isOpen, onClose }: ReportDetailModalProps) => {
+export const ReportDetailModal = ({ report, isOpen, onClose }: ReportDetailModalProps) => {
     const { t } = useTranslation();
     if (!report) return null;
   
@@ -34,6 +34,80 @@ import { useTranslation } from "react-i18next";
         style: 'currency',
         currency: 'SAR',
       }).format(amount);
+    };
+
+    const formatDate = (value: string) => new Date(value).toLocaleDateString();
+    const formatPeriod = (from?: string | null, to?: string | null) => {
+      if (!from) return t('reports.summary.allTime');
+      return `${formatDate(from)}${to ? ` - ${formatDate(to)}` : ''}`;
+    };
+    const getReportTitle = () => {
+      const labels: Record<string, string> = {
+        WALLET_SUMMARY: t('reports.reportTypes.walletSummary', { defaultValue: 'Wallet Summary' }),
+        FINANCIAL: t('reports.reportTypes.financial', { defaultValue: 'Financial Report' }),
+        SERVICES_BY_REGION: t('reports.reportTypes.servicesRegion', { defaultValue: 'Services by Region' }),
+        OPEN_AFTER_PAYMENT: t('reports.reportTypes.openAfterPayment', { defaultValue: 'Open After Payment' }),
+        USERS_DETAILED: t('reports.reportTypes.users', { defaultValue: 'Users Report' }),
+        CANCELLED_REQUESTS: t('reports.reportTypes.cancelled', { defaultValue: 'Cancelled Requests' }),
+        LOYALTY_POINTS: t('reports.reportTypes.loyalty', { defaultValue: 'Loyalty Points' }),
+        SUPPORT_TICKETS: t('reports.reportTypes.support', { defaultValue: 'Support Tickets' }),
+        DISCOUNTS: t('reports.reportTypes.discounts', { defaultValue: 'Discounts & Cashback' }),
+        INVOICES_BY_SERVICE: t('reports.reportTypes.invoices', { defaultValue: 'Invoices by Service' }),
+        SERVICES_INDICATORS: t('reports.reportTypes.serviceIndicators', { defaultValue: 'Services Indicators' }),
+        PROVIDERS_BY_SERVICE: t('reports.reportTypes.providersByService', { defaultValue: 'Providers by Service' }),
+        PROVIDERS_BY_RATING: t('reports.reportTypes.providersByRating', { defaultValue: 'Providers by Rating' }),
+      };
+      return labels[report.report_type] || report.title || t('reports.details.reportDetails', { defaultValue: 'Report Details' });
+    };
+    const getRequestStatusLabel = (status?: string) => {
+      switch (status) {
+        case 'COMPLETED':
+          return t('common.completed');
+        case 'CANCELLED':
+          return t('common.cancelled');
+        case 'OPEN':
+          return t('common.open');
+        default:
+          return status ?? '—';
+      }
+    };
+    const getUserRoleLabel = (role?: string) => {
+      if (!role) return '—';
+      if (role.toLowerCase() === 'provider') return t('reports.details.provider');
+      if (role.toLowerCase() === 'customer') return t('reports.details.customer');
+      return role;
+    };
+    const getCancelledByLabel = (value?: string) => {
+      switch ((value || '').toUpperCase()) {
+        case 'SYSTEM':
+          return t('reports.details.cancelledBySystem', { defaultValue: 'System' });
+        case 'CUSTOMER':
+          return t('reports.details.customer', { defaultValue: 'Customer' });
+        case 'PROVIDER':
+          return t('reports.details.provider', { defaultValue: 'Provider' });
+        case 'ADMIN':
+          return t('common.admin', { defaultValue: 'Admin' });
+        default:
+          return value || '—';
+      }
+    };
+    const getCancellationReasonLabel = (reason?: string) => {
+      const normalizedReason = (reason || '').trim().toLowerCase();
+      if (normalizedReason.includes('payment not completed') && normalizedReason.includes('configured time limit')) {
+        return t('reports.details.paymentTimeoutReason', { defaultValue: 'Payment not completed within the configured time limit' });
+      }
+      return reason || '—';
+    };
+    const getCustomerDisplayName = (name?: string) => {
+      if (!name) return '—';
+      const match = /^Generated Customer\s+(\d+)$/i.exec(name.trim());
+      if (match) {
+        return t('reports.details.generatedCustomer', {
+          defaultValue: 'Generated Customer {{id}}',
+          id: match[1],
+        });
+      }
+      return name;
     };
   
     return (
@@ -73,7 +147,7 @@ import { useTranslation } from "react-i18next";
                 </div>
                 <div>
                   <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
-                    {report.title ?? 'Report Details'}
+                    {getReportTitle()}
                   </DialogTitle>
                   <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-1">
                     <Calendar className="w-3.5 h-3.5" />
@@ -86,7 +160,7 @@ import { useTranslation } from "react-i18next";
               </div>
               <Button variant="outline" size="sm" className="gap-2 hidden sm:flex">
                 <Download className="w-4 h-4" />
-                Export
+                {t('reports.export')}
               </Button>
             </div>
           </DialogHeader>
@@ -135,23 +209,23 @@ import { useTranslation } from "react-i18next";
                 {summaryData.byUser && summaryData.byUser.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                       Detailed Breakdown
+                       {t('reports.details.detailedBreakdown')}
                     </h3>
                     <div className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
                       <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-800">
                           <tr>
-                            <th className="px-6 py-4">User</th>
-                            <th className="px-6 py-4">Role</th>
-                            <th className="px-6 py-4 text-right">Balance</th>
-                            <th className="px-6 py-4 text-right">Frozen</th>
+                            <th className="px-6 py-4">{t('reports.details.user')}</th>
+                            <th className="px-6 py-4">{t('reports.details.role')}</th>
+                            <th className="px-6 py-4 text-right">{t('reports.details.balance')}</th>
+                            <th className="px-6 py-4 text-right">{t('reports.details.frozen')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                           {summaryData.byUser.map((user: Record<string, any>, idx: number) => (
                             <tr key={idx} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
                               <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                                {user.userName || 'Unknown User'}
+                                {user.userName || t('reports.details.unknownUser')}
                                 <div className="text-xs text-gray-500 font-normal mt-0.5">ID: {user.userId}</div>
                               </td>
                               <td className="px-6 py-4">
@@ -160,7 +234,7 @@ import { useTranslation } from "react-i18next";
                                     ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                                     : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                                 }`}>
-                                  {user.isProvider ? 'Provider' : 'Customer'}
+                                  {user.isProvider ? t('reports.details.provider') : t('reports.details.customer')}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-right font-medium text-gray-900 dark:text-white">
@@ -189,7 +263,7 @@ import { useTranslation } from "react-i18next";
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-200 dark:shadow-none">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-emerald-100 font-medium text-sm">Total Revenue</p>
+                      <p className="text-emerald-100 font-medium text-sm">{t('reports.summary.totalRevenue')}</p>
                       <TrendingUp className="w-5 h-5 text-emerald-100 opacity-80" />
                     </div>
                     <p className="text-3xl font-bold tracking-tight">
@@ -199,7 +273,7 @@ import { useTranslation } from "react-i18next";
 
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Platform Commission</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{t('reports.details.platformCommission')}</p>
                       <div className="p-2 bg-violet-50 dark:bg-violet-900/20 rounded-lg">
                         <Percent className="w-4 h-4 text-violet-500 dark:text-violet-400" />
                       </div>
@@ -211,7 +285,7 @@ import { useTranslation } from "react-i18next";
 
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Tax Collected</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{t('reports.details.taxCollected')}</p>
                       <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                         <Receipt className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                       </div>
@@ -223,7 +297,7 @@ import { useTranslation } from "react-i18next";
 
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Total Transactions</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{t('reports.details.totalTransactions')}</p>
                       <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                         <ArrowRightLeft className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                       </div>
@@ -238,7 +312,7 @@ import { useTranslation } from "react-i18next";
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Base Revenue</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{t('reports.details.baseRevenue')}</p>
                       <Tag className="w-4 h-4 text-gray-400" />
                     </div>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -248,7 +322,7 @@ import { useTranslation } from "react-i18next";
 
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Discounts Given</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{t('reports.details.discountsGiven')}</p>
                       <Tag className="w-4 h-4 text-gray-400" />
                     </div>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -258,7 +332,7 @@ import { useTranslation } from "react-i18next";
 
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Cashback Used</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{t('reports.details.cashbackUsed')}</p>
                       <Tag className="w-4 h-4 text-gray-400" />
                     </div>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -268,7 +342,7 @@ import { useTranslation } from "react-i18next";
 
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Provider Commissions</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{t('reports.details.providerCommissions')}</p>
                       <Tag className="w-4 h-4 text-gray-400" />
                     </div>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -280,11 +354,11 @@ import { useTranslation } from "react-i18next";
                 {/* Transaction Status */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800">
-                    <p className="text-emerald-600 dark:text-emerald-400 font-medium text-sm mb-1">Paid Transactions</p>
+                    <p className="text-emerald-600 dark:text-emerald-400 font-medium text-sm mb-1">{t('reports.details.paidTransactions')}</p>
                     <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{summaryData.paidTransactions}</p>
                   </div>
                   <div className="p-5 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800">
-                    <p className="text-red-600 dark:text-red-400 font-medium text-sm mb-1">Refunded Transactions</p>
+                    <p className="text-red-600 dark:text-red-400 font-medium text-sm mb-1">{t('reports.details.refundedTransactions')}</p>
                     <p className="text-2xl font-bold text-red-700 dark:text-red-300">
                       {summaryData.refundedTransactions} ({formatCurrency(summaryData.refundedAmount)})
                     </p>
@@ -295,19 +369,19 @@ import { useTranslation } from "react-i18next";
                 {summaryData.recentTransactions && summaryData.recentTransactions.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                      Recent Transactions
+                      {t('reports.summary.recentTransactions')}
                     </h3>
                     <div className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
                       <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-800">
                           <tr>
-                            <th className="px-6 py-4">Invoice</th>
-                            <th className="px-6 py-4">Service</th>
-                            <th className="px-6 py-4 text-right">Base</th>
-                            <th className="px-6 py-4 text-right">Commission</th>
-                            <th className="px-6 py-4 text-right">Tax</th>
-                            <th className="px-6 py-4 text-right">Total</th>
-                            <th className="px-6 py-4">Status</th>
+                            <th className="px-6 py-4">{t('reports.details.invoice')}</th>
+                            <th className="px-6 py-4">{t('reports.details.service')}</th>
+                            <th className="px-6 py-4 text-right">{t('reports.details.base')}</th>
+                            <th className="px-6 py-4 text-right">{t('reports.details.commission')}</th>
+                            <th className="px-6 py-4 text-right">{t('reports.details.tax')}</th>
+                            <th className="px-6 py-4 text-right">{t('common.total')}</th>
+                            <th className="px-6 py-4">{t('reports.details.status')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -338,7 +412,7 @@ import { useTranslation } from "react-i18next";
                                     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
                                     : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
                                 }`}>
-                                  {txn.status}
+                                  {getRequestStatusLabel(txn.status === 'PAID' ? 'COMPLETED' : txn.status)}
                                 </span>
                               </td>
                             </tr>
@@ -355,7 +429,7 @@ import { useTranslation } from "react-i18next";
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-blue-100 font-medium text-sm">Total Requests</p>
+                      <p className="text-blue-100 font-medium text-sm">{t('reports.summary.totalRequests')}</p>
                       <Wrench className="w-5 h-5 text-blue-100 opacity-80" />
                     </div>
                     <p className="text-3xl font-bold tracking-tight">
@@ -365,7 +439,7 @@ import { useTranslation } from "react-i18next";
 
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Total Regions</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{t('reports.details.totalRegions')}</p>
                       <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                         <MapPin className="w-4 h-4 text-purple-500 dark:text-purple-400" />
                       </div>
@@ -377,14 +451,13 @@ import { useTranslation } from "react-i18next";
 
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Period</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{t('reports.summary.period')}</p>
                       <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                         <Calendar className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                       </div>
                     </div>
                     <p className="text-lg font-bold text-gray-900 dark:text-white">
-                      {summaryData.periodFrom ? new Date(summaryData.periodFrom).toLocaleDateString() : 'All Time'}
-                      {summaryData.periodTo && ` - ${new Date(summaryData.periodTo).toLocaleDateString()}`}
+                      {formatPeriod(summaryData.periodFrom, summaryData.periodTo)}
                     </p>
                   </div>
                 </div>
@@ -400,16 +473,16 @@ import { useTranslation } from "react-i18next";
                       <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-800">
                           <tr>
-                            <th className="px-6 py-4">Region</th>
-                            <th className="px-6 py-4 text-right">Requests</th>
-                            <th className="px-6 py-4 text-right">Percentage</th>
+                            <th className="px-6 py-4">{t('reports.details.region')}</th>
+                            <th className="px-6 py-4 text-right">{t('reports.details.requests')}</th>
+                            <th className="px-6 py-4 text-right">{t('reports.details.percentage')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                           {summaryData.byRegion.map((region: Record<string, any>, idx: number) => (
                             <tr key={idx} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
                               <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                                {region.region || 'Unknown'}
+                                {region.region || t('common.notFound')}
                               </td>
                               <td className="px-6 py-4 text-right text-gray-900 dark:text-white">
                                 {region.count}
@@ -436,8 +509,8 @@ import { useTranslation } from "react-i18next";
                       <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-800">
                           <tr>
-                            <th className="px-6 py-4">Service</th>
-                            <th className="px-6 py-4 text-right">Requests</th>
+                            <th className="px-6 py-4">{t('reports.details.service')}</th>
+                            <th className="px-6 py-4 text-right">{t('reports.details.requests')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -485,11 +558,11 @@ import { useTranslation } from "react-i18next";
                       <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-800">
                           <tr>
-                            <th className="px-6 py-4">Service</th>
-                            <th className="px-6 py-4">Customer</th>
-                            <th className="px-6 py-4">Region</th>
-                            <th className="px-6 py-4">Status</th>
-                            <th className="px-6 py-4 text-right">Price</th>
+                            <th className="px-6 py-4">{t('reports.details.service')}</th>
+                            <th className="px-6 py-4">{t('common.customer')}</th>
+                            <th className="px-6 py-4">{t('reports.details.region')}</th>
+                            <th className="px-6 py-4">{t('reports.details.status')}</th>
+                            <th className="px-6 py-4 text-right">{t('reports.details.price')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -512,7 +585,7 @@ import { useTranslation } from "react-i18next";
                                     ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
                                     : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
                                 }`}>
-                                  {req.status}
+                                  {getRequestStatusLabel(req.status)}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-right text-gray-900 dark:text-white">
@@ -644,7 +717,7 @@ import { useTranslation } from "react-i18next";
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="p-5 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-200 dark:shadow-none">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-cyan-100 font-medium text-sm">Total Users</p>
+                      <p className="text-cyan-100 font-medium text-sm">{t('reports.summary.totalUsers')}</p>
                       <Users className="w-5 h-5 text-cyan-100 opacity-80" />
                     </div>
                     <p className="text-3xl font-bold tracking-tight">{summaryData.totalUsers}</p>
@@ -652,7 +725,7 @@ import { useTranslation } from "react-i18next";
 
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Customers</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{t('dashboard.customers')}</p>
                       <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                         <UserCheck className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                       </div>
@@ -662,7 +735,7 @@ import { useTranslation } from "react-i18next";
 
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Providers</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{t('dashboard.providers')}</p>
                       <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                         <UserCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                       </div>
@@ -672,7 +745,7 @@ import { useTranslation } from "react-i18next";
 
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">Active</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">{t('reports.details.active')}</p>
                       <div className="p-2 bg-violet-50 dark:bg-violet-900/20 rounded-lg">
                         <CheckCircle className="w-4 h-4 text-violet-500 dark:text-violet-400" />
                       </div>
@@ -684,14 +757,14 @@ import { useTranslation } from "react-i18next";
                 {/* User Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Verified Providers</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{t('reports.details.verifiedProviders')}</p>
                     <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{summaryData.verifiedProviders}</p>
-                    <p className="text-xs text-gray-400">{summaryData.unverifiedProviders} unverified</p>
+                    <p className="text-xs text-gray-400">{summaryData.unverifiedProviders} {t('reports.details.unverified')}</p>
                   </div>
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Active Users</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{t('dashboard.activeUsers')}</p>
                     <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{summaryData.activeUsers}</p>
-                    <p className="text-xs text-gray-400">{summaryData.inactiveUsers} inactive</p>
+                    <p className="text-xs text-gray-400">{summaryData.inactiveUsers} {t('reports.details.inactive')}</p>
                   </div>
                 </div>
 
@@ -700,15 +773,15 @@ import { useTranslation } from "react-i18next";
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                       <UserCheck className="w-5 h-5 text-blue-500" />
-                      Top Customers
+                      {t('reports.summary.topCustomers')}
                     </h3>
                     <div className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
                       <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-800">
                           <tr>
-                            <th className="px-6 py-4">Name</th>
-                            <th className="px-6 py-4">Phone</th>
-                            <th className="px-6 py-4 text-right">Requests</th>
+                            <th className="px-6 py-4">{t('common.name')}</th>
+                            <th className="px-6 py-4">{t('common.phone')}</th>
+                            <th className="px-6 py-4 text-right">{t('reports.details.requests')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -730,15 +803,15 @@ import { useTranslation } from "react-i18next";
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                       <UserCheck className="w-5 h-5 text-emerald-500" />
-                      Top Providers
+                      {t('reports.summary.topProviders')}
                     </h3>
                     <div className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
                       <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-800">
                           <tr>
-                            <th className="px-6 py-4">Name</th>
-                            <th className="px-6 py-4">Business</th>
-                            <th className="px-6 py-4 text-right">Requests</th>
+                            <th className="px-6 py-4">{t('common.name')}</th>
+                            <th className="px-6 py-4">{t('reports.details.business')}</th>
+                            <th className="px-6 py-4 text-right">{t('reports.details.requests')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -759,16 +832,16 @@ import { useTranslation } from "react-i18next";
                 {summaryData.recentUsers && summaryData.recentUsers.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                      Recent Users
+                      {t('reports.details.recentUsers')}
                     </h3>
                     <div className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
                       <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-800">
                           <tr>
-                            <th className="px-6 py-4">Name</th>
-                            <th className="px-6 py-4">Phone</th>
-                            <th className="px-6 py-4">Role</th>
-                            <th className="px-6 py-4">Status</th>
+                            <th className="px-6 py-4">{t('common.name')}</th>
+                            <th className="px-6 py-4">{t('common.phone')}</th>
+                            <th className="px-6 py-4">{t('reports.details.role')}</th>
+                            <th className="px-6 py-4">{t('reports.details.status')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -780,13 +853,13 @@ import { useTranslation } from "react-i18next";
                                 <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                   user.role === 'Provider' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
                                 }`}>
-                                  {user.role}
+                                  {getUserRoleLabel(user.role)}
                                 </span>
                               </td>
                               <td className="px-6 py-4">
                                 <span className={`inline-flex items-center gap-1 ${user.isActive ? 'text-emerald-600' : 'text-red-600'}`}>
                                   {user.isActive ? <CheckCircle className="w-3 h-3" /> : <UserX className="w-3 h-3" />}
-                                  {user.isActive ? 'Active' : 'Inactive'}
+                                  {user.isActive ? t('reports.details.active') : t('reports.details.inactive')}
                                 </span>
                               </td>
                             </tr>
@@ -802,28 +875,28 @@ import { useTranslation } from "react-i18next";
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-5 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-red-100 font-medium text-sm">Cancelled Requests</p>
+                      <p className="text-red-100 font-medium text-sm">{t('reports.summary.cancelledRequests')}</p>
                       <XCircle className="w-5 h-5 text-red-100 opacity-80" />
                     </div>
                     <p className="text-3xl font-bold tracking-tight">{summaryData.totalCancelled}</p>
                   </div>
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">By Reason</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('reports.summary.byReason')}</p>
                     <div className="space-y-2 max-h-32 overflow-auto">
                       {summaryData.byReason?.map((item: any, idx: number) => (
                         <div key={idx} className="flex justify-between text-sm">
-                          <span className="text-gray-700 dark:text-gray-300">{item.reason}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{getCancellationReasonLabel(item.reason)}</span>
                           <span className="font-medium text-gray-900 dark:text-white">{item.count}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Cancelled By</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('reports.details.cancelledBy', { defaultValue: 'Cancelled By' })}</p>
                     <div className="space-y-2">
                       {summaryData.byCancelledBy?.map((item: any, idx: number) => (
                         <div key={idx} className="flex justify-between text-sm">
-                          <span className="text-gray-700 dark:text-gray-300">{item.cancelledBy}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{getCancelledByLabel(item.cancelledBy)}</span>
                           <span className="font-medium text-gray-900 dark:text-white">{item.count}</span>
                         </div>
                       ))}
@@ -832,26 +905,26 @@ import { useTranslation } from "react-i18next";
                 </div>
                 {summaryData.recentCancellations && summaryData.recentCancellations.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Cancellations</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('reports.details.recentCancellations', { defaultValue: 'Recent Cancellations' })}</h3>
                     <div className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-gray-900">
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 dark:bg-gray-800">
                           <tr>
-                            <th className="px-4 py-3">Service</th>
-                            <th className="px-4 py-3">Customer</th>
-                            <th className="px-4 py-3">Reason</th>
-                            <th className="px-4 py-3">Cancelled By</th>
+                            <th className="px-4 py-3">{t('reports.details.service', { defaultValue: 'Service' })}</th>
+                            <th className="px-4 py-3">{t('common.customer')}</th>
+                            <th className="px-4 py-3">{t('reports.details.reason', { defaultValue: 'Reason' })}</th>
+                            <th className="px-4 py-3">{t('reports.details.cancelledBy', { defaultValue: 'Cancelled By' })}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                           {summaryData.recentCancellations.map((item: any, idx: number) => (
                             <tr key={idx}>
                               <td className="px-4 py-3">{item.serviceName}</td>
-                              <td className="px-4 py-3">{item.customerName || '—'}</td>
+                              <td className="px-4 py-3">{getCustomerDisplayName(item.customerName)}</td>
                               <td className="px-4 py-3">
-                                <span className="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs">{item.reason}</span>
+                                <span className="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs">{getCancellationReasonLabel(item.reason)}</span>
                               </td>
-                              <td className="px-4 py-3">{item.cancelledBy || '—'}</td>
+                              <td className="px-4 py-3">{getCancelledByLabel(item.cancelledBy)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -865,17 +938,17 @@ import { useTranslation } from "react-i18next";
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="p-5 rounded-2xl bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-lg">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-pink-100 font-medium text-sm">Total Points Balance</p>
+                      <p className="text-pink-100 font-medium text-sm">{t('reports.summary.totalPointsBalance')}</p>
                       <Gift className="w-5 h-5 text-pink-100 opacity-80" />
                     </div>
                     <p className="text-3xl font-bold tracking-tight">{summaryData.totalPointsBalance?.toLocaleString() || 0}</p>
                   </div>
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total Accounts</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('reports.summary.totalAccounts')}</p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">{summaryData.totalAccounts || 0}</p>
                   </div>
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total Earned</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('reports.summary.totalEarned')}</p>
                     <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">+{summaryData.totalEarned?.toLocaleString() || 0}</p>
                   </div>
                   <div className="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">

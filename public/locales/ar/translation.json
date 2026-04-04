@@ -630,6 +630,13 @@
       "phone": "رقم الهاتف",
       "price": "السعر",
       "reason": "السبب",
+      "region": "المنطقة",
+      "requests": "الطلبات",
+      "cancelledBy": "تم الإلغاء بواسطة",
+      "cancelledBySystem": "النظام",
+      "recentCancellations": "أحدث الإلغاءات",
+      "paymentTimeoutReason": "لم يتم إكمال الدفع خلال المهلة الزمنية المحددة",
+      "generatedCustomer": "عميل تجريبي {{id}}",
       "unverifiedProviders": "مقدمي الخدمة غير الموثقين",
       "verifiedProviders": "مقدمي الخدمة الموثقين",
       "totalRegions": "إجمالي المناطق",
@@ -637,7 +644,10 @@
       "recentOpenRequests": "الطلبات المفتوحة الأخيرة",
       "recentUsers": "المستخدمين الجدد",
       "topCustomers": "أفضل العملاء",
-      "topProviders": "أفضل مقدمي الخدمة"
+      "topProviders": "أفضل مقدمي الخدمة",
+      "totalPointsBalance": "إجمالي رصيد النقاط",
+      "totalAccounts": "إجمالي الحسابات",
+      "totalEarned": "إجمالي المكتسب"
     }
   },
   "supportTickets": {

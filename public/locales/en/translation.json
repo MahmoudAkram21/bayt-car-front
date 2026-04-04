@@ -630,6 +630,13 @@
       "phone": "Phone",
       "price": "Price",
       "reason": "Reason",
+      "region": "Region",
+      "requests": "Requests",
+      "cancelledBy": "Cancelled By",
+      "cancelledBySystem": "System",
+      "recentCancellations": "Recent Cancellations",
+      "paymentTimeoutReason": "Payment not completed within the configured time limit",
+      "generatedCustomer": "Generated Customer {{id}}",
       "unverifiedProviders": "Unverified Providers",
       "verifiedProviders": "Verified Providers",
       "totalRegions": "Total Regions",
@@ -637,7 +644,10 @@
       "recentOpenRequests": "Recent Open Requests",
       "recentUsers": "Recent Users",
       "topCustomers": "Top Customers",
-      "topProviders": "Top Providers"
+      "topProviders": "Top Providers",
+      "totalPointsBalance": "Total Points Balance",
+      "totalAccounts": "Total Accounts",
+      "totalEarned": "Total Earned"
     }
   },
   "supportTickets": {
